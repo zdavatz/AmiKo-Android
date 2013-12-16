@@ -1,0 +1,5 @@
+bin/
+*.db
+gen/
+assets/amiko_report_de.html
+assets/amiko_report_fr.html

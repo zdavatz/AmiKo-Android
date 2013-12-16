@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+	<item android:id="@+id/menu_search"
+        android:title="@string/search"            
+        android:icon="@drawable/ic_action_search"           
+        android:showAsAction="ifRoom|collapseActionView"
+		android:actionLayout="@layout/search_layout" />
+			
+	<item android:id="@+id/menu_pref1"
+	    android:title="@string/menu_pref1"
+	    android:showAsAction="collapseActionView"
+	    android:checkable="true" />
+	
+	<item android:id="@+id/menu_pref2"
+	    android:title="@string/menu_pref2"
+		android:showAsAction="collapseActionView" />
+	<!-- 				
+	<item android:id="@+id/menu_pref3"
+	    android:title="@string/menu_pref3"
+	    android:showAsAction="collapseActionView" />
+	-->
+</menu>
