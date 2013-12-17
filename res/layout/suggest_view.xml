@@ -8,9 +8,14 @@
     
     <ListView
        	android:id="@+id/listView1"
+        android:layout_weight="1"       	
         android:layout_width="0dp"
-        android:layout_weight="1"
        	android:layout_height="match_parent"
+       	android:smoothScrollbar="true"
+       	android:fastScrollEnabled="true"
+       	android:clickable="true"
+       	android:choiceMode="singleChoice"
+       	android:listSelector="@drawable/list_item_bkg"
       	class="com.ywesee.amiko.SectionFragment" >
 	</ListView>  
 

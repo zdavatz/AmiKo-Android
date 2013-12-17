@@ -1,26 +1,35 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/show_view_container"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="horizontal"
+    android:animateLayoutChanges="true"
     tools:context=".MainActivity" >
-    
-    <!-- 
-    <ListView
-       	android:id="@+id/sectionView1"
-       	android:layout_weight="4"
-        android:layout_width="0dp"
-       	android:layout_height="match_parent"
-      	class="com.ywesee.amiko.SectionFragment" >
-	</ListView>  
-	-->
-	
+    	
+    <!-- As the main content view, the webview consumes the entire space available 
+    	 using match_parent in both dimensions. -->
     <WebView
-       	android:id="@+id/webView1"
-       	android:layout_weight="15"
-       	android:layout_width="0dp"
+       	android:id="@+id/fach_info_view"
+       	android:layout_width="match_parent"
        	android:layout_height="match_parent"
        	class="com.ywesee.amiko.InfoFragment" >
 	</WebView>	
 
-</LinearLayout>
+    <!-- This view slides in from the side. The drawer has a fixed width in dp
+    	 and extends to the full height of the container. A solid background is
+    	 used for contrast with the content view. -->
+    <ListView
+       	android:id="@+id/section_title_view"
+        android:layout_width="240dp"
+       	android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"
+        android:background="#111"       	
+      	class="com.ywesee.amiko.SectionFragment" >
+	</ListView>  
+    
+</android.support.v4.widget.DrawerLayout>

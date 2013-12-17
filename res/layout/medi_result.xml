@@ -3,14 +3,24 @@
     android:id="@+id/medi_result"
     android:layout_width="match_parent"
     android:layout_height="match_parent" 
+    android:background="@drawable/list_item_bkg"
     android:padding="5dp">
+    
+    <!-- The star icon is 28x28 (36-8=28) -->
+    <ImageView android:id="@+id/mfavorite"
+        android:contentDescription="favorites star"
+        android:layout_width="36dip"
+        android:layout_height="36dip"
+        android:layout_alignParentTop="true"
+        android:paddingRight="8dip"
+        android:layout_gravity="left" />
     
     <TextView android:id="@+id/mtitle" 
 		android:textIsSelectable="false"            
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/mfavorite"
         android:layout_toLeftOf="@+id/mlogo"
-	    android:layout_alignParentLeft="true"
     	android:layout_alignParentTop="true"   
 		style="@android:style/TextAppearance.Medium"/>
 	        
@@ -18,16 +28,17 @@
 		android:textIsSelectable="false"            
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
+        android:layout_toRightOf="@+id/mfavorite"
  	    android:layout_toLeftOf="@+id/mlogo" 
  	    android:layout_below="@+id/mtitle"  
         style="@android:style/TextAppearance.Small" />
 	
   	<ImageView android:id="@+id/mlogo" 
+  	    android:contentDescription="customer logo"
 	    android:layout_width="50dip"
 	    android:layout_height="50dip"
   	    android:layout_alignParentTop="true"
   	    android:layout_alignParentRight="true"
-  	    android:layout_gravity="right"/>
+  	    android:layout_gravity="right" />
     
 </RelativeLayout>

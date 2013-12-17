@@ -28,11 +28,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.animation.LayoutTransition;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.Fragment;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
@@ -57,10 +57,13 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.TranslateAnimation;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -114,9 +117,42 @@ public class MainActivity extends Activity {
 	private View mShowView = null;
 	private View mReportView = null;	
 	
-	// Fragments
-	private ReportFragment mReportFragment = null;
-	
+	// This is the currently visible view
+	private View mCurrentView = null;
+		
+	/**
+	 * Sets currently visible view
+	 * @param currentView
+	 */
+    private void setCurrentView(View newCurrentView, boolean withAnimation) {
+    	if (mCurrentView==newCurrentView)
+    		return;
+    	// It's important to perform sanity checks on views and viewgroup
+    	if (mViewHolder!=null) {  		
+    		// Remove current view
+    		if (mCurrentView!=null) {
+	    		if (withAnimation==true) {
+		    	    TranslateAnimation animate = new TranslateAnimation(0,mCurrentView.getWidth(),0,0);
+		    	    animate.setDuration(500);
+		    	    animate.setFillAfter(false);
+		    	    mCurrentView.startAnimation(animate);
+	    		}
+	    		mCurrentView.setVisibility(View.GONE);    
+	    	}
+        	if (newCurrentView!=null) {
+        		if (withAnimation==true) {
+	    		    TranslateAnimation animate = new TranslateAnimation(-newCurrentView.getWidth(),0,0,0);
+	    		    animate.setDuration(500);
+	    		    animate.setFillAfter(false);
+	    		    newCurrentView.startAnimation(animate);
+        		}
+        		newCurrentView.setVisibility(View.VISIBLE);
+        	} 	    	
+        	// Update currently visible view
+        	mCurrentView = newCurrentView;
+    	}
+    }
+       
 	/**
 	 * Implements listeners for action bar
 	 * @author MaxL
@@ -145,11 +181,7 @@ public class MainActivity extends Activity {
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);			
 			}
 			// Change content view
-    		if (mShowView!=null) {
-    			mShowView.setVisibility(View.GONE);
-    			mReportView.setVisibility(View.GONE);
-    			mSuggestView.setVisibility(View.VISIBLE);
-    		}		    		
+   			setCurrentView(mSuggestView, false);
 		}
 
 		@Override
@@ -165,12 +197,8 @@ public class MainActivity extends Activity {
 				// Set hint
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);
 			}
-    		// Change content view
-    		if (mShowView!=null) {
-    			mShowView.setVisibility(View.GONE);
-    			mReportView.setVisibility(View.GONE);    			
-    			mSuggestView.setVisibility(View.VISIBLE);  			
-    		}
+			// Change content view
+   			setCurrentView(mSuggestView, true);
 		}
 
 		@Override
@@ -213,17 +241,23 @@ public class MainActivity extends Activity {
 		mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
 		mReportView = getLayoutInflater().inflate(R.layout.report_view, null);
-		mReportFragment = new ReportFragment();
+		
 		// Add views to viewholder
 		mViewHolder = (ViewGroup) findViewById(R.id.main_layout);		
 		mViewHolder.addView(mSuggestView);		
 		mViewHolder.addView(mShowView);	
 		mViewHolder.addView(mReportView);
-	
+		
+		LayoutTransition lt = new LayoutTransition();		
+		lt.enableTransitionType(LayoutTransition.CHANGING);
+		lt.setDuration(LayoutTransition.APPEARING, 500);
+		lt.setDuration(LayoutTransition.DISAPPEARING, 100);
+		mViewHolder.setLayoutTransition(lt);
+			
 		// Set visibility of views
-		mShowView.setVisibility(View.GONE);
-		mReportView.setVisibility(View.GONE);
-		mSuggestView.setVisibility(View.VISIBLE);				
+		mSuggestView.setVisibility(View.VISIBLE);			
+		mShowView.setVisibility(View.GONE);			
+		mReportView.setVisibility(View.GONE);			
 
 		// Setup webviews
 		setupWebView();
@@ -253,7 +287,7 @@ public class MainActivity extends Activity {
 	
 	private void setupWebView() {
 		// Define and load webview
-		mWebView = (WebView) findViewById(R.id.webView1);	
+		mWebView = (WebView) findViewById(R.id.fach_info_view);	
 		// Override web client to open all links in same webview
 		// mWebView.setWebChromeClient(new WebChromeClient());
 		mWebView.setWebViewClient(new MyWebViewClient());
@@ -291,13 +325,13 @@ public class MainActivity extends Activity {
 
 	private void setupReportView() {
 		mReportView.setPadding(5, 5, 5, 5);	
-		mReportWebView = (WebView) mReportView.findViewById(R.id.reportView);
+		mReportWebView = (WebView) mReportView.findViewById(R.id.report_view);
 		// Activate JavaScriptInterface
 		mReportWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");		
 		// Enable javascript
 		mReportWebView.getSettings().setJavaScriptEnabled(true);
 	}
-	
+		
 	/**
 	 * Asynchronous thread launched to initialize the SQLite database
 	 * @author Max
@@ -529,7 +563,7 @@ public class MainActivity extends Activity {
     protected boolean isAlwaysExpanded() {
         return false;
     }    
-    
+        
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
@@ -563,16 +597,16 @@ public class MainActivity extends Activity {
 			else
 				parse_report = loadReport("amiko_report.html");
 			mReportWebView.loadDataWithBaseURL("app:myhtml", parse_report, "text/html", "utf-8", null);
+
 			// Display report
-			mShowView.setVisibility(View.GONE);
-			mSuggestView.setVisibility(View.GONE);
-			// mReportView.setVisibility(View.VISIBLE);			
+			setCurrentView(mReportView, true);	
 			
+			/*
 			FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
             ft.show(mReportFragment);
             ft.commit();
-			
+			*/
 			return true;
 		}
 		/*
@@ -637,6 +671,7 @@ public class MainActivity extends Activity {
 		private Context mContext;
 		private int id;
 		private List<T> items ;
+		private Medication med;
 
 		public CustomListAdapter(Context context, int textViewResourceId , List<T> list ) {
 		    super(context, textViewResourceId, list);           
@@ -662,8 +697,14 @@ public class MainActivity extends Activity {
 		        mView = vi.inflate(id, null);
 		    }
 		     
-		    final Medication med = (Medication) items.get(position);
+		    med = (Medication) items.get(position);
 
+		    // Get reference to favorite's star
+		    ImageView favorite_star = (ImageView) mView.findViewById(R.id.mfavorite);
+		    favorite_star.setImageResource(R.drawable.star_small_ye);
+		    favorite_star.setVisibility(View.VISIBLE);
+
+		    // Get reference to customer logo
 		    ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
         	image_logo.setImageResource(R.drawable.logo_desitin);	
 		    
@@ -676,12 +717,12 @@ public class MainActivity extends Activity {
         	String therapy_str = "k.A.";	// tab_name_6 = Therapie / Indications
         	String application_str = "";
         	String pack_info_str = "";
-        	
+
+	 		TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
+		    TextView text_subtitle = (TextView) mView.findViewById(R.id.mauth);
+		    
 		 	if (mActionName.equals(getString(R.string.tab_name_1))) {
 		 		// Display "Präparatname" and "Therapie/Kurzbeschrieb"
-		 		TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
-			    TextView text_auth = (TextView) mView.findViewById(R.id.mauth);
-			    
 			    if (med!=null ) {    
 			    	if (med.getTitle()!=null) 
 			    		title_str = med.getTitle();
@@ -691,7 +732,7 @@ public class MainActivity extends Activity {
 			    	text_title.setTextColor(Color.argb(255,10,10,10));
 			    	// text_auth.setText(pack_info_str);  // --> Original solution
 			    	// text_auth.setText(Html.fromHtml(pack_info_str));	 // --> Solution with fromHtml (slow)		
-	        		text_auth.setTextColor(Color.argb(255,128,128,128));	
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));	
 
 	        		Pattern p_red = Pattern.compile(".*O]");
 	        		Pattern p_green = Pattern.compile(".*G]");
@@ -704,7 +745,7 @@ public class MainActivity extends Activity {
 			    	while (m_green.find()) {
 			    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(50,188,50)), m_green.start(), m_green.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			    	}
-			    	text_auth.setText(spannable, BufferType.SPANNABLE);
+			    	text_subtitle.setText(spannable, BufferType.SPANNABLE);
 			    	
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);
@@ -714,19 +755,16 @@ public class MainActivity extends Activity {
 			    }		 		
 		 	}
 		 	else if (mActionName.equals(getString(R.string.tab_name_2))) {
-		 		// Display "Präparatname" and "Inhaber"		 		
-		 		TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
-			    TextView text_auth = (TextView) mView.findViewById(R.id.mauth);	
-			    
+		 		// Display "Präparatname" and "Inhaber"		 					    
 			    if (med!=null ) {    	 
 			    	if (med.getTitle()!=null) 
 			    		title_str = med.getTitle();
 			    	if (med.getAuth()!=null) 
 			    		auth_str = med.getAuth();
 		    		text_title.setText(title_str);    
-		    		text_auth.setText(auth_str);		    		
+		    		text_subtitle.setText(auth_str);		    		
 			    	text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_auth.setTextColor(Color.argb(255,128,128,128));		        
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);
 		        	} else {
@@ -735,10 +773,7 @@ public class MainActivity extends Activity {
 			    }
 		 	}
 			else if (mActionName.equals(getString(R.string.tab_name_3))) {
-				// Display name, registration number (swissmedicno5) and author
-				TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
-			    TextView text_regnr = (TextView) mView.findViewById(R.id.mauth);	
-			    
+				// Display name, registration number (swissmedicno5) and author			    
 			    if (med!=null ) {  
 			    	if (med.getTitle()!=null) 
 			    		title_str = med.getTitle();
@@ -748,9 +783,9 @@ public class MainActivity extends Activity {
 			    		auth_str = med.getAuth();
 			    	
 		    		text_title.setText(title_str);			    				    	
-			        text_regnr.setText(regnr_str + " - " + auth_str);			        
+			        text_subtitle.setText(regnr_str + " - " + auth_str);			        
 			        text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_regnr.setTextColor(Color.argb(255,128,128,128));		        
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);
 		        	} else {
@@ -760,8 +795,6 @@ public class MainActivity extends Activity {
 			}
 		 	else if (mActionName.equals(getString(R.string.tab_name_4))) {
 		 		// Display "Präparatname" and "ATC Code" (atccode) and "Inhaber" (author)		 		
-		 		TextView text_title = (TextView) mView.findViewById(R.id.mtitle);		 		
-			    TextView text_auth = (TextView) mView.findViewById(R.id.mauth);
 			    if (med!=null) {   
 			    	if (med.getTitle()!=null)
 			    		title_str = med.getTitle();
@@ -774,9 +807,9 @@ public class MainActivity extends Activity {
 			    	}
 			    	
 			    	text_title.setText(title_str);			     
-		        	text_auth.setText(atc_code_str + " - " + atc_class_str);			    	
+		        	text_subtitle.setText(atc_code_str + " - " + atc_class_str);			    	
 			    	text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_auth.setTextColor(Color.argb(255,128,128,128));		        
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);			        	
 		        	} else {
@@ -785,10 +818,7 @@ public class MainActivity extends Activity {
 			    }		 		
 		 	}		 	
 	 		else if (mActionName.equals(getString(R.string.tab_name_5))) {
-	 			// Display substances, name and author
-	 			TextView text_substances = (TextView) mView.findViewById(R.id.mtitle);
-			    TextView text_title = (TextView) mView.findViewById(R.id.mauth);	
-			    
+	 			// Display substances, name and author			    
 			    if (med!=null) {
 			    	if (med.getSubstances()!=null)
 			    		substances_str = med.getSubstances();
@@ -797,10 +827,10 @@ public class MainActivity extends Activity {
 			    	if (med.getAuth()!=null)
 			    		auth_str = med.getAuth();
 			    	
-			        text_substances.setText(substances_str);			     
-			        text_title.setText(title_str + " - " + auth_str);
-			        text_substances.setTextColor(Color.argb(255,10,10,10));
-	        		text_title.setTextColor(Color.argb(255,128,128,128));		        
+			        text_title.setText(substances_str);			     
+			        text_subtitle.setText(title_str + " - " + auth_str);
+			        text_title.setTextColor(Color.argb(255,10,10,10));
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);			        	
 		        	} else {
@@ -809,10 +839,7 @@ public class MainActivity extends Activity {
 			    }
 	 		}
 			else if (mActionName.equals(getString(R.string.tab_name_6))) {
-				// Display name and "Therapy/Kurzbeschrieb"
-				TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
-			    TextView text_application = (TextView) mView.findViewById(R.id.mauth);	
-			    
+				// Display name and "Therapy/Kurzbeschrieb"			    
 			    if (med!=null ) {    	 
 			    	if (med.getTitle()!=null)
 			    		title_str = med.getTitle();
@@ -821,9 +848,9 @@ public class MainActivity extends Activity {
 			    		application_str = med.getApplication().replaceAll(";","\n");			    		
 			    	}
 			    	text_title.setText(title_str);			     
-			        text_application.setText(application_str);
+			        text_subtitle.setText(application_str);
 			        text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_application.setTextColor(Color.argb(255,128,128,128));		        
+	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
 			        	image_logo.setVisibility(View.VISIBLE);
 		        	} else {
@@ -831,81 +858,77 @@ public class MainActivity extends Activity {
 		        	}
 			    }
 			}
+		 			 		    
+		    // ClickListener
+		    mView.setOnClickListener(mOnTitleClickListener);
 		 	
-		 	/**
-		 	 * If any of the list items is clicked, change to webview ('showview')
-		 	 */
-		    mView.setOnClickListener(new OnClickListener() {			    	
-		    	@Override
-		    	public void onClick(View v) {
-		    		TextView text_title = (TextView) v.findViewById(R.id.mtitle);
-		    		Toast.makeText(getApplicationContext(), 
-		    				text_title.getText(),Toast.LENGTH_SHORT).show();  
-		    		
-		    		// Change content view
-		    		// TODO: slide view in!
-		    		if (mSuggestView!=null) {
-		    			mSuggestView.setVisibility(View.GONE);
-		    			mShowView.setVisibility(View.VISIBLE);
-		    		}
-										
-					// If portrait
-					int orientation = getResources().getConfiguration().orientation;
-					if (orientation==Configuration.ORIENTATION_PORTRAIT) {
-						mWebView.getSettings().setTextZoom(175);
-					} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-						mWebView.getSettings().setTextZoom(125);						
-					}
-		    		
-					// Reset and change search hint
-					if (mSearch != null) {
-						mSearch.setText("");
-						mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
-					}					
-					
-					Medication m = null;
-					if (DEBUG)
-						Log.d(TAG, "medi id = " + med.getId());					
-					m = mMediDataSource.searchId(med.getId());
-					
-					if (m!=null) {
-						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
-						mHtmlString = createHtml(mCSS_str, m.getContent());						
-						
-						if (mWebView!=null) {
-							// Checks the orientation of the screen
-							Configuration mConfig = mContext.getResources().getConfiguration();
-							if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
-								mWebView.getSettings().setTextZoom(125);
-							} else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
-								mWebView.getSettings().setTextZoom(175);
-							}
-						}							
-						
-						mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
-							
-			    		/**
-			    		 * Add section title view
-			    		 */
-						/*
-			    		String[] id_items = m.getSectionIds().split(",");
-			    		List<String> section_ids = Arrays.asList(id_items);		    		
-			    		String[] title_items = m.getSectionTitles().split(";");
-			    		List<String> section_titles = Arrays.asList(title_items);		    			
-						
-						mSectionView = (ListView) findViewById(R.id.sectionView1);
-		    			mSectionView.setClickable(true);	    	
-			    			
-		    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
-		    					section_ids, section_titles);
-		    			mSectionView.setAdapter(sectionTitles);	
-		    			*/
-					}
-		    	}
-	    	});
-		
 			return mView;
 		}
+		
+		/**
+	 	 * If any of the list items is clicked, change to webview ('showview')
+	 	 */
+	 	private OnClickListener mOnTitleClickListener = new OnClickListener() {
+	    	@Override
+	    	public void onClick(View v) {
+		
+	    		// Change content view
+	    		if (mSuggestView!=null) {
+	    			setCurrentView(mShowView, true);
+	    		}
+									
+				// If portrait
+				int orientation = getResources().getConfiguration().orientation;
+				if (orientation==Configuration.ORIENTATION_PORTRAIT) {
+					mWebView.getSettings().setTextZoom(175);
+				} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
+					mWebView.getSettings().setTextZoom(125);						
+				}
+	    		
+				// Reset and change search hint
+				if (mSearch != null) {
+					mSearch.setText("");
+					mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
+				}					
+				
+				Medication m = null;
+				if (DEBUG)
+					Log.d(TAG, "medi id = " + med.getId());					
+				m = mMediDataSource.searchId(med.getId());
+				
+				if (m!=null) {
+					// mHtmlString = createHtml(m.getStyle(), m.getContent());						
+					mHtmlString = createHtml(mCSS_str, m.getContent());						
+					
+					if (mWebView!=null) {
+						// Checks the orientation of the screen
+						Configuration mConfig = mContext.getResources().getConfiguration();
+						if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
+							mWebView.getSettings().setTextZoom(125);
+						} else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
+							mWebView.getSettings().setTextZoom(175);
+						}
+					}							
+					
+					mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
+						
+		    		/**
+		    		 * Add section title view
+		    		 */
+		    		String[] id_items = m.getSectionIds().split(",");
+		    		List<String> section_ids = Arrays.asList(id_items);		    		
+		    		String[] title_items = m.getSectionTitles().split(";");
+		    		List<String> section_titles = Arrays.asList(title_items);		    			
+					
+					mSectionView = (ListView) findViewById(R.id.section_title_view);
+	    			mSectionView.setClickable(true);	    	
+		    			
+	    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
+	    					section_ids, section_titles);
+	    			mSectionView.setAdapter(sectionTitles);	
+				}
+	    	}
+    	};	
 	}
 	
 	/**
@@ -1000,7 +1023,8 @@ public class MainActivity extends Activity {
 		    
 		    if (title != null ) {    	 
 		        text_title.setText(title);			     
-		        text_title.setTextColor(Color.argb(255,10,10,10));
+		        // See section_item.xml for settings!!
+		        // text_title.setTextColor(Color.argb(255,240,240,240));
 		    }
 		    
 		    mView.setOnClickListener(new OnClickListener() {			    	
