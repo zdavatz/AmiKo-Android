@@ -36,12 +36,14 @@ import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -58,12 +60,11 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -78,10 +79,10 @@ import com.ywesee.amiko.de.R;
 public class MainActivity extends Activity {
 
 	private static final String TAG = "AmiKoActivity";
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 
 	// Main AsyncTask
-	private AsyncSearchTask mAsyncSearchTask = null;	
+	private AsyncSearchTask mAsyncSearchTask = null;
 	// SQLite database adapter
 	private DBAdapter mMediDataSource;
 	// List of medications returned by SQLite query
@@ -128,20 +129,27 @@ public class MainActivity extends Activity {
     	if (mCurrentView==newCurrentView)
     		return;
     	// It's important to perform sanity checks on views and viewgroup
-    	if (mViewHolder!=null) {  		
-    		// Remove current view
+    	if (mViewHolder!=null) {
+    		// Set directions
+    		int direction = 1;
+    		if (mCurrentView==mShowView)
+    			direction = -1;
+    		// Remove current view    		
     		if (mCurrentView!=null) {
 	    		if (withAnimation==true) {
-		    	    TranslateAnimation animate = new TranslateAnimation(0,mCurrentView.getWidth(),0,0);
+		    	    TranslateAnimation animate = 
+		    	    		new TranslateAnimation(0, direction*mCurrentView.getWidth(), 0, 0);
 		    	    animate.setDuration(500);
 		    	    animate.setFillAfter(false);
 		    	    mCurrentView.startAnimation(animate);
 	    		}
 	    		mCurrentView.setVisibility(View.GONE);    
 	    	}
+    		// Add new view
         	if (newCurrentView!=null) {
         		if (withAnimation==true) {
-	    		    TranslateAnimation animate = new TranslateAnimation(-newCurrentView.getWidth(),0,0,0);
+	    		    TranslateAnimation animate = 
+	    		    		new TranslateAnimation(-direction*newCurrentView.getWidth(), 0, 0, 0);
 	    		    animate.setDuration(500);
 	    		    animate.setFillAfter(false);
 	    		    newCurrentView.startAnimation(animate);
@@ -150,6 +158,19 @@ public class MainActivity extends Activity {
         	} 	    	
         	// Update currently visible view
         	mCurrentView = newCurrentView;
+        	
+        	// Note: Handler is the way to go to postdelay the executation of the thread.
+            Handler handler = new Handler();
+        	final Runnable r = new Runnable() {
+                @Override
+                public void run() {            	
+                	// Remove keyboard
+            		InputMethodManager imm = (InputMethodManager) getSystemService(Service.INPUT_METHOD_SERVICE);
+            		if (imm!=null)
+            			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), 0); 
+                }
+            };
+            handler.postDelayed(r, 1000);
     	}
     }
        
@@ -181,7 +202,7 @@ public class MainActivity extends Activity {
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);			
 			}
 			// Change content view
-   			setCurrentView(mSuggestView, false);
+   			setCurrentView(mSuggestView, true);
 		}
 
 		@Override
@@ -398,7 +419,7 @@ public class MainActivity extends Activity {
 	 */
 	private class AsyncSearchTask extends AsyncTask<String, Void, Void> {
 
-		List<Medication> medis = null;
+		private List<Medication> medis = null;
 		
 		@Override
 		protected void onCancelled() {
@@ -476,6 +497,7 @@ public class MainActivity extends Activity {
 		if (mSearch != null) {
 			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
 		}
+		
 		mSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (hasFocus) {
@@ -671,7 +693,6 @@ public class MainActivity extends Activity {
 		private Context mContext;
 		private int id;
 		private List<T> items ;
-		private Medication med;
 
 		public CustomListAdapter(Context context, int textViewResourceId , List<T> list ) {
 		    super(context, textViewResourceId, list);           
@@ -685,6 +706,10 @@ public class MainActivity extends Activity {
 			return items!=null ? items.size() : 0;
 		}
 		
+		/**
+		 * Called by superclass. Its goal is to return single list row. The row
+		 * is recreated each time. There is a performance issue. Optimize.
+		 */
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 		    View mView = convertView;
@@ -697,12 +722,7 @@ public class MainActivity extends Activity {
 		        mView = vi.inflate(id, null);
 		    }
 		     
-		    med = (Medication) items.get(position);
-
-		    // Get reference to favorite's star
-		    ImageView favorite_star = (ImageView) mView.findViewById(R.id.mfavorite);
-		    favorite_star.setImageResource(R.drawable.star_small_ye);
-		    favorite_star.setVisibility(View.VISIBLE);
+		    final Medication med = (Medication) items.get(position);
 
 		    // Get reference to customer logo
 		    ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
@@ -858,77 +878,85 @@ public class MainActivity extends Activity {
 		        	}
 			    }
 			}
-		 			 		    
+		 			
+		    
+		    // Get reference to favorite's star
+		    final ImageView favorite_star = (ImageView) mView.findViewById(R.id.mfavorite);
+		    favorite_star.setImageResource(R.drawable.star_small_gy);
+		    favorite_star.setVisibility(View.VISIBLE);		 	
+		 	
+		 	favorite_star.setOnClickListener( new OnClickListener() {
+		 		@Override
+		 		public void onClick(View v) {
+		 			favorite_star.setImageResource(R.drawable.star_small_ye);
+				    favorite_star.setVisibility(View.VISIBLE);
+		 		}
+		 	});
+		 	
 		    // ClickListener
-		    mView.setOnClickListener(mOnTitleClickListener);
+		    mView.setOnClickListener( new OnClickListener() {
+		    	@Override
+		    	public void onClick(View v) {	
+		    		// Change content view
+		    		if (mSuggestView!=null) {
+		    			setCurrentView(mShowView, true);
+		    		}
+										
+					// If portrait
+					int orientation = getResources().getConfiguration().orientation;
+					if (orientation==Configuration.ORIENTATION_PORTRAIT) {
+						mWebView.getSettings().setTextZoom(175);
+					} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
+						mWebView.getSettings().setTextZoom(125);						
+					}
+		    		
+					// Reset and change search hint
+					if (mSearch != null) {
+						mSearch.setText("");
+						mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
+					}					
+					
+					Medication m = null;
+					if (DEBUG)
+						Log.d(TAG, "medi id = " + med.getId());					
+					m = mMediDataSource.searchId(med.getId());
+					
+					if (m!=null) {
+						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
+						mHtmlString = createHtml(mCSS_str, m.getContent());						
+						
+						if (mWebView!=null) {
+							// Checks the orientation of the screen
+							Configuration mConfig = mContext.getResources().getConfiguration();
+							if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
+								mWebView.getSettings().setTextZoom(125);
+							} else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
+								mWebView.getSettings().setTextZoom(175);
+							}
+						}							
+						
+						mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
+							
+			    		/**
+			    		 * Add section title view
+			    		 */
+			    		String[] id_items = m.getSectionIds().split(",");
+			    		List<String> section_ids = Arrays.asList(id_items);		    		
+			    		String[] title_items = m.getSectionTitles().split(";");
+			    		List<String> section_titles = Arrays.asList(title_items);		    			
+						
+						mSectionView = (ListView) findViewById(R.id.section_title_view);
+		    			mSectionView.setClickable(true);	    	
+			    			
+		    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
+		    					section_ids, section_titles);
+		    			mSectionView.setAdapter(sectionTitles);	
+					}
+		    	}
+	    	});	
 		 	
 			return mView;
 		}
-		
-		/**
-	 	 * If any of the list items is clicked, change to webview ('showview')
-	 	 */
-	 	private OnClickListener mOnTitleClickListener = new OnClickListener() {
-	    	@Override
-	    	public void onClick(View v) {
-		
-	    		// Change content view
-	    		if (mSuggestView!=null) {
-	    			setCurrentView(mShowView, true);
-	    		}
-									
-				// If portrait
-				int orientation = getResources().getConfiguration().orientation;
-				if (orientation==Configuration.ORIENTATION_PORTRAIT) {
-					mWebView.getSettings().setTextZoom(175);
-				} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-					mWebView.getSettings().setTextZoom(125);						
-				}
-	    		
-				// Reset and change search hint
-				if (mSearch != null) {
-					mSearch.setText("");
-					mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
-				}					
-				
-				Medication m = null;
-				if (DEBUG)
-					Log.d(TAG, "medi id = " + med.getId());					
-				m = mMediDataSource.searchId(med.getId());
-				
-				if (m!=null) {
-					// mHtmlString = createHtml(m.getStyle(), m.getContent());						
-					mHtmlString = createHtml(mCSS_str, m.getContent());						
-					
-					if (mWebView!=null) {
-						// Checks the orientation of the screen
-						Configuration mConfig = mContext.getResources().getConfiguration();
-						if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
-							mWebView.getSettings().setTextZoom(125);
-						} else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
-							mWebView.getSettings().setTextZoom(175);
-						}
-					}							
-					
-					mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
-						
-		    		/**
-		    		 * Add section title view
-		    		 */
-		    		String[] id_items = m.getSectionIds().split(",");
-		    		List<String> section_ids = Arrays.asList(id_items);		    		
-		    		String[] title_items = m.getSectionTitles().split(";");
-		    		List<String> section_titles = Arrays.asList(title_items);		    			
-					
-					mSectionView = (ListView) findViewById(R.id.section_title_view);
-	    			mSectionView.setClickable(true);	    	
-		    			
-	    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
-	    					section_ids, section_titles);
-	    			mSectionView.setAdapter(sectionTitles);	
-				}
-	    	}
-    	};	
 	}
 	
 	/**

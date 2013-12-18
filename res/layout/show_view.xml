@@ -5,9 +5,11 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="horizontal"
-    android:animateLayoutChanges="true"
     tools:context=".MainActivity" >
-    	
+    <!-- Additional options:
+    		android:animateLayoutChanges="true"
+    -->
+    
     <!-- As the main content view, the webview consumes the entire space available 
     	 using match_parent in both dimensions. -->
     <WebView
@@ -19,16 +21,18 @@
 
     <!-- This view slides in from the side. The drawer has a fixed width in dp
     	 and extends to the full height of the container. A solid background is
-    	 used for contrast with the content view. -->
+    	 used for contrast with the content view. 
+    	 Other options for listview:
+   	         android:divider="@android:color/transparent"
+    	 -->
     <ListView
        	android:id="@+id/section_title_view"
         android:layout_width="240dp"
        	android:layout_height="match_parent"
         android:layout_gravity="start"
         android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:background="#111"       	
+        android:dividerHeight="1dp"
+        android:background="@color/white"       	
       	class="com.ywesee.amiko.SectionFragment" >
 	</ListView>  
     
