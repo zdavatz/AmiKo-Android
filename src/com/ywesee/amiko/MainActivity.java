@@ -44,6 +44,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -78,9 +79,17 @@ import com.ywesee.amiko.de.R;
 
 public class MainActivity extends Activity {
 
-	private static final String TAG = "AmiKoActivity";
-	private static final boolean DEBUG = true;
-
+	private static final String TAG = "MainActivity";	
+	
+	private static final String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen", 
+		"Indikationen", "Dosierung/Anwendung", "Vorsichtsmassnahmen", "Interaktionen", "Schwangerschaft", 
+		"Fahrtüchtigkeit", "Unerwünschte Wirk.", "Überdosierung", "Eig./Wirkung", "Kinetik", "Präklinik", 
+		"Sonstige Hinweise", "Zulassungsnummer", "Packungen", "Inhaberin", "Stand der Information"};
+	private static final String[] SectionTitle_FR = {"Composition", "Forme galénique", "Contre-indications", 
+		"Indications", "Posologie", "Précautions", "Interactions", "Grossesse/All.", 
+		"Conduite", "Effets indésir.", "Surdosage", "Propriétés/Effets", "Cinétique", "Préclinique", 
+		"Remarques", "Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};
+	
 	// Main AsyncTask
 	private AsyncSearchTask mAsyncSearchTask = null;
 	// SQLite database adapter
@@ -120,7 +129,20 @@ public class MainActivity extends Activity {
 	
 	// This is the currently visible view
 	private View mCurrentView = null;
-		
+	
+	/**
+	 * Returns the language of the app
+	 * @return
+	 */
+	private String appLanguage() {
+		if (Constants.APP_NAME.equals(Constants.AMIKO_NAME)) {
+			return "de";
+		} else if (Constants.APP_NAME.equals(Constants.COMED_NAME)) {
+			return "fr";
+		}
+		return "";
+	}
+	
 	/**
 	 * Sets currently visible view
 	 * @param currentView
@@ -249,10 +271,11 @@ public class MainActivity extends Activity {
 		if (savedInstanceState != null) {
 			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
 		}
-		// Setup action bar for tabs
+		// Retrieve reference to the activity's action bar
 		ActionBar ab = getActionBar();
 		// Disable activity title
 		ab.setDisplayShowTitleEnabled(true);
+		ab.
 		setTabNavigation(ab);
 						
 		// Sets current content view
@@ -280,6 +303,9 @@ public class MainActivity extends Activity {
 		mShowView.setVisibility(View.GONE);			
 		mReportView.setVisibility(View.GONE);			
 
+		// Sets initial view
+		setCurrentView(mSuggestView, false);
+		
 		// Setup webviews
 		setupWebView();
 		setupReportView();
@@ -370,7 +396,7 @@ public class MainActivity extends Activity {
 		
 		@Override
 		protected void onPreExecute() {
-			if (DEBUG)
+			if (Constants.DEBUG)
 				Log.d(TAG, "onPreExecute(): progressDialog");
 	        // initialize the dialog
 			progressBar = new ProgressDialog(MainActivity.this);
@@ -387,7 +413,7 @@ public class MainActivity extends Activity {
 		
 		@Override
 		protected Void doInBackground(Void... voids) {
-			if (DEBUG)
+			if (Constants.DEBUG)
 				Log.d(TAG, "doInBackground: open database");
 			// Creates and opens database
 			mMediDataSource = new DBAdapter(this.context);
@@ -405,7 +431,7 @@ public class MainActivity extends Activity {
 		
 		@Override
 		protected void onPostExecute(Void result) {			
-			if (DEBUG) 
+			if (Constants.DEBUG) 
 				Log.d(TAG, "mMediDataSource open!");			
 			if (progressBar.isShowing())
 				progressBar.dismiss();
@@ -493,7 +519,7 @@ public class MainActivity extends Activity {
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.setVisible(true);		
 		
-		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search);
+		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
 		if (mSearch != null) {
 			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
 		}
@@ -506,44 +532,36 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
+
 		mSearch.requestFocus();
 		
 		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
 		mDelete.setVisibility( mSearch.getText().length()>0 ? View.VISIBLE : View.GONE );
 		
+		// Action listener for search_box
 		mSearch.addTextChangedListener(new TextWatcher() {		
 			@Override
 			public void beforeTextChanged( CharSequence s, int start, int count, int after ) {
-				//
+				// Do nothing
 			}					
 			
 			@Override
 			public void onTextChanged( CharSequence cs, int start, int before, int count ) {	
-				/*
-				if (myTask!=null) {
-					myTask.cancel(true);
-					Log.d(TAG, "onTextChanged: cancel()");
-				}
-				*/
-				// Shifted to afterTextChanged ... 
-				/*
-				myTask = new MyAsyncTask();						
-				myTask.execute(cs.toString());		
-				*/
+				// Do nothing
 			}	
 
 			@Override
 			public void afterTextChanged(Editable s) {	
 				String search_key = mSearch.getText().toString();
-	
+				
 				if (search_key!="") {
-					if (mSuggestView.getVisibility()==View.VISIBLE) {
+					if (mCurrentView==mSuggestView) {
 						long t0 = System.currentTimeMillis();				
 						mAsyncSearchTask = new AsyncSearchTask();						
 						mAsyncSearchTask.execute(search_key);	
-						if (DEBUG)
+						if (Constants.DEBUG)
 							Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
-					} else if (mShowView.getVisibility()==View.VISIBLE) {
+					} else if (mCurrentView==mShowView) {
 						if (mWebView!=null) {
 							if (search_key.length()>2) {
 						    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
@@ -552,7 +570,7 @@ public class MainActivity extends Activity {
 								mWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
 							}
 						}
-					} else if (mReportView.getVisibility()==View.VISIBLE) {
+					} else if (mCurrentView==mReportView) {
 						if (search_key.length()>2) {
 							mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
 						}
@@ -569,13 +587,6 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				mSearch.setText("");
-				/*
-				// Change content view
-	    		if (mShowView!=null) {
-	    			mShowView.setVisibility(View.GONE);
-	    			mSuggestView.setVisibility(View.VISIBLE);
-	    		}
-	    		*/	
 			}
 		});
 		
@@ -601,10 +612,7 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_pref2): {
-			if (getString(R.string.app_name).equals("AmiKo"))
-				Toast.makeText(getBaseContext(), "About AmiKo", Toast.LENGTH_SHORT).show();	
-			else if (getString(R.string.app_name).equals("CoMed"))
-				Toast.makeText(getBaseContext(), "à propos de CoMed", Toast.LENGTH_SHORT).show();					
+			Toast.makeText(getBaseContext(), "Error Report", Toast.LENGTH_SHORT).show();	
 			// Reset and change search hint
 			if (mSearch != null) {
 				mSearch.setText("");
@@ -612,9 +620,9 @@ public class MainActivity extends Activity {
 			}
 			// Load report from file
 			String parse_report = "";
-			if (getString(R.string.app_name).equals("AmiKo"))
+			if (appLanguage().equals("de"))
 				parse_report = loadReport("amiko_report_de.html");
-			else if (getString(R.string.app_name).equals("CoMed"))
+			else if (appLanguage().equals("fr"))
 				parse_report = loadReport("amiko_report_fr.html");
 			else
 				parse_report = loadReport("amiko_report.html");
@@ -631,19 +639,51 @@ public class MainActivity extends Activity {
 			*/
 			return true;
 		}
-		/*
 		case (R.id.menu_pref3): {
-			Toast.makeText(getBaseContext(), "Volltextsuche", Toast.LENGTH_SHORT).show();
+			Toast.makeText(getBaseContext(), "Update", Toast.LENGTH_SHORT).show();
 			return true;
 		}
-		*/
 		default:
 			break;
 		}
 
 		return true;
 	}    
-	
+
+	/**
+	 * Sets action bar tab click listeners
+	 * @param actionBar
+	 */
+	private void setTabNavigation( ActionBar actionBar ) {
+		actionBar.removeAllTabs();
+		actionBar.setNavigationMode( ActionBar.NAVIGATION_MODE_TABS );
+		actionBar.setTitle(R.string.app_name);
+
+		Tab tab = actionBar.newTab().setText(R.string.tab_name_1)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_1)));
+		actionBar.addTab(tab);
+
+		tab = actionBar.newTab().setText(R.string.tab_name_2)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_2)));
+		actionBar.addTab(tab);
+
+		tab = actionBar.newTab().setText(R.string.tab_name_3)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_3)));
+		actionBar.addTab(tab);
+		
+		tab = actionBar.newTab().setText(R.string.tab_name_4)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_4)));
+		actionBar.addTab(tab);
+		
+		tab = actionBar.newTab().setText(R.string.tab_name_5)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
+		actionBar.addTab(tab);
+		
+		tab = actionBar.newTab().setText(R.string.tab_name_6)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_6)));
+		actionBar.addTab(tab);		
+	}	
+		
 	private List<Medication> getResults(String query) {
     	List<Medication> medis = null;
     	
@@ -662,7 +702,7 @@ public class MainActivity extends Activity {
 		else if (mActionName.equals(getString(R.string.tab_name_6)))
 	 		medis = mMediDataSource.searchApplication((query!=null ? query.toString() : "@@@@"));
 		
-    	if (DEBUG)
+    	if (Constants.DEBUG)
     		Log.d(TAG, "getResults() - "+medis.size()+" medis found in "+Long.toString(System.currentTimeMillis()-mTimer)+"ms");	   	
     	
     	return medis;
@@ -900,9 +940,14 @@ public class MainActivity extends Activity {
 		    		// Change content view
 		    		if (mSuggestView!=null) {
 		    			setCurrentView(mShowView, true);
+		    			// Get handle to DrawerLayout
+		    			DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);
+		    			// Close any open drawers
+		    			if (dl!=null)
+		    				dl.closeDrawers();
 		    		}
 										
-					// If portrait
+					// Adapt the zoom settings depending on the device's orientation
 					int orientation = getResources().getConfiguration().orientation;
 					if (orientation==Configuration.ORIENTATION_PORTRAIT) {
 						mWebView.getSettings().setTextZoom(175);
@@ -916,10 +961,9 @@ public class MainActivity extends Activity {
 						mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
 					}					
 					
-					Medication m = null;
-					if (DEBUG)
+					if (Constants.DEBUG)
 						Log.d(TAG, "medi id = " + med.getId());					
-					m = mMediDataSource.searchId(med.getId());
+					Medication m = mMediDataSource.searchId(med.getId());
 					
 					if (m!=null) {
 						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
@@ -945,7 +989,9 @@ public class MainActivity extends Activity {
 			    		String[] title_items = m.getSectionTitles().split(";");
 			    		List<String> section_titles = Arrays.asList(title_items);		    			
 						
+			    		// Get reference to listview in DrawerLayout
 						mSectionView = (ListView) findViewById(R.id.section_title_view);
+						// Make it clickable
 		    			mSectionView.setClickable(true);	    	
 			    			
 		    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
@@ -1046,11 +1092,28 @@ public class MainActivity extends Activity {
 			}
 			
 		    TextView text_title = (TextView) mView.findViewById(R.id.absTitle); // R.id.textView			
-		    final String title = (String) title_items.get(position);
+		    String title = (String) title_items.get(position);
 		    final String id = (String) id_items.get(position);
 		    
-		    if (title != null ) {    	 
-		        text_title.setText(title);			     
+		    if (title != null ) {
+		    	// Use German abbreviation if possible
+		    	if (appLanguage().equals("de")) {
+		    		for (String s : SectionTitle_DE) {
+		    			if (title.contains(s)) {
+		    				title = s;
+		    				break;
+		    			}
+		    		}
+		    	} else if (appLanguage().equals("fr")) {
+		    		// Use French abbreviation if possible
+		    		for (String s : SectionTitle_FR) {
+			    		if (title.contains(s)) {
+			    			title = s;
+			    			break;
+			    		}
+			    	}
+		    	}		    			    		
+		    	text_title.setText(title);			     
 		        // See section_item.xml for settings!!
 		        // text_title.setTextColor(Color.argb(255,240,240,240));
 		    }
@@ -1066,40 +1129,6 @@ public class MainActivity extends Activity {
 			return mView;
 		}		
 	}
-	
-	/**
-	 * Sets action bar tab click listeners
-	 * @param actionBar
-	 */
-	private void setTabNavigation( ActionBar actionBar ) {
-		actionBar.removeAllTabs();
-		actionBar.setNavigationMode( ActionBar.NAVIGATION_MODE_TABS );
-		actionBar.setTitle(R.string.app_name);
-
-		Tab tab = actionBar.newTab().setText(R.string.tab_name_1)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_1)));
-		actionBar.addTab(tab);
-
-		tab = actionBar.newTab().setText(R.string.tab_name_2)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_2)));
-		actionBar.addTab(tab);
-
-		tab = actionBar.newTab().setText(R.string.tab_name_3)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_3)));
-		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_4)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_4)));
-		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_5)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
-		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_6)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_6)));
-		actionBar.addTab(tab);		
-	}	
 	
 	/**
 	 * Web view has record of all pages visited so you can go back and forth just override 

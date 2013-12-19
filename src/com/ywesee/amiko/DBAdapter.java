@@ -32,7 +32,6 @@ import android.util.Log;
 
 public class DBAdapter {
 
-	private static final boolean DEBUG = false;
 	private static final String TAG = "DBAdapter"; // Tag for LogCat window
 	
 	private final Context mContext;	
@@ -218,7 +217,7 @@ public class DBAdapter {
 		}
 		// Make sure to close the cursor
 		mCursor.close();
-		if (DEBUG)
+		if (Constants.DEBUG)
 			Log.d(TAG, q);
 	}
 	
@@ -345,7 +344,10 @@ public class DBAdapter {
 	 * @return database entry
 	 */
 	public Medication searchId(long rowId) {
-		return cursorToMedi(getRecord(rowId));
+		if (rowId>=0)
+			return cursorToMedi(getRecord(rowId));
+		else
+			return null;
 	}
 
 	/**

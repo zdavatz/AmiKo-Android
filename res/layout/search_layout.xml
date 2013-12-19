@@ -6,12 +6,13 @@
     android:gravity="right" >
  
     <EditText
-        android:id="@+id/search"
+        android:id="@+id/search_box"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:cursorVisible="true"
+		android:singleLine="true"
         android:maxWidth="280dp"
         android:minWidth="280dp"
         android:hint="@string/search">
@@ -21,7 +22,7 @@
         android:id="@+id/delete"
         android:layout_width="18dp"
         android:layout_height="18dp"
-        android:layout_alignRight="@id/search"
+        android:layout_alignRight="@id/search_box"
         android:layout_centerVertical="true"
         android:layout_marginRight="12dp"
         android:background="@drawable/ic_delete"/>

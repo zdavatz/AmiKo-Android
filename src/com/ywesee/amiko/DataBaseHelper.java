@@ -33,7 +33,6 @@ import android.util.Log;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 		
-	private static final boolean DEBUG = false;
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 	private static String DB_PATH = "";
 	private static String DB_NAME = "amiko_db_full_idx_de.db";
@@ -67,7 +66,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			try {
 				// Copy database from assets
 				copyDataBase();
-				if (DEBUG)
+				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
 				throw new Error("Error copying database");
@@ -135,7 +134,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (oldVersion < newVersion) {
-			if (DEBUG)
+			if (Constants.DEBUG)
 				Log.d(TAG, "onUpgrade(): upgrading database from version " + oldVersion + " to version " + newVersion);
 			try { 
 				copyDataBase(); 

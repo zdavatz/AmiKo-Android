@@ -18,8 +18,8 @@
 
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">Min. 2 Buchstaben  </string>
-    <string name="menu_pref2">About AmiKo</string>
-    <string name="menu_pref3">Lesezeichen setzen </string>
+    <string name="menu_pref2">Error Report</string>
+    <string name="menu_pref3">Update</string>
     
     <string name="search">Suche</string>
     <string name="tab_name_1">Präparat</string>
@@ -29,6 +29,6 @@
     <string name="tab_name_5">Wirkstoff</string>
     <string name="tab_name_6">Therapie</string>
     <string name="full_text_search">in Fachinfo</string>
-    <string name="report_search">in About-File</string>
+    <string name="report_search">in Error Report</string>
     
 </resources>
