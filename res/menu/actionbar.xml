@@ -7,6 +7,16 @@
         android:showAsAction="ifRoom|collapseActionView"
 		android:actionLayout="@layout/search_layout" />
 	
+	<item android:id="@+id/aips_button"
+	    android:title="@string/aips_button"
+	    android:icon="@drawable/aips_icon_wh"
+	    android:showAsAction="always" />
+	
+	<item android:id="@+id/favorites_button"
+	    android:title="@string/favorites_button"
+	    android:icon="@drawable/favorites_icon_wh"
+	    android:showAsAction="always" />
+	
 	<item android:id="@+id/menu_pref1"
 	    android:title="@string/menu_pref1"
 	    android:showAsAction="collapseActionView"

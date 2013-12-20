@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,6 +116,11 @@ public class MainActivity extends Activity {
 	private WebView mReportWebView;
 	// Cascading style sheet
 	private String mCSS_str = null;
+	
+	// Hashset containing registration numbers of favorite medications
+	HashSet<String> mFavoriteMedsSet = null;
+	DataStore mFavoriteData = null;
+	String mDatabaseUsed = "aips";
 	
 	// Actionbar menu items
 	private MenuItem mSearchItem = null;
@@ -275,7 +281,6 @@ public class MainActivity extends Activity {
 		ActionBar ab = getActionBar();
 		// Disable activity title
 		ab.setDisplayShowTitleEnabled(true);
-		ab.
 		setTabNavigation(ab);
 						
 		// Sets current content view
@@ -316,6 +321,11 @@ public class MainActivity extends Activity {
 		// Initialize suggestion listview
 		mListView = (ListView) findViewById(R.id.listView1);
 		mListView.setClickable(true);
+		
+		// Load hashset containing registration numbers from persistent data store
+		mFavoriteData = new DataStore(this.getFilesDir().toString());
+		mFavoriteMedsSet = new HashSet<String>();
+		mFavoriteMedsSet = mFavoriteData.load();
 		
 		try {
 			AsyncInitDBTask initDBTask = new AsyncInitDBTask(this);						
@@ -464,7 +474,7 @@ public class MainActivity extends Activity {
 			try {
 				// Thread.sleep(1000L);
 				if (!isCancelled()) {
-					if (search_key[0].length()>mMinCharSearch) {
+					if (search_key[0].length()>=mMinCharSearch) {
 						medis = mMedis = getResults(search_key[0]);		
 					}
 				}
@@ -552,33 +562,7 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {	
-				String search_key = mSearch.getText().toString();
-				
-				if (search_key!="") {
-					if (mCurrentView==mSuggestView) {
-						long t0 = System.currentTimeMillis();				
-						mAsyncSearchTask = new AsyncSearchTask();						
-						mAsyncSearchTask.execute(search_key);	
-						if (Constants.DEBUG)
-							Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
-					} else if (mCurrentView==mShowView) {
-						if (mWebView!=null) {
-							if (search_key.length()>2) {
-						    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
-							}
-							else {
-								mWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
-							}
-						}
-					} else if (mCurrentView==mReportView) {
-						if (search_key.length()>2) {
-							mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
-						}
-						else {
-							mReportWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
-						}
-					}
-				}
+				performSearch(mSearch.getText().toString());
 				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );	    		
 			}
 		} );
@@ -593,6 +577,42 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
+	void performSearch(String search_key) {
+		if (search_key!="") {
+			if (mCurrentView==mSuggestView) {
+				long t0 = System.currentTimeMillis();				
+				mAsyncSearchTask = new AsyncSearchTask();						
+				mAsyncSearchTask.execute(search_key);	
+				if (Constants.DEBUG)
+					Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
+			} else if (mCurrentView==mShowView) {
+				if (mWebView!=null) {
+					if (search_key.length()>2) {
+				    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
+					}
+					else {
+						mWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
+					}
+				}
+			} else if (mCurrentView==mReportView) {
+				if (search_key.length()>2) {
+					mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
+				}
+				else {
+					mReportWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
+				}
+			}
+		} else {
+			if (mCurrentView==mSuggestView) {
+				long t0 = System.currentTimeMillis();				
+				mAsyncSearchTask = new AsyncSearchTask();						
+				mAsyncSearchTask.execute(search_key);	
+				if (Constants.DEBUG)
+					Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
+			}
+		}
+	}
+	
     protected boolean isAlwaysExpanded() {
         return false;
     }    
@@ -600,6 +620,20 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case (R.id.aips_button): {
+			Toast.makeText(getBaseContext(), getString(R.string.aips_button), Toast.LENGTH_SHORT).show();
+			// Switch to AIPS database
+			mDatabaseUsed = "aips";
+			performSearch("");
+			return true;
+		}
+		case (R.id.favorites_button): {
+			Toast.makeText(getBaseContext(), getString(R.string.favorites_button), Toast.LENGTH_SHORT).show();
+			// Switch to favorites database
+			mDatabaseUsed = "favorites";
+			
+			return true;
+		}
 		case (R.id.menu_pref1): {
 			Toast.makeText(getBaseContext(), getString(R.string.menu_pref1), Toast.LENGTH_SHORT).show();
 			if (!item.isChecked()) {
@@ -720,7 +754,18 @@ public class MainActivity extends Activity {
 	   				Toast.LENGTH_SHORT).show();
 	   	}
 	}
-	   		
+	
+	/**
+	 * Implements view holder design pattern
+	 * @author Max
+	 *
+	 */
+	private static class ViewHolder {
+		public ImageView owner_logo;
+		public TextView text_title;
+		public TextView text_subtitle;
+	}    
+    
     /**
      * Displays a customized list of items
      * @author Max
@@ -745,28 +790,41 @@ public class MainActivity extends Activity {
 		public int getCount() {
 			return items!=null ? items.size() : 0;
 		}
-		
+				
 		/**
-		 * Called by superclass. Its goal is to return single list row. The row
-		 * is recreated each time. There is a performance issue. Optimize.
+		 * Every time ListView needs to show a new row on screen, it will call getView().
+		 * Its goal is to return single list row. The row is recreated each time. 
+		 * There is a performance issue. Must be optimized.
 		 */
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
+			// viewHolder is instantiated only once!
+			ViewHolder viewHolder;			
+			// convertView is a "ScrapView" (non-visible view used for going on-screen)
 		    View mView = convertView;
+		    // Trick 1: if convertView is null, inflate it, otherwise only update its content!
 		    if (mView==null) {
-		    	/*
-		    	LayoutInflater vi = getLayoutInflater();
-		        mView = vi.inflate(id, parent, false);
-		    	*/
 		    	LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		        mView = vi.inflate(id, null);
+		        // viewHolder is a static variable and is instantiated only here
+		        viewHolder = new ViewHolder();
+		        viewHolder.owner_logo = (ImageView) mView.findViewById(R.id.mlogo);
+		        viewHolder.owner_logo.setImageResource(R.drawable.logo_desitin);
+		 		viewHolder.text_title = (TextView) mView.findViewById(R.id.mtitle);
+			    viewHolder.text_subtitle = (TextView) mView.findViewById(R.id.mauth);
+			    // Store view
+		        mView.setTag(viewHolder);
+		    } else {
+		    	// Recycle existing view. 
+		    	// We've just avoided calling findViewById() on resource, just call viewHolder
+		    	viewHolder = (ViewHolder) mView.getTag();
 		    }
 		     
 		    final Medication med = (Medication) items.get(position);
 
 		    // Get reference to customer logo
-		    ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
-        	image_logo.setImageResource(R.drawable.logo_desitin);	
+		    // ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
+        	// viewHolder.image_logo.setImageResource(R.drawable.logo_desitin);	
 		    
         	String title_str = "k.A.";		// tab_name_1 = Präparat
         	String auth_str = "k.A.";		// tab_name_2 = Inhaber
@@ -777,9 +835,6 @@ public class MainActivity extends Activity {
         	String therapy_str = "k.A.";	// tab_name_6 = Therapie / Indications
         	String application_str = "";
         	String pack_info_str = "";
-
-	 		TextView text_title = (TextView) mView.findViewById(R.id.mtitle);
-		    TextView text_subtitle = (TextView) mView.findViewById(R.id.mauth);
 		    
 		 	if (mActionName.equals(getString(R.string.tab_name_1))) {
 		 		// Display "Präparatname" and "Therapie/Kurzbeschrieb"
@@ -788,11 +843,11 @@ public class MainActivity extends Activity {
 			    		title_str = med.getTitle();
 			    	if (med.getPackInfo()!=null)
 			    		pack_info_str = med.getPackInfo();		    	
-			    	text_title.setText(title_str);
-			    	text_title.setTextColor(Color.argb(255,10,10,10));
+			    	viewHolder.text_title.setText(title_str);
+			    	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
 			    	// text_auth.setText(pack_info_str);  // --> Original solution
 			    	// text_auth.setText(Html.fromHtml(pack_info_str));	 // --> Solution with fromHtml (slow)		
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));	
+			    	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));	
 
 	        		Pattern p_red = Pattern.compile(".*O]");
 	        		Pattern p_green = Pattern.compile(".*G]");
@@ -805,12 +860,12 @@ public class MainActivity extends Activity {
 			    	while (m_green.find()) {
 			    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(50,188,50)), m_green.start(), m_green.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 			    	}
-			    	text_subtitle.setText(spannable, BufferType.SPANNABLE);
+			    	viewHolder.text_subtitle.setText(spannable, BufferType.SPANNABLE);
 			    	
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }		 		
 		 	}
@@ -821,14 +876,14 @@ public class MainActivity extends Activity {
 			    		title_str = med.getTitle();
 			    	if (med.getAuth()!=null) 
 			    		auth_str = med.getAuth();
-		    		text_title.setText(title_str);    
-		    		text_subtitle.setText(auth_str);		    		
-			    	text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
+			    	viewHolder.text_title.setText(title_str);    
+			    	viewHolder.text_subtitle.setText(auth_str);		    		
+		    		viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+		    		viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
 		 	}
@@ -842,14 +897,14 @@ public class MainActivity extends Activity {
 			    	if (med.getAuth()!=null)
 			    		auth_str = med.getAuth();
 			    	
-		    		text_title.setText(title_str);			    				    	
-			        text_subtitle.setText(regnr_str + " - " + auth_str);			        
-			        text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
+			    	viewHolder.text_title.setText(title_str);			    				    	
+			    	viewHolder.text_subtitle.setText(regnr_str + " - " + auth_str);			        
+			        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+			        viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
 			}
@@ -866,14 +921,14 @@ public class MainActivity extends Activity {
 			    			atc_class_str = atc.get(1);
 			    	}
 			    	
-			    	text_title.setText(title_str);			     
-		        	text_subtitle.setText(atc_code_str + " - " + atc_class_str);			    	
-			    	text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
+			    	viewHolder.text_title.setText(title_str);			     
+			    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_class_str);			    	
+		        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+		        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);			        	
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);			        	
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }		 		
 		 	}		 	
@@ -887,14 +942,14 @@ public class MainActivity extends Activity {
 			    	if (med.getAuth()!=null)
 			    		auth_str = med.getAuth();
 			    	
-			        text_title.setText(substances_str);			     
-			        text_subtitle.setText(title_str + " - " + auth_str);
-			        text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
+			    	viewHolder.text_title.setText(substances_str);			     
+			    	viewHolder.text_subtitle.setText(title_str + " - " + auth_str);
+			        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+			        viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);			        	
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);			        	
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
 	 		}
@@ -907,29 +962,41 @@ public class MainActivity extends Activity {
 			    		// 29/09/2013: fix for Heparin bug
 			    		application_str = med.getApplication().replaceAll(";","\n");			    		
 			    	}
-			    	text_title.setText(title_str);			     
-			        text_subtitle.setText(application_str);
-			        text_title.setTextColor(Color.argb(255,10,10,10));
-	        		text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
+			    	viewHolder.text_title.setText(title_str);			     
+			    	viewHolder.text_subtitle.setText(application_str);
+			        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+			        viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
 		        	if (med.getCustomerId()==1) {
-			        	image_logo.setVisibility(View.VISIBLE);
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {
-		        		image_logo.setVisibility(View.GONE);
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
 			}
-		 			
-		    
+		 	
 		    // Get reference to favorite's star
 		    final ImageView favorite_star = (ImageView) mView.findViewById(R.id.mfavorite);
-		    favorite_star.setImageResource(R.drawable.star_small_gy);
-		    favorite_star.setVisibility(View.VISIBLE);		 	
-		 	
+		 	// Retrieve information from hash set		 			 	
+		 	if (mFavoriteMedsSet.contains(med.getRegnrs())) {
+			    favorite_star.setImageResource(R.drawable.star_small_ye);
+			    favorite_star.setVisibility(View.VISIBLE);		 		
+		 	} else {
+			    favorite_star.setImageResource(R.drawable.star_small_gy);
+			    favorite_star.setVisibility(View.VISIBLE);
+		 	}
+		    // Make star clickable
 		 	favorite_star.setOnClickListener( new OnClickListener() {
 		 		@Override
 		 		public void onClick(View v) {
-		 			favorite_star.setImageResource(R.drawable.star_small_ye);
-				    favorite_star.setVisibility(View.VISIBLE);
+		 			String regnrs = med.getRegnrs();
+		 			// Update star
+		 			if (mFavoriteMedsSet.contains(regnrs))
+		 				mFavoriteMedsSet.remove(regnrs);
+	 				else
+	 					mFavoriteMedsSet.add(regnrs);
+		 			mFavoriteData.save(mFavoriteMedsSet);
+		 			// Refreshes the listview
+		 			notifyDataSetChanged();
 		 		}
 		 	});
 		 	
