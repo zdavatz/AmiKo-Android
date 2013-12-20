@@ -23,7 +23,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -580,11 +583,15 @@ public class MainActivity extends Activity {
 	void performSearch(String search_key) {
 		if (search_key!="") {
 			if (mCurrentView==mSuggestView) {
-				long t0 = System.currentTimeMillis();				
-				mAsyncSearchTask = new AsyncSearchTask();						
-				mAsyncSearchTask.execute(search_key);	
+				long t0 = System.currentTimeMillis();
+				if (mDatabaseUsed.equals("aips")) {
+					mAsyncSearchTask = new AsyncSearchTask();						
+					mAsyncSearchTask.execute(search_key);	
+				} else if (mDatabaseUsed.equals("favorites")){
+					
+				}
 				if (Constants.DEBUG)
-					Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
+					Log.d(TAG, "Time for performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			} else if (mCurrentView==mShowView) {
 				if (mWebView!=null) {
 					if (search_key.length()>2) {
@@ -604,11 +611,31 @@ public class MainActivity extends Activity {
 			}
 		} else {
 			if (mCurrentView==mSuggestView) {
-				long t0 = System.currentTimeMillis();				
-				mAsyncSearchTask = new AsyncSearchTask();						
-				mAsyncSearchTask.execute(search_key);	
+				long t0 = System.currentTimeMillis();
+				if (mDatabaseUsed.equals("aips")) {
+					mAsyncSearchTask = new AsyncSearchTask();						
+					mAsyncSearchTask.execute(search_key);	
+				} else if (mDatabaseUsed.equals("favorites")) {
+					// Clear the search container
+					List<Medication> medis = new ArrayList<Medication>();
+					mTimer = System.currentTimeMillis();
+					for (String regnr : mFavoriteMedsSet) {
+						List<Medication> meds = mMediDataSource.searchRegnr((regnr!=null ? regnr.toString() : "@@@@"));
+						if (!meds.isEmpty())
+							medis.add(meds.get(0));
+					}
+					// Sort list of meds
+					Collections.sort(medis, new Comparator<Medication>() {
+						@Override
+						public int compare(final Medication m1, final Medication m2) {
+							return m1.getTitle().compareTo(m2.getTitle());
+						}
+					});
+					if (medis!=null)
+						showResults(medis);
+				}
 				if (Constants.DEBUG)
-					Log.d(TAG, "Time AsyncTask: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
+					Log.d(TAG, "Time performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			}
 		}
 	}
@@ -631,7 +658,7 @@ public class MainActivity extends Activity {
 			Toast.makeText(getBaseContext(), getString(R.string.favorites_button), Toast.LENGTH_SHORT).show();
 			// Switch to favorites database
 			mDatabaseUsed = "favorites";
-			
+			performSearch("");
 			return true;
 		}
 		case (R.id.menu_pref1): {
