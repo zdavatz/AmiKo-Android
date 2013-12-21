@@ -23,13 +23,15 @@
     	 and extends to the full height of the container. A solid background is
     	 used for contrast with the content view. 
     	 Other options for listview:
-   	         android:divider="@android:color/transparent"
+   	        android:divider="@android:color/transparent"
+   	     Gravity option:
+   	     	android:layout_gravity="start" 
     	 -->
     <ListView
        	android:id="@+id/section_title_view"
         android:layout_width="200dp"
        	android:layout_height="match_parent"
-        android:layout_gravity="start"
+        android:layout_gravity="left"
         android:choiceMode="singleChoice"
         android:dividerHeight="1dp"
         android:background="@color/white"       	

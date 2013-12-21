@@ -48,6 +48,7 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
@@ -66,8 +67,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.WebSettings;
-import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
@@ -85,15 +84,16 @@ public class MainActivity extends Activity {
 
 	private static final String TAG = "MainActivity";	
 	
+	// German section title abbreviations
 	private static final String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen", 
 		"Indikationen", "Dosierung/Anwendung", "Vorsichtsmassnahmen", "Interaktionen", "Schwangerschaft", 
 		"Fahrtüchtigkeit", "Unerwünschte Wirk.", "Überdosierung", "Eig./Wirkung", "Kinetik", "Präklinik", 
-		"Sonstige Hinweise", "Zulassungsnummer", "Packungen", "Inhaberin", "Stand der Information"};
+		"Sonstige Hinweise", "Zulassungsnummer", "Packungen", "Inhaberin", "Stand der Information"};	
+	// French section title abbrevations
 	private static final String[] SectionTitle_FR = {"Composition", "Forme galénique", "Contre-indications", 
 		"Indications", "Posologie", "Précautions", "Interactions", "Grossesse/All.", 
 		"Conduite", "Effets indésir.", "Surdosage", "Propriétés/Effets", "Cinétique", "Préclinique", 
-		"Remarques", "Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};
-	
+		"Remarques", "Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};	
 	// Main AsyncTask
 	private AsyncSearchTask mAsyncSearchTask = null;
 	// SQLite database adapter
@@ -107,30 +107,32 @@ public class MainActivity extends Activity {
 	// Minimum number of characters used for SQLite query (default: min 1-chars search)
 	private int mMinCharSearch = 0;	
 	// Global timer used for benchmarking app
-	private long mTimer = 0;	
-
+	private long mTimer = 0;
+	
 	// Listview of suggestions returned by SQLite query
 	private ListView mListView = null;	
 	// ListView of section titles (shortcuts)
-	private ListView mSectionView = null;	
+	private ListView mSectionView = null;
 	// Webview used to display "Fachinformation"
 	private WebView mWebView;	
 	// Webview used to display the report (About-File)
 	private WebView mReportWebView;
 	// Cascading style sheet
-	private String mCSS_str = null;
+	private String mCSS_str = null;	
 	
 	// Hashset containing registration numbers of favorite medications
-	HashSet<String> mFavoriteMedsSet = null;
-	DataStore mFavoriteData = null;
-	String mDatabaseUsed = "aips";
-	
+	private HashSet<String> mFavoriteMedsSet = null;
+	// Reference to favorites' datastore
+	private DataStore mFavoriteData = null;
+	// This is the currently used database
+	private String mDatabaseUsed = "aips";	
+
 	// Actionbar menu items
 	private MenuItem mSearchItem = null;
 	private EditText mSearch = null;
-	private Button mDelete = null;
+	private Button mDelete = null;	
 	
-	// Viewholder for fragments
+	// Viewholder and views
 	private ViewGroup mViewHolder = null;	
 	private View mSuggestView = null;	
 	private View mShowView = null;
@@ -154,14 +156,15 @@ public class MainActivity extends Activity {
 	
 	/**
 	 * Sets currently visible view
-	 * @param currentView
+	 * @param newCurrentView
+	 * @param withAnimation
 	 */
     private void setCurrentView(View newCurrentView, boolean withAnimation) {
     	if (mCurrentView==newCurrentView)
     		return;
     	// It's important to perform sanity checks on views and viewgroup
     	if (mViewHolder!=null) {
-    		// Set directions
+    		// Set direction of transitation old view to new view
     		int direction = 1;
     		if (mCurrentView==mShowView)
     			direction = -1;
@@ -190,7 +193,7 @@ public class MainActivity extends Activity {
         	// Update currently visible view
         	mCurrentView = newCurrentView;
         	
-        	// Note: Handler is the way to go to postdelay the executation of the thread.
+        	// This handler is used to schedule the runnable to be executed as some point in the future
             Handler handler = new Handler();
         	final Runnable r = new Runnable() {
                 @Override
@@ -201,6 +204,7 @@ public class MainActivity extends Activity {
             			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), 0); 
                 }
             };
+            // Runnable is executed in 1000ms
             handler.postDelayed(r, 1000);
     	}
     }
@@ -283,7 +287,7 @@ public class MainActivity extends Activity {
 		// Retrieve reference to the activity's action bar
 		ActionBar ab = getActionBar();
 		// Disable activity title
-		ab.setDisplayShowTitleEnabled(true);
+		ab.setDisplayShowTitleEnabled(false);
 		setTabNavigation(ab);
 						
 		// Sets current content view
@@ -315,9 +319,14 @@ public class MainActivity extends Activity {
 		setCurrentView(mSuggestView, false);
 		
 		// Setup webviews
-		setupWebView();
 		setupReportView();
-				
+		// Load CSS from asset folder
+		mCSS_str = loadFromFile("amiko_stylesheet.css", "UTF-8"); 
+		// Define and load webview
+		ExpertInfoView mExpertInfoView = 
+				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
+		mWebView = mExpertInfoView.getWebView();	
+		
 		// Reset action name
 		mActionName = getString(R.string.tab_name_1);
 		
@@ -345,44 +354,6 @@ public class MainActivity extends Activity {
 		}	
 	}
 	
-	private void setupWebView() {
-		// Define and load webview
-		mWebView = (WebView) findViewById(R.id.fach_info_view);	
-		// Override web client to open all links in same webview
-		// mWebView.setWebChromeClient(new WebChromeClient());
-		mWebView.setWebViewClient(new MyWebViewClient());
-		
-		mWebView.setInitialScale(1);
-		mWebView.setPadding(0, 0, 0, 0);		
-		mWebView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);	
-		mWebView.setScrollbarFadingEnabled(true);
-		mWebView.setHorizontalScrollBarEnabled(false);
-		mWebView.requestFocus(WebView.FOCUS_DOWN);
-		// Activate JavaScriptInterface
-		mWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");		
-
-		WebSettings wsettings = mWebView.getSettings();		    		
-		// Sets whether WebView loads pages in overview mode
-		wsettings.setLoadWithOverviewMode(true);
-		// Tells WebView to use a wide viewport
-		wsettings.setUseWideViewPort(true);
-		// Sets whether WebView should use its built-in zoom mechanisms
-		wsettings.setBuiltInZoomControls(true);
-		// Sets whether WebView should display on-screen zoom controls
-		wsettings.setDisplayZoomControls(false);
-		// Sets default zoom density of the page
-		// wsettings.setDefaultZoom(WebSettings.ZoomDensity.CLOSE);
-		wsettings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);//SINGLE_COLUMN);
-		wsettings.setLightTouchEnabled(true);
-		// Enable javascript
-		wsettings.setJavaScriptEnabled(true);
-		// TODO
-		wsettings.setLoadsImagesAutomatically(true);		
-				
-		// Load CSS from asset folder
-		mCSS_str = loadFromFile("amiko_stylesheet.css", "UTF-8"); // loadCSS();
-	}
-
 	private void setupReportView() {
 		mReportView.setPadding(5, 5, 5, 5);	
 		mReportWebView = (WebView) mReportView.findViewById(R.id.report_view);
@@ -1033,12 +1004,12 @@ public class MainActivity extends Activity {
 		    	public void onClick(View v) {	
 		    		// Change content view
 		    		if (mSuggestView!=null) {
-		    			setCurrentView(mShowView, true);
-		    			// Get handle to DrawerLayout
-		    			DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);
-		    			// Close any open drawers
-		    			if (dl!=null)
-		    				dl.closeDrawers();
+						setCurrentView(mShowView, true);
+						// Get handle to DrawerLayout
+						DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);					
+						// Close any open drawers
+						if (dl != null)
+							dl.closeDrawers();
 		    		}
 										
 					// Adapt the zoom settings depending on the device's orientation
