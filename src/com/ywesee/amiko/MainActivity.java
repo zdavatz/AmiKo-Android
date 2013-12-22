@@ -56,6 +56,7 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -1005,11 +1006,6 @@ public class MainActivity extends Activity {
 		    		// Change content view
 		    		if (mSuggestView!=null) {
 						setCurrentView(mShowView, true);
-						// Get handle to DrawerLayout
-						DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);					
-						// Close any open drawers
-						if (dl != null)
-							dl.closeDrawers();
 		    		}
 										
 					// Adapt the zoom settings depending on the device's orientation
@@ -1046,9 +1042,37 @@ public class MainActivity extends Activity {
 						
 						mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
 							
-			    		/**
-			    		 * Add section title view
-			    		 */
+						// Add NavigationDrawer, get handle to DrawerLayout
+						DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);
+					    // Set a custom shadow that overlays the main content when the drawer opens
+					    dl.setDrawerShadow(R.drawable.drawer_shadow, Gravity.START);					 
+					    // Close any open drawers
+						if (dl != null)
+							dl.closeDrawers();
+						/** What follows is all actionbardrawer-related
+					    // ActionBarDrawerToggle ties together the the proper interactions
+					    // between the sliding drawer and the action bar app icon
+					    ActionBarDrawerToggle dt = new ActionBarDrawerToggle(
+					            MainActivity.this, 		// host activity
+					            dl,         			// DrawerLayout object
+					            R.drawable.ic_drawer,  	// nav drawer image to replace 'Up' caret
+					            R.string.drawer_open,  	// "open drawer" description for accessibility
+					            R.string.drawer_close  	// "close drawer" description for accessibility ) {
+					        public void onDrawerClosed(View view) {
+								// Do nothing
+					        }
+
+					        public void onDrawerOpened(View drawerView) {
+								// Do nothing
+					        }
+					    };
+					    dl.setDrawerListener(dt);					    
+						// enable ActionBar app icon to behave as action to toggle nav drawer
+					    getActionBar().setIcon(R.drawable.ic_drawer);
+					    getActionBar().setDisplayHomeAsUpEnabled(true);
+					    getActionBar().setHomeButtonEnabled(true);					    
+						***/
+			    		// Add section title view
 			    		String[] id_items = m.getSectionIds().split(",");
 			    		List<String> section_ids = Arrays.asList(id_items);		    		
 			    		String[] title_items = m.getSectionTitles().split(";");
