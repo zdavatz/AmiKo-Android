@@ -1,9 +1,5 @@
 package com.ywesee.amiko;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import android.content.Context;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
@@ -12,6 +8,8 @@ import android.webkit.WebViewClient;
 
 public class ExpertInfoView {
 
+	private static final String TAG = "ExpertInfoView";
+	
 	private WebView mWebView = null;
 	
 	public ExpertInfoView(Context context, WebView webView) {
@@ -27,10 +25,10 @@ public class ExpertInfoView {
 		mWebView.setScrollbarFadingEnabled(true);
 		mWebView.setHorizontalScrollBarEnabled(false);
 		mWebView.requestFocus(WebView.FOCUS_DOWN);
-
+		
 		// Activate JavaScriptInterface in given context
-		mWebView.addJavascriptInterface(new JSInterface(context), "jsInterface");		
-
+		mWebView.addJavascriptInterface(new JSInterface(context), "jsInterface");				
+		
 		WebSettings wsettings = mWebView.getSettings();		    		
 		// Sets whether WebView loads pages in overview mode
 		wsettings.setLoadWithOverviewMode(true);
@@ -43,7 +41,6 @@ public class ExpertInfoView {
 		// Sets default zoom density of the page
 		// wsettings.setDefaultZoom(WebSettings.ZoomDensity.CLOSE);
 		wsettings.setLayoutAlgorithm(LayoutAlgorithm.NORMAL);//SINGLE_COLUMN);
-		wsettings.setLightTouchEnabled(true);
 		// Enable javascript
 		wsettings.setJavaScriptEnabled(true);
 		// TODO

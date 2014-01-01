@@ -48,7 +48,6 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
@@ -56,11 +55,13 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -142,6 +143,12 @@ public class MainActivity extends Activity {
 	// This is the currently visible view
 	private View mCurrentView = null;
 	
+	// This is the global toast object
+	private CustomToast mToastObject = null;
+
+	// Global flag for checking if a search is in progress
+	private boolean mSearchInProgress = false;
+	
 	/**
 	 * Returns the language of the app
 	 * @return
@@ -167,7 +174,7 @@ public class MainActivity extends Activity {
     	if (mViewHolder!=null) {
     		// Set direction of transitation old view to new view
     		int direction = 1;
-    		if (mCurrentView==mShowView)
+    		if (mCurrentView==mShowView || mCurrentView==mReportView)
     			direction = -1;
     		// Remove current view    		
     		if (mCurrentView!=null) {
@@ -210,6 +217,13 @@ public class MainActivity extends Activity {
     	}
     }
        
+    /**
+     * Changes to "suggestView" - called from ExpertInfoView
+     */
+    public void setSuggestView() {
+    	setCurrentView(mSuggestView, true);
+    }
+    
 	/**
 	 * Implements listeners for action bar
 	 * @author MaxL
@@ -326,7 +340,11 @@ public class MainActivity extends Activity {
 		// Define and load webview
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
-		mWebView = mExpertInfoView.getWebView();	
+		mWebView = mExpertInfoView.getWebView();
+		
+		// Setup gesture detectors
+		setupGestureDetector(mWebView);
+		setupGestureDetector(mReportWebView);
 		
 		// Reset action name
 		mActionName = getString(R.string.tab_name_1);
@@ -339,6 +357,9 @@ public class MainActivity extends Activity {
 		mFavoriteData = new DataStore(this.getFilesDir().toString());
 		mFavoriteMedsSet = new HashSet<String>();
 		mFavoriteMedsSet = mFavoriteData.load();
+		
+		// Init toast object
+		mToastObject = new CustomToast(getApplicationContext());
 		
 		try {
 			AsyncInitDBTask initDBTask = new AsyncInitDBTask(this);						
@@ -355,9 +376,53 @@ public class MainActivity extends Activity {
 		}	
 	}
 	
+	/**
+	 * Gesture detector for expert-info webview
+	 * @param webView
+	 */
+	private void setupGestureDetector(WebView webView) {
+		GestureDetector.SimpleOnGestureListener simpleOnGestureListener = 
+				new GestureDetector.SimpleOnGestureListener() {
+			public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
+				if (event1==null || event2==null)
+					return false;
+				if (event1.getPointerCount()>1 || event2.getPointerCount()>1)
+					return false;
+				else {
+					try {
+						float diffX = event1.getX() - event2.getX();
+						// right to left swipe... return to mSuggestView
+						if (diffX>80 && Math.abs(velocityX)>200) {
+							setCurrentView(mSuggestView, true);
+							return true;
+						}
+					} catch (Exception e) {
+						// Handle exceptions...
+					}
+					return false;
+				}
+			}
+		};
+		
+		final GestureDetector detector = new GestureDetector(this, simpleOnGestureListener);
+		
+		webView.setOnTouchListener(new View.OnTouchListener() {			
+			@Override
+			public boolean onTouch(View v, MotionEvent event) {
+				return detector.onTouchEvent(event);
+			}
+		});			
+	}
+	
 	private void setupReportView() {
-		mReportView.setPadding(5, 5, 5, 5);	
 		mReportWebView = (WebView) mReportView.findViewById(R.id.report_view);
+		
+		mReportWebView.setPadding(5, 5, 5, 5);
+		mReportWebView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);	
+		mReportWebView.setScrollbarFadingEnabled(true);
+		mReportWebView.setHorizontalScrollBarEnabled(false);
+		mReportWebView.requestFocus(WebView.FOCUS_DOWN);
+		
 		// Activate JavaScriptInterface
 		mReportWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");		
 		// Enable javascript
@@ -436,6 +501,7 @@ public class MainActivity extends Activity {
 		protected void onCancelled() {
 			super.onCancelled();
 			mAsyncSearchTask.cancel(true);
+			mSearchInProgress = false;
 		}
 
 		@Override
@@ -448,9 +514,10 @@ public class MainActivity extends Activity {
 			// Do the expensive work in the background here
 			try {
 				// Thread.sleep(1000L);
-				if (!isCancelled()) {
+				if (!isCancelled() && !mSearchInProgress) {					
 					if (search_key[0].length()>=mMinCharSearch) {
-						medis = mMedis = getResults(search_key[0]);		
+						mSearchInProgress = true;
+						medis = mMedis = getResults(search_key[0]);	
 					}
 				}
 			} catch (Exception e) {
@@ -464,6 +531,7 @@ public class MainActivity extends Activity {
 			if (medis!=null) {		
 				showResults(medis);
 			}
+			mSearchInProgress = false;
 		}
 		
 		@Override
@@ -552,16 +620,14 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
-	void performSearch(String search_key) {
-		if (search_key!="") {
+	void performSearch(String search_key) {	
+		if (!search_key.isEmpty()) {
 			if (mCurrentView==mSuggestView) {
 				long t0 = System.currentTimeMillis();
-				if (mDatabaseUsed.equals("aips")) {
-					mAsyncSearchTask = new AsyncSearchTask();						
-					mAsyncSearchTask.execute(search_key);	
-				} else if (mDatabaseUsed.equals("favorites")){
-					
-				}
+				// For this case, we don't need to discriminate between aips and favorites here
+				// The distinction is made in the function getResults
+				mAsyncSearchTask = new AsyncSearchTask();						
+				mAsyncSearchTask.execute(search_key);
 				if (Constants.DEBUG)
 					Log.d(TAG, "Time for performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			} else if (mCurrentView==mShowView) {
@@ -585,12 +651,16 @@ public class MainActivity extends Activity {
 			if (mCurrentView==mSuggestView) {
 				long t0 = System.currentTimeMillis();
 				if (mDatabaseUsed.equals("aips")) {
-					mAsyncSearchTask = new AsyncSearchTask();						
-					mAsyncSearchTask.execute(search_key);	
+					// If "complete search" is already in progress, don't do anything!
+					if (mSearchInProgress==false) {
+						mAsyncSearchTask = new AsyncSearchTask();						
+						mAsyncSearchTask.execute(search_key);	
+					}
 				} else if (mDatabaseUsed.equals("favorites")) {
+					// Save time stamp
+					mTimer = System.currentTimeMillis();
 					// Clear the search container
 					List<Medication> medis = new ArrayList<Medication>();
-					mTimer = System.currentTimeMillis();
 					for (String regnr : mFavoriteMedsSet) {
 						List<Medication> meds = mMediDataSource.searchRegnr((regnr!=null ? regnr.toString() : "@@@@"));
 						if (!meds.isEmpty())
@@ -603,38 +673,123 @@ public class MainActivity extends Activity {
 							return m1.getTitle().compareTo(m2.getTitle());
 						}
 					});
-					if (medis!=null)
+					if (medis!=null) {
+						mMedis = medis;
 						showResults(medis);
+					}
 				}
 				if (Constants.DEBUG)
-					Log.d(TAG, "Time performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
+					Log.d(TAG, "Time performing search (empty search_key): " + Long.toString(System.currentTimeMillis()-t0)+"ms");
 			}
 		}
 	}
 	
+	private List<Medication> getResults(String query) {
+		List<Medication> medis = null;
+		
+		mTimer = System.currentTimeMillis();		
+		
+		if (mActionName.equals(getString(R.string.tab_name_1)))
+	 		medis = mMediDataSource.searchTitle((query!=null ? query.toString() : "@@@@"));
+	 	else if (mActionName.equals(getString(R.string.tab_name_2)))
+	 		medis = mMediDataSource.searchAuth((query!=null ? query.toString() : "@@@@"));
+		else if (mActionName.equals(getString(R.string.tab_name_3)))	 		
+	 		medis = mMediDataSource.searchRegnr((query!=null ? query.toString() : "@@@@"));			
+	 	else if (mActionName.equals(getString(R.string.tab_name_4)))
+	 		medis = mMediDataSource.searchATC((query!=null ? query.toString() : "@@@@")); 	
+		else if (mActionName.equals(getString(R.string.tab_name_5)))
+	 		medis = mMediDataSource.searchSubstance((query!=null ? query.toString() : "@@@@"));
+		else if (mActionName.equals(getString(R.string.tab_name_6)))
+	 		medis = mMediDataSource.searchApplication((query!=null ? query.toString() : "@@@@"));
+		
+		// Filter according to favorites
+		if (mDatabaseUsed.equals("favorites")) {
+			// This list contains all filtered medis
+			List<Medication> favMedis = new ArrayList<Medication>();
+			// Loop through all found medis
+			for (Medication m : medis) {
+				// If found medi is not in "favorites", remove it
+				if (mFavoriteMedsSet.contains(m.getRegnrs()))
+					favMedis.add(m); 	
+			}
+			// Filtered medis
+			medis = favMedis;
+			
+			// Sort list of meds
+			Collections.sort(medis, new Comparator<Medication>() {
+				@Override
+				public int compare(final Medication m1, final Medication m2) {
+					return m1.getTitle().compareTo(m2.getTitle());
+				}
+			});
+		}
+		
+		if (Constants.DEBUG)
+			Log.d(TAG, "getResults() - "+medis.size()+" medis found in "+Long.toString(System.currentTimeMillis()-mTimer)+"ms");	   	
+		
+		return medis;
+		
+	}
+	
+	private void showResults(List<Medication> medis) {
+		if (medis!=null) {	
+	   		// Create simple cursor adapter
+	   		CustomListAdapter<Medication> custom_adapter = 
+	   			new CustomListAdapter<Medication>(this, R.layout.medi_result, medis);	
+	   		// Set adapter to listview		
+	   		mListView.setAdapter(custom_adapter);	
+	   		// Give some feedback about the search to the user (could be done better!)
+	   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
+	   				Toast.LENGTH_SHORT);
+	   	}
+	}	
+	
     protected boolean isAlwaysExpanded() {
         return false;
     }    
-        
+       
+    /**
+     * Called through onOptionsItemSelected's invalidateMenuOptions function
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+    	MenuItem aipsButton = menu.findItem(R.id.aips_button);
+    	MenuItem favoritesButton = menu.findItem(R.id.favorites_button);
+    	if (mDatabaseUsed.equals("aips")) {
+    		aipsButton.setIcon(R.drawable.aips_icon_wh);
+    		favoritesButton.setIcon(R.drawable.favorites_icon_gy);
+    	} else if (mDatabaseUsed.equals("favorites")) {
+    		aipsButton.setIcon(R.drawable.aips_icon_gy);
+    		favoritesButton.setIcon(R.drawable.favorites_icon_wh);
+    	}
+    	return super.onPrepareOptionsMenu(menu);
+    }
+    
 	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
+	public boolean onOptionsItemSelected(MenuItem item) {		
 		switch (item.getItemId()) {
 		case (R.id.aips_button): {
-			Toast.makeText(getBaseContext(), getString(R.string.aips_button), Toast.LENGTH_SHORT).show();
+			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
 			// Switch to AIPS database
-			mDatabaseUsed = "aips";
+			mDatabaseUsed = "aips";		
+			mSearch.setText("");
 			performSearch("");
+			// Request menu update
+			invalidateOptionsMenu();
 			return true;
 		}
 		case (R.id.favorites_button): {
-			Toast.makeText(getBaseContext(), getString(R.string.favorites_button), Toast.LENGTH_SHORT).show();
+			mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);
 			// Switch to favorites database
 			mDatabaseUsed = "favorites";
+			mSearch.setText("");
 			performSearch("");
+			// Request menu update
+			invalidateOptionsMenu();
 			return true;
 		}
 		case (R.id.menu_pref1): {
-			Toast.makeText(getBaseContext(), getString(R.string.menu_pref1), Toast.LENGTH_SHORT).show();
+			mToastObject.show(getString(R.string.menu_pref1), Toast.LENGTH_SHORT);
 			if (!item.isChecked()) {
 				item.setChecked(true);
 				mMinCharSearch = 1;
@@ -645,7 +800,7 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_pref2): {
-			Toast.makeText(getBaseContext(), "Error Report", Toast.LENGTH_SHORT).show();	
+			mToastObject.show("Error Report", Toast.LENGTH_SHORT);	
 			// Reset and change search hint
 			if (mSearch != null) {
 				mSearch.setText("");
@@ -673,7 +828,7 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_pref3): {
-			Toast.makeText(getBaseContext(), "Update", Toast.LENGTH_SHORT).show();
+			mToastObject.show("Update", Toast.LENGTH_SHORT);
 			return true;
 		}
 		default:
@@ -716,43 +871,6 @@ public class MainActivity extends Activity {
 				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_6)));
 		actionBar.addTab(tab);		
 	}	
-		
-	private List<Medication> getResults(String query) {
-    	List<Medication> medis = null;
-    	
-		mTimer = System.currentTimeMillis();		
-		
-    	if (mActionName.equals(getString(R.string.tab_name_1)))
-	 		medis = mMediDataSource.searchTitle((query!=null ? query.toString() : "@@@@"));
-	 	else if (mActionName.equals(getString(R.string.tab_name_2)))
-	 		medis = mMediDataSource.searchAuth((query!=null ? query.toString() : "@@@@"));
- 		else if (mActionName.equals(getString(R.string.tab_name_3)))	 		
-	 		medis = mMediDataSource.searchRegnr((query!=null ? query.toString() : "@@@@"));			
-	 	else if (mActionName.equals(getString(R.string.tab_name_4)))
-	 		medis = mMediDataSource.searchATC((query!=null ? query.toString() : "@@@@")); 	
-		else if (mActionName.equals(getString(R.string.tab_name_5)))
-	 		medis = mMediDataSource.searchSubstance((query!=null ? query.toString() : "@@@@"));
-		else if (mActionName.equals(getString(R.string.tab_name_6)))
-	 		medis = mMediDataSource.searchApplication((query!=null ? query.toString() : "@@@@"));
-		
-    	if (Constants.DEBUG)
-    		Log.d(TAG, "getResults() - "+medis.size()+" medis found in "+Long.toString(System.currentTimeMillis()-mTimer)+"ms");	   	
-    	
-    	return medis;
-	}
-	
-    private void showResults(List<Medication> medis) {
-		if (medis!=null) {	
-	   		// Create simple cursor adapter
-	   		CustomListAdapter<Medication> custom_adapter = 
-	   			new CustomListAdapter<Medication>(this, R.layout.medi_result, medis);	
-	   		// Set adapter to listview		
-	   		mListView.setAdapter(custom_adapter);	
-	   		// Give some feedback about the search to the user (could be done better!)
-	   		Toast.makeText(getApplicationContext(), + medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
-	   				Toast.LENGTH_SHORT).show();
-	   	}
-	}
 	
 	/**
 	 * Implements view holder design pattern
@@ -1079,6 +1197,7 @@ public class MainActivity extends Activity {
 			    		List<String> section_titles = Arrays.asList(title_items);		    			
 						
 			    		// Get reference to listview in DrawerLayout
+			    		// Implements swiping mechanism!
 						mSectionView = (ListView) findViewById(R.id.section_title_view);
 						// Make it clickable
 		    			mSectionView.setClickable(true);	    	
