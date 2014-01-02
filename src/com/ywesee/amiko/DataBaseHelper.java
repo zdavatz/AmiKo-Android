@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.util.Observer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -40,9 +41,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 	private static String DB_NAME = "amiko_db_full_idx_de.db";
-
 	private static String mDBPath = "";
-	private SQLiteDatabase mDataBase;		
+
+	private SQLiteDatabase mDataBase;
+	private Observer mObserver;
+	
 	private final Context mContext;
 	
     /**
@@ -54,6 +57,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		super(context, DB_NAME, null, Constants.DB_VERSION);
 		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
 		this.mContext = context;
+	}
+	
+	/**
+	 * 
+	 */
+	public void addObserver(Observer observer) {
+		mObserver = observer;
+	}
+	
+	/**
+	 * 
+	 */
+	public void notifyObserver(long totBytes) {
+		mObserver.update(null, totBytes);
 	}
 	
 	/**
@@ -165,6 +182,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 					while ((bytesRead = zis.read(buffer)) != -1) {
 						fout.write(buffer, 0, bytesRead);
 						totBytesRead += bytesRead;
+						notifyObserver(totBytesRead);
 					}
 					
 					Log.d(TAG, "Unzipped file " + ze.getName() + "(" + totBytesRead/1000 + "kB)");

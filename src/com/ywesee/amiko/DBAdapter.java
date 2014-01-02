@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,6 +48,7 @@ public class DBAdapter {
 	private final Context mContext;	
 	private SQLiteDatabase mDb;
 	private DataBaseHelper mDbHelper;	
+	private Observer mObserver;
 	private int mNumRecords;
 	private boolean mDatabaseCreated = false;
 	
@@ -86,7 +89,14 @@ public class DBAdapter {
 		mContext = context;
 		mDbHelper = new DataBaseHelper(mContext);
 	}
-			
+	
+	/**
+	 * 
+	 */
+	public void addObserver(Observer observer) {
+		mDbHelper.addObserver(observer);
+	}
+	
 	/**
 	 * Creates database
 	 * @throws IOException
@@ -113,13 +123,6 @@ public class DBAdapter {
 	public void overwrite() throws IOException {
 		try {
 			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
-			/*
-			// Unzip file			
-			String unzipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.db";									
-			Log.d(TAG, "Unzipping file " + downloadFile);
-			// Unzip (blocking function)
-			unzipFile(downloadFile, unzipFile);
-			*/
 			mDbHelper.overwriteDataBase(downloadFile);
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");

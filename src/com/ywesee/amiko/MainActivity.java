@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -492,6 +494,12 @@ public class MainActivity extends Activity {
 				mMediDataSource = new DBAdapter(this.context);
 
 			try {
+				mMediDataSource.addObserver(new Observer() {
+					@Override
+					public void update(Observable o, Object arg) {
+						Log.d(TAG, "observer -> " + arg.toString());
+					}
+				});
 				mMediDataSource.create();
 			} catch( IOException e) {
 				Log.d(TAG, "unable to create database!");
