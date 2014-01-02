@@ -36,17 +36,25 @@ import android.animation.LayoutTransition;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
+import android.app.DownloadManager;
+import android.app.DownloadManager.Query;
+import android.app.DownloadManager.Request;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
@@ -148,6 +156,15 @@ public class MainActivity extends Activity {
 
 	// Global flag for checking if a search is in progress
 	private boolean mSearchInProgress = false;
+	
+	/** 
+	 * The download manager is a system service that handles long-running HTTP downloads. 
+	 * Clients may request that a URI be downloaded to a particular destination file. 
+	 * The download manager will conduct the download in the background, taking care of 
+	 * HTTP interactions and retrying downloads after failures or across connectivity changes 
+	 * and system reboots.
+	 */
+	private DownloadManager mDownloadManager;	
 	
 	/**
 	 * Returns the language of the app
@@ -361,11 +378,15 @@ public class MainActivity extends Activity {
 		// Init toast object
 		mToastObject = new CustomToast(getApplicationContext());
 		
+		// 
+		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+		
+		// Initialize database (including DownloadManager)
 		try {
 			AsyncInitDBTask initDBTask = new AsyncInitDBTask(this);						
 			initDBTask.execute();		
 		} catch (Exception e) {
-			Log.e(TAG, "AsyncInitDBTask exception caught!");
+			Log.e(TAG, "AsyncInitDBTask-init exception caught!");
 		}
 
 		// Get search intent
@@ -464,9 +485,11 @@ public class MainActivity extends Activity {
 		@Override
 		protected Void doInBackground(Void... voids) {
 			if (Constants.DEBUG)
-				Log.d(TAG, "doInBackground: open database");
-			// Creates and opens database
-			mMediDataSource = new DBAdapter(this.context);
+				Log.d(TAG, "doInBackground: open/overwrite database");
+			// Creates, opens or overwrites database (singleton)
+			// TODO: implement proper singleton pattern (getInstance())
+			if (mMediDataSource==null)
+				mMediDataSource = new DBAdapter(this.context);
 			// Display progressbar ...
 			try {
 				mMediDataSource.create();
@@ -485,6 +508,7 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "mMediDataSource open!");			
 			if (progressBar.isShowing())
 				progressBar.dismiss();
+			mToastObject.show("Database installed successfully", Toast.LENGTH_LONG);
 		}
 	}
 	
@@ -829,6 +853,8 @@ public class MainActivity extends Activity {
 		}
 		case (R.id.menu_pref3): {
 			mToastObject.show("Update", Toast.LENGTH_SHORT);
+			// Download new database (blocking call)
+			downloadZippedFile();
 			return true;
 		}
 		default:
@@ -838,6 +864,60 @@ public class MainActivity extends Activity {
 		return true;
 	}    
 
+	/**
+	 * Downloads the database
+	 */
+	public void downloadZippedFile() {
+		Uri downloadUri = Uri.parse("http://pillbox.oddb.org/amiko_db_full_idx_de.zip");
+		// NOTE: the default download destination is a shared volume where the system might delete your file if 
+		// it needs to reclaim space for system use
+		DownloadManager.Request request = new DownloadManager.Request(downloadUri);
+		// Allow download only over WIFI
+		request.setAllowedNetworkTypes(Request.NETWORK_WIFI);
+		// Download visible and shows in notifications while in progress and after completion
+		request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+		// Set the title of this download, to be displayed in notifications (if enabled).
+		request.setTitle("AmiKo Update");
+		// Set a description of this download, to be displayed in notifications (if enabled)
+		request.setDescription("Updating the AmiKo database.");
+		// Set local destination to standard directory (place where files downloaded by the user are placed)
+		request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_db_full_idx_de.zip");
+		
+		BroadcastReceiver receiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+					long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+					Query query = new Query();
+					query.setFilterById(downloadId);
+					Cursor c = mDownloadManager.query(query);
+					if (c.moveToFirst()) {
+						int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
+						if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+							// Update database
+							try {
+								AsyncInitDBTask updateDBTask = new AsyncInitDBTask(MainActivity.this);						
+								updateDBTask.execute();		
+							} catch (Exception e) {
+								Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
+							}			
+							// Toast
+							mToastObject.show("Database downloaded successfully... installing", Toast.LENGTH_LONG);
+						}
+					}
+				}
+			}
+		};
+        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        
+		// Check if file exist, if yes, delete it 
+		deleteFile("amiko_db_full_idx_de.zip");
+		// The downloadId is unique across the system. It is used to make future calls related to this download.
+		mDownloadManager.enqueue(request);        
+	}
+	
+	
 	/**
 	 * Sets action bar tab click listeners
 	 * @param actionBar
@@ -943,16 +1023,26 @@ public class MainActivity extends Activity {
 		    // ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
         	// viewHolder.image_logo.setImageResource(R.drawable.logo_desitin);	
 		    
-        	String title_str = "k.A.";		// tab_name_1 = Präparat
-        	String auth_str = "k.A.";		// tab_name_2 = Inhaber
-        	String regnr_str = "k.A.";		// tab_name_3 = Reg.Nr.
-        	String atc_code_str = "k.A.";	// tab_name_4 = ATC Code 
-        	String atc_class_str = "k.A.";	//			  = ATC Klasse	
-        	String substances_str = "k.A.";	// tab_name_5 = Wirkstoff
-        	String therapy_str = "k.A.";	// tab_name_6 = Therapie / Indications
-        	String application_str = "";
+        	String title_str = "k.A.";		 // tab_name_1 = Präparat
+        	String auth_str = "k.A.";		 // tab_name_2 = Inhaber
+        	String regnr_str = "k.A.";		 // tab_name_3 = Reg.Nr.
+        	String atc_code_str = "k.A.";	 // tab_name_4 = ATC Code 
+        	String atc_class_str = "k.A.";	 //			   = ATC Klasse	
+        	String substances_str = "k.A.";	 // tab_name_5 = Wirkstoff
+        	// String therapy_str = "k.A.";	
+        	String application_str = "k.A."; // tab_name_6 = Therapie / Indications
         	String pack_info_str = "";
 		    
+        	if (appLanguage().equals("fr")) {
+            	title_str = "n.s.";			 // tab_name_1 = Präparat
+            	auth_str = "n.s.";			 // tab_name_2 = Inhaber
+            	regnr_str = "n.s.";			 // tab_name_3 = Reg.Nr.
+            	atc_code_str = "n.s.";		 // tab_name_4 = ATC Code 
+            	atc_class_str = "n.s.";		 //			   = ATC Klasse	
+            	substances_str = "n.s.";	 // tab_name_5 = Wirkstoff
+            	application_str = "n.s.";	 // tab_name_6 = Therapie / Indications
+        	}
+        	
 		 	if (mActionName.equals(getString(R.string.tab_name_1))) {
 		 		// Display "Präparatname" and "Therapie/Kurzbeschrieb"
 			    if (med!=null ) {    
@@ -971,14 +1061,15 @@ public class MainActivity extends Activity {
 			    	Matcher m_red = p_red.matcher(pack_info_str);
 			    	Matcher m_green = p_green.matcher(pack_info_str);
 			    	SpannableStringBuilder spannable = new SpannableStringBuilder(pack_info_str);
-			    	while (m_red.find()) {   		
-			    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(205,0,0)), m_red.start(), m_red.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);	    		
-			    	}			    	
-			    	while (m_green.find()) {
-			    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(50,188,50)), m_green.start(), m_green.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+			    	if (spannable!=null) {
+				    	while (m_red.find()) {   		
+				    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(205,0,0)), m_red.start(), m_red.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);	    		
+				    	}			    	
+				    	while (m_green.find()) {
+				    		spannable.setSpan(new ForegroundColorSpan(Color.rgb(50,188,50)), m_green.start(), m_green.end(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+				    	}
+				    	viewHolder.text_subtitle.setText(spannable, BufferType.SPANNABLE);
 			    	}
-			    	viewHolder.text_subtitle.setText(spannable, BufferType.SPANNABLE);
-			    	
 		        	if (med.getCustomerId()==1) {
 			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {

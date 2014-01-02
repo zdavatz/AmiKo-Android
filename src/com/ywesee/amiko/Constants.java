@@ -24,10 +24,12 @@ public class Constants {
 	
 	public static final String AMIKO_NAME = "AmiKo";
 	public static final String COMED_NAME = "CoMed";
+	public static final String DB_NAME_BASE = "amiko_db_full_idx_";
 	
 	// --> Note: uncomment name of app to compile!
 	public static final String APP_NAME = AMIKO_NAME;
 	// public static final String APP_NAME = COMED_NAME;	
 	public static final String APP_VERSION = "1.2.0";
 	public static final String GEN_DATE = "18.12.2013";
+	public static final int DB_VERSION = 127; 	// Database (1.2.7), AmiKo Release 1.2.0 (06/12/2013)
 }

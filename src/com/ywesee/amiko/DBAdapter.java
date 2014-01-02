@@ -19,15 +19,24 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 import android.util.Log;
 
 public class DBAdapter {
@@ -36,9 +45,10 @@ public class DBAdapter {
 	
 	private final Context mContext;	
 	private SQLiteDatabase mDb;
-	private DataBaseHelper mDbHelper;
+	private DataBaseHelper mDbHelper;	
 	private int mNumRecords;
-
+	private boolean mDatabaseCreated = false;
+	
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_TITLE = "title";
 	public static final String KEY_AUTH = "auth";
@@ -74,16 +84,22 @@ public class DBAdapter {
      */	
 	public DBAdapter(Context context) {		
 		mContext = context;
-		mDbHelper = new DataBaseHelper(mContext);		
+		mDbHelper = new DataBaseHelper(mContext);
 	}
 			
 	/**
-	 * Creates the database
+	 * Creates database
 	 * @throws IOException
 	 */
 	public void create() throws IOException {
 		try {
-			mDbHelper.createDataBase();
+			if (!mDatabaseCreated) {
+				mDbHelper.createDataBase();
+				mDatabaseCreated = true;
+			}
+			else {
+				overwrite();
+			}
 		} catch (IOException ioe) {
 			Log.e(TAG, ioe.toString() + " Unable to create database");
 			throw new Error("Unable to create database");
@@ -91,7 +107,26 @@ public class DBAdapter {
 	}
 
 	/**
-	 * Opens the database and initializes the number of stored records
+	 * Overwrites old database
+	 * @throws IOException
+	 */
+	public void overwrite() throws IOException {
+		try {
+			// Unzip file
+			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
+			String unzipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.db";									
+			Log.d(TAG, "Unzipping file " + downloadFile);
+			// Unzip (blocking function)
+			unzipFile(downloadFile, unzipFile);
+			mDbHelper.overwriteDataBase(unzipFile);
+		} catch (IOException e) {
+			Log.e(TAG, e.toString() + " Unable to overwrite database");
+			throw new Error("Unable to overwrite database");	
+		}
+	}
+	
+	/**
+	 * Opens database and initializes number of stored records
 	 * @throws SQLException
 	 */
 	public void open() throws SQLException {
@@ -114,6 +149,71 @@ public class DBAdapter {
 		mDbHelper.close();		
 	}
 
+	/**
+	 * Checks if file exists and deletes
+	 */
+	public boolean deleteFile(String fileName) {
+		File filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+		File file = new File(filePath, fileName);
+		if (file.exists()) {
+			Log.d(TAG, "Downloaded database found and deleted.");
+			return file.delete();
+		} else {
+			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
+		}
+		return false;
+	}
+
+	/**
+	 * Unzip file in src and move it to dst
+	 */
+	public void unzipFile(String src, String dst) {
+		byte buffer[] = new byte[1024];
+		int bytesRead = -1;
+
+		try {
+			// Chmod src file
+			chmod(src, 755);
+			// 
+			InputStream is = new FileInputStream(src);
+			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
+			ZipEntry ze;
+			
+			while ((ze = zis.getNextEntry()) != null) {
+				FileOutputStream fout = new FileOutputStream(dst);
+				long totBytesRead = 0;
+
+				while ((bytesRead = zis.read(buffer)) != -1) {
+					fout.write(buffer, 0, bytesRead);
+					totBytesRead += bytesRead;
+				}
+				
+				Log.d(TAG, "Unzipped file " + ze.getName() + "(" + totBytesRead/1000 + "kB)");
+				
+				fout.close();
+				zis.closeEntry();
+			}
+
+			zis.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Implements chmod using reflection pattern
+	 * @param path
+	 * @param mode
+	 * @return
+	 * @throws Exception
+	 */
+	private int chmod(String path, int mode) throws Exception {
+		Class<?> fileUtils = Class.forName("android.os.FileUtils");
+		Method setPermissions = 
+				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
+	}
+	
 	/**
 	 * Queries the number of records in the database
 	 * @return number of records

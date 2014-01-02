@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,10 +35,9 @@ import android.util.Log;
 public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
-	private static String DB_PATH = "";
 	private static String DB_NAME = "amiko_db_full_idx_de.db";
-	private static int DB_VERSION = 127;	// Database (1.2.7), AmiKo Release 1.2.0 (06/12/2013)
-	
+
+	private static String mDBPath = "";
 	private SQLiteDatabase mDataBase;		
 	private final Context mContext;
 	
@@ -47,8 +47,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @param context
      */
 	public DataBaseHelper(Context context) {
-		super(context, DB_NAME, null, DB_VERSION);
-		DB_PATH = context.getApplicationInfo().dataDir + "/databases/";
+		super(context, DB_NAME, null, Constants.DB_VERSION);
+		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
 		this.mContext = context;
 	}
 	
@@ -69,17 +69,34 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
-				throw new Error("Error copying database");
+				throw new Error("Error copying database!");
 			}	
 		}
 	}
+	
+	/**
+	 * Overwrite database
+	 */
+	public void overwriteDataBase(String srcFile) throws IOException {
+		getReadableDatabase();
+		// Close database
+		close();
+		try {
+			// Copy database from src to dst
+			copyDataBase(srcFile);
+			if (Constants.DEBUG)
+				Log.d(TAG, "overwriteDataBase(): old database overwritten");
+		} catch (IOException e) {
+			throw new Error("Error overwriting database!");
+		}
+	}	
 	
     /**
      * Check if the database already exist to avoid re-copying the file each time you open the application.
      * @return true if it exists, false if it doesn't
      */		
 	private boolean checkDataBase() {
-		File dbFile = new File(DB_PATH + DB_NAME);
+		File dbFile = new File(mDBPath + DB_NAME);
 		return dbFile.exists();
 	}
 	
@@ -89,10 +106,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * This is done by transferring bytestream.
      * */
 	private void copyDataBase() throws IOException {
-		InputStream mInput = mContext.getAssets().open(DB_NAME);		
-		String outFileName = DB_PATH + DB_NAME;
-		OutputStream mOutput = new FileOutputStream(outFileName);
+		// Open shipped database from assets folder
+		InputStream mInput = mContext.getAssets().open(DB_NAME);
+		String dbFileName = mDBPath + DB_NAME;
+		OutputStream mOutput = new FileOutputStream(dbFileName);
 		
+		// Transfer bytes from input to output
 		byte[] mBuffer = new byte[1024];
 		int mLength;
 		while ((mLength = mInput.read(mBuffer))>0) {
@@ -105,13 +124,32 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mInput.close();
 	}
 	
+	private void copyDataBase(String srcFile) throws IOException {
+		// Open shipped database from assets folder
+		InputStream mInput = new FileInputStream(srcFile);
+		String dbFileName = mDBPath + DB_NAME;
+		OutputStream mOutput = new FileOutputStream(dbFileName);
+		
+		// Transfer bytes from input to output
+		byte[] mBuffer = new byte[1024];
+		int mLength;
+		while ((mLength = mInput.read(mBuffer))>0) {
+			mOutput.write(mBuffer, 0, mLength);				
+		}
+		
+		// Close streams
+		mOutput.flush();
+		mOutput.close();
+		mInput.close();		
+	}
+	
 	/**
 	 * Opens SQLite database in read-only mode
 	 * @return true if operation is successful, false otherwise
 	 * @throws SQLException
 	 */
 	public boolean openDataBase() throws SQLException {
-		String mPath = DB_PATH + DB_NAME;
+		String mPath = mDBPath + DB_NAME;
 		try {
 			mDataBase = SQLiteDatabase.openDatabase(mPath,  null, SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLException sqle ) {
@@ -131,6 +169,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		super.close();
 	}
 		
+	/**
+	 * Called if database version is increased
+	 */
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (oldVersion < newVersion) {
@@ -143,7 +184,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		    } 
 		} 
 	}		
-	
+		
+	/**
+	 * Called when database is created for the first time
+	 */
 	@Override
 	public void onCreate(SQLiteDatabase db)	{
 		/*
