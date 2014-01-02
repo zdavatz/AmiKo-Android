@@ -471,9 +471,9 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "onPreExecute(): progressDialog");
 	        // initialize the dialog
 			progressBar = new ProgressDialog(MainActivity.this);
-	        progressBar.setMessage("Initializing database ...");
+	        progressBar.setMessage("Initializing database...");
 	        progressBar.setIndeterminate(true);
-	        progressBar.setCancelable(true);
+	        progressBar.setCancelable(false);
 	        progressBar.show();
 		}
 				
@@ -490,7 +490,7 @@ public class MainActivity extends Activity {
 			// TODO: implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null)
 				mMediDataSource = new DBAdapter(this.context);
-			// Display progressbar ...
+
 			try {
 				mMediDataSource.create();
 			} catch( IOException e) {
@@ -508,7 +508,7 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "mMediDataSource open!");			
 			if (progressBar.isShowing())
 				progressBar.dismiss();
-			mToastObject.show("Database installed successfully", Toast.LENGTH_LONG);
+			mToastObject.show("Database initialized successfully", Toast.LENGTH_LONG);
 		}
 	}
 	
@@ -903,7 +903,7 @@ public class MainActivity extends Activity {
 								Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
 							}			
 							// Toast
-							mToastObject.show("Database downloaded successfully... installing", Toast.LENGTH_LONG);
+							mToastObject.show("Database downloaded successfully. Installing...", Toast.LENGTH_SHORT);
 						}
 					}
 				}

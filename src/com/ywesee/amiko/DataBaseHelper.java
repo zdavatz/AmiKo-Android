@@ -19,12 +19,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import android.content.Context;
 import android.database.SQLException;
@@ -83,7 +87,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		close();
 		try {
 			// Copy database from src to dst
-			copyDataBase(srcFile);
+			copyDataBase(srcFile, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
@@ -124,23 +128,70 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mInput.close();
 	}
 	
-	private void copyDataBase(String srcFile) throws IOException {
-		// Open shipped database from assets folder
-		InputStream mInput = new FileInputStream(srcFile);
-		String dbFileName = mDBPath + DB_NAME;
-		OutputStream mOutput = new FileOutputStream(dbFileName);
-		
-		// Transfer bytes from input to output
-		byte[] mBuffer = new byte[1024];
-		int mLength;
-		while ((mLength = mInput.read(mBuffer))>0) {
-			mOutput.write(mBuffer, 0, mLength);				
+	private void copyDataBase(String srcFile, boolean zipped) throws IOException {
+		if (!zipped) {
+			// Open database
+			InputStream mInput = new FileInputStream(srcFile);
+			String dbFileName = mDBPath + DB_NAME;
+			OutputStream mOutput = new FileOutputStream(dbFileName);
+			
+			// Transfer bytes from input to output
+			byte[] mBuffer = new byte[1024];
+			int mLength;
+			while ((mLength = mInput.read(mBuffer))>0) {
+				mOutput.write(mBuffer, 0, mLength);				
+			}
+			
+			// Close streams
+			mOutput.flush();
+			mOutput.close();
+			mInput.close();
+		} else {
+			byte buffer[] = new byte[2048];
+			int bytesRead = -1;
+
+			try {
+				// Chmod src file
+				chmod(srcFile, 755);
+				// 
+				InputStream is = new FileInputStream(srcFile);
+				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
+				ZipEntry ze;
+				
+				while ((ze = zis.getNextEntry()) != null) {
+					FileOutputStream fout = new FileOutputStream(mDBPath + DB_NAME);
+					long totBytesRead = 0;
+
+					while ((bytesRead = zis.read(buffer)) != -1) {
+						fout.write(buffer, 0, bytesRead);
+						totBytesRead += bytesRead;
+					}
+					
+					Log.d(TAG, "Unzipped file " + ze.getName() + "(" + totBytesRead/1000 + "kB)");
+					
+					fout.close();
+					zis.closeEntry();
+				}
+
+				zis.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
-		
-		// Close streams
-		mOutput.flush();
-		mOutput.close();
-		mInput.close();		
+	}
+	
+	/**
+	 * Implements chmod using reflection pattern
+	 * @param path
+	 * @param mode
+	 * @return
+	 * @throws Exception
+	 */
+	private int chmod(String path, int mode) throws Exception {
+		Class<?> fileUtils = Class.forName("android.os.FileUtils");
+		Method setPermissions = 
+				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
 	}
 	
 	/**

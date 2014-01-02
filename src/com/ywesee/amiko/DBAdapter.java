@@ -112,13 +112,15 @@ public class DBAdapter {
 	 */
 	public void overwrite() throws IOException {
 		try {
-			// Unzip file
 			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
+			/*
+			// Unzip file			
 			String unzipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.db";									
 			Log.d(TAG, "Unzipping file " + downloadFile);
 			// Unzip (blocking function)
 			unzipFile(downloadFile, unzipFile);
-			mDbHelper.overwriteDataBase(unzipFile);
+			*/
+			mDbHelper.overwriteDataBase(downloadFile);
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");
 			throw new Error("Unable to overwrite database");	
