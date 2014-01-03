@@ -41,6 +41,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 	private static String DB_NAME = "amiko_db_full_idx_de.db";
+	private static String REPORT_NAME = "amiko_report_de.html";
 	private static String mDBPath = "";
 
 	private SQLiteDatabase mDataBase;
@@ -91,7 +92,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
 				throw new Error("Error copying database!");
-			}	
+			}
+			try {
+				// Copy report file from assets
+				copyReportFile();
+				if (Constants.DEBUG)
+					Log.d(TAG, "createDataBase(): report file copied");
+			} catch (IOException e) {
+				throw new Error("Error copying report file!");
+			}
 		}
 	}
 	
@@ -121,16 +130,45 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		return dbFile.exists();
 	}
 	
+	/**
+	 * 
+	 */
+	public long getSizeDatabaseFile() {
+		if (checkDataBase()) {
+			File dbFile = new File(mDBPath + DB_NAME);
+			return dbFile.length();
+		}
+		return 0;
+	}
+	
     /**
      * Copies database from local assets-folder to just created empty database in the
      * system folder, from where it can be accessed and handled.
      * This is done by transferring bytestream.
+     * @throws IOException
      * */
 	private void copyDataBase() throws IOException {
+		copyFromAssetFolder(DB_NAME, mDBPath + DB_NAME);
+	}
+	
+	/**
+     * Copies report file from local assets-folder to system folder, from where it can 
+     * be accessed and handled. This is done by transferring bytestream.
+	 * @throws IOException
+	 */
+	private void copyReportFile() throws IOException {
+		copyFromAssetFolder(REPORT_NAME, mDBPath + REPORT_NAME);
+	}
+	
+	/**
+	 * Copy srcFile in Assets folder to dstPath
+	 * @param srcFile
+	 * @param dstPath
+	 */
+	private void copyFromAssetFolder(String srcFile, String dstPath) throws IOException {
 		// Open shipped database from assets folder
-		InputStream mInput = mContext.getAssets().open(DB_NAME);
-		String dbFileName = mDBPath + DB_NAME;
-		OutputStream mOutput = new FileOutputStream(dbFileName);
+		InputStream mInput = mContext.getAssets().open(srcFile);
+		OutputStream mOutput = new FileOutputStream(dstPath);
 		
 		// Transfer bytes from input to output
 		byte[] mBuffer = new byte[1024];
@@ -143,7 +181,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mOutput.flush();
 		mOutput.close();
 		mInput.close();
-	}
+	}	
 	
 	private void copyDataBase(String srcFile, boolean zipped) throws IOException {
 		if (!zipped) {
@@ -199,7 +237,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
-	 * Implements chmod using reflection pattern
+	 * Utility function: implements chmod using reflection pattern
 	 * @param path
 	 * @param mode
 	 * @return

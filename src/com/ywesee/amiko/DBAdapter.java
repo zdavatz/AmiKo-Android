@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,10 +98,14 @@ public class DBAdapter {
 		mDbHelper.addObserver(observer);
 	}
 	
+	public int getSizeDatabaseFile() {
+		return (int)mDbHelper.getSizeDatabaseFile();
+	}
+	
 	/**
 	 * 
 	 */
-	public int getSizeDownloadedZipFile() {
+	public int getSizeZippedDatabaseFile() {
 		ZipEntry ze = null;
 		try {
 			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
@@ -131,6 +136,31 @@ public class DBAdapter {
 				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
 		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
 	}	
+	
+	/**
+	 * 
+	 */
+	public void copyReportFile() throws IOException {
+		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_report_de.html";
+		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + "amiko_report_de.html";
+		
+		Log.d(TAG, "Destination report file = " + dstReportFile);
+		
+		InputStream mInput = new FileInputStream(srcReportFile);
+		OutputStream mOutput = new FileOutputStream(dstReportFile);
+		
+		// Transfer bytes from input to output
+		byte[] mBuffer = new byte[1024];
+		int mLength;
+		while ((mLength = mInput.read(mBuffer))>0) {
+			mOutput.write(mBuffer, 0, mLength);				
+		}
+		
+		// Close streams
+		mOutput.flush();
+		mOutput.close();
+		mInput.close();	
+	}
 	
 	/**
 	 * Creates database

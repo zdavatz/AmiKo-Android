@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -80,7 +81,6 @@ import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -158,7 +158,7 @@ public class MainActivity extends Activity {
 
 	// Global flag for checking if a search is in progress
 	private boolean mSearchInProgress = false;
-	
+		
 	/** 
 	 * The download manager is a system service that handles long-running HTTP downloads. 
 	 * Clients may request that a URI be downloaded to a particular destination file. 
@@ -166,8 +166,13 @@ public class MainActivity extends Activity {
 	 * HTTP interactions and retrying downloads after failures or across connectivity changes 
 	 * and system reboots.
 	 */
-	private DownloadManager mDownloadManager;	
-	
+	private DownloadManager mDownloadManager = null;
+	// Global flag to signal that update is in progress
+	private boolean mUpdateInProgress = false;
+	private long mDatabaseId = 0;
+	private long mReportId = 0;
+	private long mDownloadedFileCount = 0;
+		
 	/**
 	 * Returns the language of the app
 	 * @return
@@ -355,7 +360,7 @@ public class MainActivity extends Activity {
 		// Setup webviews
 		setupReportView();
 		// Load CSS from asset folder
-		mCSS_str = loadFromFile("amiko_stylesheet.css", "UTF-8"); 
+		mCSS_str = loadFromAssetsFolder("amiko_stylesheet.css", "UTF-8"); 
 		// Define and load webview
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
@@ -380,7 +385,7 @@ public class MainActivity extends Activity {
 		// Init toast object
 		mToastObject = new CustomToast(getApplicationContext());
 		
-		// 
+		// Initialize download manager
 		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 		
 		// Initialize database (including DownloadManager)
@@ -396,7 +401,43 @@ public class MainActivity extends Activity {
 		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
 			String query = intent.getStringExtra(SearchManager.QUERY);
 			// showResults(query);
-		}	
+		}
+		
+		BroadcastReceiver receiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+					long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+					if (downloadId==mDatabaseId || downloadId==mReportId)
+						mDownloadedFileCount++;
+					// Before proceeding make sure both files have been downloaded
+					if (mDownloadedFileCount==2) {
+						Query query = new Query();
+						query.setFilterById(downloadId);
+						Cursor c = mDownloadManager.query(query);
+						if (c.moveToFirst()) {
+							int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
+							// Check if download was successful
+							if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+								// Update database
+								try {
+									AsyncInitDBTask updateDBTask = new AsyncInitDBTask(MainActivity.this);						
+									updateDBTask.execute();		
+								} catch (Exception e) {
+									Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
+								}			
+								// Toast
+								mToastObject.show("Database downloaded successfully. Installing...", Toast.LENGTH_SHORT);
+								mUpdateInProgress = false;
+							}
+						}
+						c.close();
+					}
+				}
+			}
+		};
+        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 	}
 	
 	/**
@@ -462,7 +503,7 @@ public class MainActivity extends Activity {
 		// Progressbar
 		private ProgressDialog progressBar;
 		private Context context;
-		private int mSizeDownloadedZipFile;
+		private int mSizeDatabaseFile;
 		
 		public AsyncInitDBTask(Context context) {
 			this.context = context;
@@ -489,28 +530,40 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "doInBackground: open/overwrite database");
 			// Creates, opens or overwrites database (singleton)
 			// TODO: implement proper singleton pattern (getInstance())
-			if (mMediDataSource==null)
+			if (mMediDataSource==null) {
 				mMediDataSource = new DBAdapter(this.context);
+				mSizeDatabaseFile = mMediDataSource.getSizeDatabaseFile();
+			}
+			// Database adapter already exists, reuse it!
 			else {
-		        if (mMediDataSource!=null) {
-		        	mSizeDownloadedZipFile = mMediDataSource.getSizeDownloadedZipFile();
-		        	if (mSizeDownloadedZipFile<0)
-		        		mSizeDownloadedZipFile = 0;
-		        	Log.d(TAG, "Size downloaded zip = " + mSizeDownloadedZipFile);
-		        }
+				try {
+					// Move report file to appropriate folder
+					mMediDataSource.copyReportFile();	
+				}
+				catch (IOException e) {
+					Log.d(TAG, "Error copying report file!");
+				}
+	        	// Get size of database file (zipped version)
+	        	mSizeDatabaseFile = mMediDataSource.getSizeZippedDatabaseFile();
+	        	if (mSizeDatabaseFile<0)
+	        		mSizeDatabaseFile = 0;
+	        	Log.d(TAG, "Size downloaded zip = " + mSizeDatabaseFile);
 			}
 			try {
+				// Add observer to totally unzipped bytes (for the progress bar)
 				mMediDataSource.addObserver(new Observer() {
 					@Override
 					public void update(Observable o, Object arg) {
 						publishProgress((Integer)arg);
 					}
 				});
+				// Creates or overwrites database (if it already exists)
 				mMediDataSource.create();
 			} catch( IOException e) {
-				Log.d(TAG, "unable to create database!");
+				Log.d(TAG, "Unable to create database!");
 				throw new Error("Unable to create database");
 			}	
+			// Opens database
 			mMediDataSource.open();	
 			
 			return null;
@@ -520,7 +573,7 @@ public class MainActivity extends Activity {
 		protected void onProgressUpdate(Integer... progress) {
 			super.onProgressUpdate(progress);
 			if (progress!=null) {
-				float percentCompleted = 100*(float)progress[0]/(float)mSizeDownloadedZipFile;
+				float percentCompleted = 100*(float)progress[0]/(float)mSizeDatabaseFile;
 				// Log.d(TAG, "observer -> " + percentCompleted + " / " + progress[0] + " / " + mSizeDownloadedZipFile);
 				progressBar.setProgress((int)percentCompleted);
 			}
@@ -878,7 +931,8 @@ public class MainActivity extends Activity {
 		case (R.id.menu_pref3): {
 			mToastObject.show("Update", Toast.LENGTH_SHORT);
 			// Download new database (blocking call)
-			downloadZippedFile();
+			if (!mUpdateInProgress)
+				downloadUpdates();
 			return true;
 		}
 		default:
@@ -891,57 +945,44 @@ public class MainActivity extends Activity {
 	/**
 	 * Downloads the database
 	 */
-	public void downloadZippedFile() {
-		Uri downloadUri = Uri.parse("http://pillbox.oddb.org/amiko_db_full_idx_de.zip");
+	public void downloadUpdates() {
+		// Signal that update is in progress
+		mUpdateInProgress = true;
+		mDownloadedFileCount = 0;
+		
+		// File URIs
+		Uri databaseUri = Uri.parse("http://pillbox.oddb.org/amiko_db_full_idx_de.zip");
+		Uri reportUri = Uri.parse("http://pillbox.oddb.org/amiko_report_de.html");
+		
 		// NOTE: the default download destination is a shared volume where the system might delete your file if 
 		// it needs to reclaim space for system use
-		DownloadManager.Request request = new DownloadManager.Request(downloadUri);
+		DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
+		DownloadManager.Request requestReport = new DownloadManager.Request(reportUri);
 		// Allow download only over WIFI
-		request.setAllowedNetworkTypes(Request.NETWORK_WIFI);
+		requestDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI);
+		requestReport.setAllowedNetworkTypes(Request.NETWORK_WIFI);
 		// Download visible and shows in notifications while in progress and after completion
-		request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+		requestDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+		requestReport.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 		// Set the title of this download, to be displayed in notifications (if enabled).
-		request.setTitle("AmiKo Update");
+		requestDatabase.setTitle("AmiKo Database Update");
+		requestReport.setTitle("AmiKo Report Update");
 		// Set a description of this download, to be displayed in notifications (if enabled)
-		request.setDescription("Updating the AmiKo database.");
+		requestDatabase.setDescription("Updating the AmiKo database.");
+		requestReport.setDescription("Updating the AmiKo error report.");
 		// Set local destination to standard directory (place where files downloaded by the user are placed)
-		request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_db_full_idx_de.zip");
-		
-		BroadcastReceiver receiver = new BroadcastReceiver() {
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				String action = intent.getAction();
-				if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-					long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-					Query query = new Query();
-					query.setFilterById(downloadId);
-					Cursor c = mDownloadManager.query(query);
-					if (c.moveToFirst()) {
-						int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
-						if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
-							// Update database
-							try {
-								AsyncInitDBTask updateDBTask = new AsyncInitDBTask(MainActivity.this);						
-								updateDBTask.execute();		
-							} catch (Exception e) {
-								Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
-							}			
-							// Toast
-							mToastObject.show("Database downloaded successfully. Installing...", Toast.LENGTH_SHORT);
-						}
-					}
-				}
-			}
-		};
-        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_db_full_idx_de.zip");
+		requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_report_de.html");
         
 		// Check if file exist, if yes, delete it 
 		deleteFile("amiko_db_full_idx_de.zip");
+		deleteFile("amiko_report_de.html");
+		
 		// The downloadId is unique across the system. It is used to make future calls related to this download.
-		mDownloadManager.enqueue(request);        
+		mDatabaseId = mDownloadManager.enqueue(requestDatabase);
+		mReportId = mDownloadManager.enqueue(requestReport);
 	}
-	
-	
+		
 	/**
 	 * Sets action bar tab click listeners
 	 * @param actionBar
@@ -1328,28 +1369,19 @@ public class MainActivity extends Activity {
 		}
 	}
 	
-	/**
-	 * Customizes web view client to open links from your own site in the same web view otherwise
-	 * just open the default browser activity with the URL
-	 * @author Max
-	 * 
-	 */
-	private class MyWebViewClient extends WebViewClient {
-				
-	    @Override
-	    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-	   	 	view.loadUrl(url);
-	   	 	view.requestFocus();
-	    	return true;
-	    }
-	    
-	    @Override
-	    public void onPageFinished(WebView view, String url) {
-	    	super.onPageFinished(view, url);
-	    }
+	private String loadReport(String file_name) {	
+		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
+    
+		String file_content = loadFromApplicationFolder(file_name, "UTF-8");
+
+        file_content = "<html><head>"
+        		+ "<script type=\"text/javascript\">" + js_str + "</script></head>"
+        		+ "<body>" + file_content + "</body></html>";
+        
+		return file_content;
 	}	
 	
-	private String loadFromFile(String file_name, String encoding) {
+	private String loadFromAssetsFolder(String file_name, String encoding) {
 		String file_str = "";
 		
         try {
@@ -1363,13 +1395,36 @@ public class MainActivity extends Activity {
             }
             is.close(); 
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+        	// TODO: Handle exception        	
+        }
+        
+		return file_str;			
+	}
+	
+	private String loadFromApplicationFolder(String file_name, String encoding) {
+		String file_str = "";
+		
+        try {
+            InputStream is = new FileInputStream(getApplicationInfo().dataDir + "/databases/" + file_name); 
+            InputStreamReader isr = new InputStreamReader(is, encoding);
+            BufferedReader br = new BufferedReader(isr);
+
+            String line;
+            while ((line = br.readLine()) != null) {
+                file_str += line;
+            }
+            is.close(); 
+        }
+        catch (Exception e) {
+        	// TODO: Handle exception        	
+        }
         
 		return file_str;			
 	}
 	
 	private String createHtml( String style_str, String content_str ) {
-		String js_str = loadFromFile("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
+		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
 		
 		String html_str = "<html><head>"
 				+ "<script type=\"text/javascript\">" + js_str + "</script>"				
@@ -1377,19 +1432,7 @@ public class MainActivity extends Activity {
 				+ "</head><body>" + content_str + "</body></html>";
 
 		return html_str;
-	}	 	
-	
-	private String loadReport(String file_name) {	
-		String js_str = loadFromFile("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
-    
-		String file_content = loadFromFile(file_name, "ISO-8859-1");
-
-        file_content = "<html><head>"
-        		+ "<script type=\"text/javascript\">" + js_str + "</script></head>"
-        		+ "<body>" + file_content + "</body></html>";
-        
-		return file_content;
-	}		
+	}	 		
 		
 	private class SectionTitlesAdapter extends ArrayAdapter<String> {
 		private Context mContext;
