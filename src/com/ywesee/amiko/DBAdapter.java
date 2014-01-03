@@ -98,6 +98,41 @@ public class DBAdapter {
 	}
 	
 	/**
+	 * 
+	 */
+	public int getSizeDownloadedZipFile() {
+		ZipEntry ze = null;
+		try {
+			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
+			// Chmod src file
+			chmod(zipFile, 755);
+			InputStream is = new FileInputStream(zipFile);
+			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));		
+			ze = zis.getNextEntry();
+			zis.close();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		if (ze!=null)
+			return (int)ze.getSize();	// returns -1 if size is UNKNOWN...
+		return 0;
+	}
+	
+	/**
+	 * Implements chmod using reflection pattern
+	 * @param path
+	 * @param mode
+	 * @return
+	 * @throws Exception
+	 */
+	private int chmod(String path, int mode) throws Exception {
+		Class<?> fileUtils = Class.forName("android.os.FileUtils");
+		Method setPermissions = 
+				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
+		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
+	}	
+	
+	/**
 	 * Creates database
 	 * @throws IOException
 	 */
@@ -168,57 +203,7 @@ public class DBAdapter {
 		}
 		return false;
 	}
-
-	/**
-	 * Unzip file in src and move it to dst
-	 */
-	public void unzipFile(String src, String dst) {
-		byte buffer[] = new byte[1024];
-		int bytesRead = -1;
-
-		try {
-			// Chmod src file
-			chmod(src, 755);
-			// 
-			InputStream is = new FileInputStream(src);
-			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
-			ZipEntry ze;
-			
-			while ((ze = zis.getNextEntry()) != null) {
-				FileOutputStream fout = new FileOutputStream(dst);
-				long totBytesRead = 0;
-
-				while ((bytesRead = zis.read(buffer)) != -1) {
-					fout.write(buffer, 0, bytesRead);
-					totBytesRead += bytesRead;
-				}
-				
-				Log.d(TAG, "Unzipped file " + ze.getName() + "(" + totBytesRead/1000 + "kB)");
-				
-				fout.close();
-				zis.closeEntry();
-			}
-
-			zis.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	/**
-	 * Implements chmod using reflection pattern
-	 * @param path
-	 * @param mode
-	 * @return
-	 * @throws Exception
-	 */
-	private int chmod(String path, int mode) throws Exception {
-		Class<?> fileUtils = Class.forName("android.os.FileUtils");
-		Method setPermissions = 
-				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
-		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
-	}
-	
+		
 	/**
 	 * Queries the number of records in the database
 	 * @return number of records

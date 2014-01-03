@@ -69,10 +69,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
 	 * 
 	 */
-	public void notifyObserver(long totBytes) {
+	public void notifyObserver(int totBytes) {
 		mObserver.update(null, totBytes);
 	}
-	
+		
 	/**
      * Creates a empty database on the system and rewrites it with your own database.
      */	
@@ -177,7 +177,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				
 				while ((ze = zis.getNextEntry()) != null) {
 					FileOutputStream fout = new FileOutputStream(mDBPath + DB_NAME);
-					long totBytesRead = 0;
+					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
 
 					while ((bytesRead = zis.read(buffer)) != -1) {
 						fout.write(buffer, 0, bytesRead);

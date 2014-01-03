@@ -462,6 +462,7 @@ public class MainActivity extends Activity {
 		// Progressbar
 		private ProgressDialog progressBar;
 		private Context context;
+		private int mSizeDownloadedZipFile;
 		
 		public AsyncInitDBTask(Context context) {
 			this.context = context;
@@ -470,20 +471,18 @@ public class MainActivity extends Activity {
 		@Override
 		protected void onPreExecute() {
 			if (Constants.DEBUG)
-				Log.d(TAG, "onPreExecute(): progressDialog");
-	        // initialize the dialog
+				Log.d(TAG, "onPreExecute(): progressDialog");	
+	        // Initialize the dialog
 			progressBar = new ProgressDialog(MainActivity.this);
-	        progressBar.setMessage("Initializing database...");
-	        progressBar.setIndeterminate(true);
+	        progressBar.setMessage("Initializing database...");	        
+	        // progressBar.setIndeterminate(true);
+	        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        progressBar.setProgress(0);
+	        progressBar.setMax(100);
 	        progressBar.setCancelable(false);
 	        progressBar.show();
 		}
 				
-		@Override
-		protected void onProgressUpdate(Integer... progress) {
-			// progressBar.incrementProgressBy(progress[0]);
-		}
-		
 		@Override
 		protected Void doInBackground(Void... voids) {
 			if (Constants.DEBUG)
@@ -492,12 +491,19 @@ public class MainActivity extends Activity {
 			// TODO: implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null)
 				mMediDataSource = new DBAdapter(this.context);
-
+			else {
+		        if (mMediDataSource!=null) {
+		        	mSizeDownloadedZipFile = mMediDataSource.getSizeDownloadedZipFile();
+		        	if (mSizeDownloadedZipFile<0)
+		        		mSizeDownloadedZipFile = 0;
+		        	Log.d(TAG, "Size downloaded zip = " + mSizeDownloadedZipFile);
+		        }
+			}
 			try {
 				mMediDataSource.addObserver(new Observer() {
 					@Override
 					public void update(Observable o, Object arg) {
-						Log.d(TAG, "observer -> " + arg.toString());
+						publishProgress((Integer)arg);
 					}
 				});
 				mMediDataSource.create();
@@ -509,7 +515,17 @@ public class MainActivity extends Activity {
 			
 			return null;
 		}
-		
+				
+		@Override
+		protected void onProgressUpdate(Integer... progress) {
+			super.onProgressUpdate(progress);
+			if (progress!=null) {
+				float percentCompleted = 100*(float)progress[0]/(float)mSizeDownloadedZipFile;
+				// Log.d(TAG, "observer -> " + percentCompleted + " / " + progress[0] + " / " + mSizeDownloadedZipFile);
+				progressBar.setProgress((int)percentCompleted);
+			}
+		}
+				
 		@Override
 		protected void onPostExecute(Void result) {			
 			if (Constants.DEBUG) 
