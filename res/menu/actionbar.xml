@@ -10,7 +10,6 @@
 	<item android:id="@+id/aips_button"
 	    android:title="@string/aips_button"
 	    android:icon="@drawable/aips_icon_wh"
-	    android:checkable="true"
 	    android:showAsAction="always" />
 	
 	<item android:id="@+id/favorites_button"

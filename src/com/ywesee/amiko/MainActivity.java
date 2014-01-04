@@ -191,6 +191,17 @@ public class MainActivity extends Activity {
 	}
 	
 	/**
+	 * Check if app runs on phone or tablet
+	 * @param context
+	 * @return
+	 */
+	private boolean isTablet(Context context) {
+	    boolean ret = (context.getResources().getConfiguration().screenLayout
+	            & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;   
+	    return ret;
+	}
+			
+	/**
 	 * Sets currently visible view
 	 * @param newCurrentView
 	 * @param withAnimation
@@ -361,7 +372,10 @@ public class MainActivity extends Activity {
 		// Setup webviews
 		setupReportView();
 		// Load CSS from asset folder
-		mCSS_str = loadFromAssetsFolder("amiko_stylesheet.css", "UTF-8"); 
+		if (isTablet(this))
+			mCSS_str = loadFromAssetsFolder("amiko_stylesheet.css", "UTF-8"); 
+		else
+			mCSS_str = loadFromAssetsFolder("amiko_stylesheet_phone.css", "UTF-8");
 		// Define and load webview
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
@@ -615,7 +629,7 @@ public class MainActivity extends Activity {
 		protected void onPreExecute() {
 			// Initialize progressbar
 			progressBar = new ProgressDialog(MainActivity.this);       
-	        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 	        progressBar.setIndeterminate(true);
 	        if (mSearch!=null && mSearch.getText().length()<1)
 	        	progressBar.show();
@@ -1119,6 +1133,11 @@ public class MainActivity extends Activity {
 		        viewHolder.owner_logo.setImageResource(R.drawable.logo_desitin);
 		 		viewHolder.text_title = (TextView) mView.findViewById(R.id.mtitle);
 			    viewHolder.text_subtitle = (TextView) mView.findViewById(R.id.mauth);
+			    // Set text sizes
+			    if (!isTablet(MainActivity.this)) {
+				    viewHolder.text_title.setTextSize(14);
+				    viewHolder.text_subtitle.setTextSize(12);
+			    }
 			    // Store view
 		        mView.setTag(viewHolder);
 		    } else {
@@ -1506,7 +1525,12 @@ public class MainActivity extends Activity {
 		        mView = vi.inflate(id, null);
 			}
 			
-		    TextView text_title = (TextView) mView.findViewById(R.id.absTitle); // R.id.textView			
+		    TextView text_title = (TextView) mView.findViewById(R.id.absTitle); // R.id.textView
+		    if (!isTablet(MainActivity.this)) {
+		    	text_title.setTextSize(12);	// in "scaled pixel units" (sp)
+		    } else {
+		    	// Defined in "section_item.xml" as 14sp
+		    }
 		    String title = (String) title_items.get(position);
 		    final String id = (String) id_items.get(position);
 		    
