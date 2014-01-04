@@ -144,7 +144,7 @@ public class DBAdapter {
 		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_report_de.html";
 		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + "amiko_report_de.html";
 		
-		Log.d(TAG, "Destination report file = " + dstReportFile);
+		Log.d(TAG, "Dst report file = " + dstReportFile);
 		
 		InputStream mInput = new FileInputStream(srcReportFile);
 		OutputStream mOutput = new FileOutputStream(dstReportFile);
@@ -217,21 +217,6 @@ public class DBAdapter {
 	 */
 	public void close() {
 		mDbHelper.close();		
-	}
-
-	/**
-	 * Checks if file exists and deletes
-	 */
-	public boolean deleteFile(String fileName) {
-		File filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-		File file = new File(filePath, fileName);
-		if (file.exists()) {
-			Log.d(TAG, "Downloaded database found and deleted.");
-			return file.delete();
-		} else {
-			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
-		}
-		return false;
 	}
 		
 	/**

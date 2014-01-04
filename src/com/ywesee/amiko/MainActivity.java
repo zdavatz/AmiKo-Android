@@ -20,6 +20,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,6 +154,9 @@ public class MainActivity extends Activity {
 	// This is the currently visible view
 	private View mCurrentView = null;
 	
+	// This is the drawerlayout for the section titles in expert view
+	private DrawerLayout mDrawerLayout = null;
+	
 	// This is the global toast object
 	private CustomToast mToastObject = null;
 
@@ -270,8 +274,8 @@ public class MainActivity extends Activity {
 		@Override
 		public void onTabReselected(Tab tab, FragmentTransaction ft) {
 			if (mSearch!=null) {				
-				// Reset search
-				mSearch.setText("");
+				// Note: don't reset search
+				// 	mSearch.setText("");
 				// Set hint
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);			
 			}
@@ -287,8 +291,8 @@ public class MainActivity extends Activity {
 			if (mMedis!=null)
 				showResults(mMedis);
 			if (mSearch!=null) {
-				// Reset search
-				mSearch.setText("");
+				// Note: Don't reset search
+				// 	mSearch.setText("");
 				// Set hint
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);
 			}
@@ -353,9 +357,6 @@ public class MainActivity extends Activity {
 		mSuggestView.setVisibility(View.VISIBLE);			
 		mShowView.setVisibility(View.GONE);			
 		mReportView.setVisibility(View.GONE);			
-
-		// Sets initial view
-		setCurrentView(mSuggestView, false);
 		
 		// Setup webviews
 		setupReportView();
@@ -374,7 +375,7 @@ public class MainActivity extends Activity {
 		mActionName = getString(R.string.tab_name_1);
 		
 		// Initialize suggestion listview
-		mListView = (ListView) findViewById(R.id.listView1);
+		mListView = (ListView) findViewById(R.id.suggestView);
 		mListView.setClickable(true);
 		
 		// Load hashset containing registration numbers from persistent data store
@@ -396,6 +397,10 @@ public class MainActivity extends Activity {
 			Log.e(TAG, "AsyncInitDBTask-init exception caught!");
 		}
 
+		// Setup initial view
+		setCurrentView(mSuggestView, false);
+		performSearch("");
+		
 		// Get search intent
 		Intent intent = getIntent();
 		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
@@ -596,6 +601,7 @@ public class MainActivity extends Activity {
 	 */
 	private class AsyncSearchTask extends AsyncTask<String, Void, Void> {
 
+		private ProgressDialog progressBar;
 		private List<Medication> medis = null;
 		
 		@Override
@@ -607,7 +613,12 @@ public class MainActivity extends Activity {
 
 		@Override
 		protected void onPreExecute() {
-			// TODO
+			// Initialize progressbar
+			progressBar = new ProgressDialog(MainActivity.this);       
+	        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+	        progressBar.setIndeterminate(true);
+	        if (mSearch!=null && mSearch.getText().length()<1)
+	        	progressBar.show();
 		}
 		
 		@Override
@@ -615,14 +626,15 @@ public class MainActivity extends Activity {
 			// Do the expensive work in the background here
 			try {
 				// Thread.sleep(1000L);
-				if (!isCancelled() && !mSearchInProgress) {					
+				if (!isCancelled() && !mSearchInProgress) {
 					if (search_key[0].length()>=mMinCharSearch) {
 						mSearchInProgress = true;
 						medis = mMedis = getResults(search_key[0]);	
 					}
 				}
 			} catch (Exception e) {
-				//
+				if (progressBar.isShowing())
+					progressBar.dismiss();			
 			}
 			return null;
 		}	
@@ -632,6 +644,8 @@ public class MainActivity extends Activity {
 			if (medis!=null) {		
 				showResults(medis);
 			}
+			if (progressBar.isShowing())
+				progressBar.dismiss();			
 			mSearchInProgress = false;
 		}
 		
@@ -872,7 +886,10 @@ public class MainActivity extends Activity {
 		case (R.id.aips_button): {
 			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
 			// Switch to AIPS database
-			mDatabaseUsed = "aips";		
+			mDatabaseUsed = "aips";	
+			// Change view
+			setCurrentView(mSuggestView, true);
+			// Reset search
 			mSearch.setText("");
 			performSearch("");
 			// Request menu update
@@ -883,6 +900,9 @@ public class MainActivity extends Activity {
 			mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);
 			// Switch to favorites database
 			mDatabaseUsed = "favorites";
+			// Change view
+			setCurrentView(mSuggestView, true);
+			// Reset search
 			mSearch.setText("");
 			performSearch("");
 			// Request menu update
@@ -975,14 +995,29 @@ public class MainActivity extends Activity {
 		requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_report_de.html");
         
 		// Check if file exist, if yes, delete it 
-		deleteFile("amiko_db_full_idx_de.zip");
-		deleteFile("amiko_report_de.html");
+		deleteDownloadedFile("amiko_db_full_idx_de.zip");
+		deleteDownloadedFile("amiko_report_de.html");
 		
 		// The downloadId is unique across the system. It is used to make future calls related to this download.
 		mDatabaseId = mDownloadManager.enqueue(requestDatabase);
 		mReportId = mDownloadManager.enqueue(requestReport);
 	}
 		
+	/**
+	 * Checks if file exists and deletes
+	 */
+	private boolean deleteDownloadedFile(String fileName) {
+		File filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+		File file = new File(filePath, fileName);
+		if (file.exists()) {
+			Log.d(TAG, "Downloaded file found and deleted.");
+			return file.delete();
+		} else {
+			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
+		}
+		return false;
+	}	
+	
 	/**
 	 * Sets action bar tab click listeners
 	 * @param actionBar
@@ -1041,6 +1076,15 @@ public class MainActivity extends Activity {
 		private int id;
 		private List<T> items ;
 
+    	String title_str = "k.A.";		 // tab_name_1 = Präparat
+    	String auth_str = "k.A.";		 // tab_name_2 = Inhaber
+    	String regnr_str = "k.A.";		 // tab_name_3 = Reg.Nr.
+    	String atc_code_str = "k.A.";	 // tab_name_4 = ATC Code 
+    	String atc_class_str = "k.A.";	 //			   = ATC Klasse	
+    	String substances_str = "k.A.";	 // tab_name_5 = Wirkstoff
+    	String application_str = "k.A."; // tab_name_6 = Therapie / Indications
+    	String pack_info_str = "";		
+		
 		public CustomListAdapter(Context context, int textViewResourceId , List<T> list ) {
 		    super(context, textViewResourceId, list);           
 		    mContext = context;
@@ -1066,6 +1110,7 @@ public class MainActivity extends Activity {
 		    View mView = convertView;
 		    // Trick 1: if convertView is null, inflate it, otherwise only update its content!
 		    if (mView==null) {
+		    	// Inflations and findViewById are expensive operations...
 		    	LayoutInflater vi = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		        mView = vi.inflate(id, null);
 		        // viewHolder is a static variable and is instantiated only here
@@ -1088,26 +1133,25 @@ public class MainActivity extends Activity {
 		    // ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
         	// viewHolder.image_logo.setImageResource(R.drawable.logo_desitin);	
 		    
-        	String title_str = "k.A.";		 // tab_name_1 = Präparat
-        	String auth_str = "k.A.";		 // tab_name_2 = Inhaber
-        	String regnr_str = "k.A.";		 // tab_name_3 = Reg.Nr.
-        	String atc_code_str = "k.A.";	 // tab_name_4 = ATC Code 
-        	String atc_class_str = "k.A.";	 //			   = ATC Klasse	
-        	String substances_str = "k.A.";	 // tab_name_5 = Wirkstoff
-        	// String therapy_str = "k.A.";	
-        	String application_str = "k.A."; // tab_name_6 = Therapie / Indications
-        	String pack_info_str = "";
-		    
-        	if (appLanguage().equals("fr")) {
-            	title_str = "n.s.";			 // tab_name_1 = Präparat
-            	auth_str = "n.s.";			 // tab_name_2 = Inhaber
-            	regnr_str = "n.s.";			 // tab_name_3 = Reg.Nr.
-            	atc_code_str = "n.s.";		 // tab_name_4 = ATC Code 
-            	atc_class_str = "n.s.";		 //			   = ATC Klasse	
-            	substances_str = "n.s.";	 // tab_name_5 = Wirkstoff
-            	application_str = "n.s.";	 // tab_name_6 = Therapie / Indications
+		    if (appLanguage().equals("de")) {
+		    	title_str = "k.A.";		 
+		    	auth_str = "k.A.";		 
+		    	regnr_str = "k.A.";		 
+		    	atc_code_str = "k.A.";	
+		    	atc_class_str = "k.A.";	 
+		    	substances_str = "k.A.";	
+		    	application_str = "k.A."; 
+		    } else if (appLanguage().equals("fr")) {
+            	title_str = "n.s.";			
+            	auth_str = "n.s.";			
+            	regnr_str = "n.s.";			
+            	atc_code_str = "n.s.";		
+            	atc_class_str = "n.s.";		
+            	substances_str = "n.s.";	
+            	application_str = "n.s.";	 
         	}
-        	
+	    	pack_info_str = "";
+	    	
 		 	if (mActionName.equals(getString(R.string.tab_name_1))) {
 		 		// Display "Präparatname" and "Therapie/Kurzbeschrieb"
 			    if (med!=null ) {    
@@ -1135,6 +1179,7 @@ public class MainActivity extends Activity {
 				    	}
 				    	viewHolder.text_subtitle.setText(spannable, BufferType.SPANNABLE);
 			    	}
+			    	
 		        	if (med.getCustomerId()==1) {
 			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);
 		        	} else {
@@ -1317,12 +1362,12 @@ public class MainActivity extends Activity {
 						mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
 							
 						// Add NavigationDrawer, get handle to DrawerLayout
-						DrawerLayout dl = (DrawerLayout) findViewById(R.id.show_view_container);
+						mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
 					    // Set a custom shadow that overlays the main content when the drawer opens
-					    dl.setDrawerShadow(R.drawable.drawer_shadow, Gravity.START);					 
+					    mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.START);					 
 					    // Close any open drawers
-						if (dl != null)
-							dl.closeDrawers();
+						if (mDrawerLayout != null)
+							mDrawerLayout.closeDrawers();
 						/** What follows is all actionbardrawer-related
 					    // ActionBarDrawerToggle ties together the the proper interactions
 					    // between the sliding drawer and the action bar app icon
@@ -1358,8 +1403,8 @@ public class MainActivity extends Activity {
 						// Make it clickable
 		    			mSectionView.setClickable(true);	    	
 			    			
-		    			SectionTitlesAdapter sectionTitles = new SectionTitlesAdapter(mContext, R.layout.section_item, 
-		    					section_ids, section_titles);
+		    			SectionTitlesAdapter sectionTitles = 
+		    					new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);
 		    			mSectionView.setAdapter(sectionTitles);	
 					}
 		    	}
@@ -1404,7 +1449,6 @@ public class MainActivity extends Activity {
 	
 	private String loadFromApplicationFolder(String file_name, String encoding) {
 		String file_str = "";
-		
         try {
             InputStream is = new FileInputStream(getApplicationInfo().dataDir + "/databases/" + file_name); 
             InputStreamReader isr = new InputStreamReader(is, encoding);
@@ -1433,7 +1477,12 @@ public class MainActivity extends Activity {
 
 		return html_str;
 	}	 		
-		
+	
+	/**
+	 * This class implements the adapter for the section titles 
+	 * @author Max
+	 *
+	 */
 	private class SectionTitlesAdapter extends ArrayAdapter<String> {
 		private Context mContext;
 		private int id;
@@ -1489,6 +1538,9 @@ public class MainActivity extends Activity {
 		    	public void onClick(View v) {
 		    		// Log.d(TAG, "section = "+ id);	
 		    		mWebView.loadUrl("app:myhtml#"+id);
+		    		// Close section title view
+					if (mDrawerLayout != null)
+						mDrawerLayout.closeDrawers();
 		    	}
 		    });
 		    
