@@ -200,7 +200,26 @@ public class MainActivity extends Activity {
 	            & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;   
 	    return ret;
 	}
-			
+		
+	/**
+	 * Hide soft keyboard
+	 */
+	private void hideSoftKeyboard() {
+       	// This handler is used to schedule the runnable to be executed as some point in the future
+        Handler handler = new Handler();
+    	final Runnable r = new Runnable() {
+            @Override
+            public void run() {            	
+            	// Remove keyboard
+        		InputMethodManager imm = (InputMethodManager) getSystemService(Service.INPUT_METHOD_SERVICE);
+        		if (imm!=null)
+        			imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0); 
+            }
+        };
+        // Runnable is executed in 1000ms
+        handler.postDelayed(r, 700);
+	}
+	
 	/**
 	 * Sets currently visible view
 	 * @param newCurrentView
@@ -238,21 +257,9 @@ public class MainActivity extends Activity {
         		newCurrentView.setVisibility(View.VISIBLE);
         	} 	    	
         	// Update currently visible view
-        	mCurrentView = newCurrentView;
-        	
-        	// This handler is used to schedule the runnable to be executed as some point in the future
-            Handler handler = new Handler();
-        	final Runnable r = new Runnable() {
-                @Override
-                public void run() {            	
-                	// Remove keyboard
-            		InputMethodManager imm = (InputMethodManager) getSystemService(Service.INPUT_METHOD_SERVICE);
-            		if (imm!=null)
-            			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), 0); 
-                }
-            };
-            // Runnable is executed in 1000ms
-            handler.postDelayed(r, 1000);
+        	mCurrentView = newCurrentView;        	
+        	// Hide keyboard
+        	hideSoftKeyboard();
     	}
     }
        
@@ -261,6 +268,7 @@ public class MainActivity extends Activity {
      */
     public void setSuggestView() {
     	setCurrentView(mSuggestView, true);
+		mSearch.setHint(getString(R.string.search) + " " + mActionName);   	
     }
     
 	/**
@@ -329,7 +337,7 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-	
+		
 		// Flag for enabling the Action Bar on top
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 		
@@ -346,7 +354,7 @@ public class MainActivity extends Activity {
 						
 		// Sets current content view
 		setContentView(R.layout.activity_main);	
-
+		
 		// Initialize views
 		mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
@@ -421,7 +429,7 @@ public class MainActivity extends Activity {
 			String query = intent.getStringExtra(SearchManager.QUERY);
 			// showResults(query);
 		}
-		
+
 		BroadcastReceiver receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
@@ -476,7 +484,7 @@ public class MainActivity extends Activity {
 						float diffX = event1.getX() - event2.getX();
 						// right to left swipe... return to mSuggestView
 						if (diffX>80 && Math.abs(velocityX)>200) {
-							setCurrentView(mSuggestView, true);
+							setSuggestView();	
 							return true;
 						}
 					} catch (Exception e) {
@@ -499,17 +507,16 @@ public class MainActivity extends Activity {
 	
 	private void setupReportView() {
 		mReportWebView = (WebView) mReportView.findViewById(R.id.report_view);
-		
+		// Setup reportwebview
 		mReportWebView.setPadding(5, 5, 5, 5);
 		mReportWebView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);	
 		mReportWebView.setScrollbarFadingEnabled(true);
 		mReportWebView.setHorizontalScrollBarEnabled(false);
-		mReportWebView.requestFocus(WebView.FOCUS_DOWN);
-		
+		mReportWebView.requestFocus(WebView.FOCUS_DOWN);		
 		// Activate JavaScriptInterface
 		mReportWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");		
 		// Enable javascript
-		mReportWebView.getSettings().setJavaScriptEnabled(true);
+		mReportWebView.getSettings().setJavaScriptEnabled(true);		
 	}
 		
 	/**

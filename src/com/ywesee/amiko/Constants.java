@@ -29,7 +29,7 @@ public class Constants {
 	// --> Note: uncomment name of app to compile!
 	public static final String APP_NAME = AMIKO_NAME;
 	// public static final String APP_NAME = COMED_NAME;	
-	public static final String APP_VERSION = "1.2.0";
-	public static final String GEN_DATE = "18.12.2013";
-	public static final int DB_VERSION = 127; 	// Database (1.2.7), AmiKo Release 1.2.0 (06/12/2013)
+	public static final String APP_VERSION = "1.2.1";
+	public static final String GEN_DATE = "04.01.2013";
+	public static final int DB_VERSION = 128; 	// Database (1.2.7), AmiKo Release 1.2.0 (06/12/2013)
 }
