@@ -1,13 +1,14 @@
 var MyApp_SearchResultCount = 0;
 
 function MyApp_Test() {
-document.bgColor="#AAAAAA";
+  document.bgColor="#AAAAAA";
 }
 
 function MyApp_HighlightAllOccurencesOfString(keyword) {
   MyApp_RemoveAllHighlights();
   MyApp_HighlightAllOccurencesOfStringForElement(document.body, keyword.toLowerCase());
   document.getElementById("MyAppHighlight").scrollIntoView();
+  jsInterface.receiveValueFromJS(MyApp_SearchResultCount);
 }
 
 function MyApp_HighlightAllOccurencesOfStringForElement(element,keyword) {
@@ -32,7 +33,7 @@ function MyApp_HighlightAllOccurencesOfStringForElement(element,keyword) {
         element.parentNode.insertBefore(span, next);
         element.parentNode.insertBefore(text, next);
         element = text;
-        MyApp_SearchResultCount++;	
+        MyApp_SearchResultCount++;
       }
     } else if (element.nodeType == 1) { 
       if (element.style.display != "none" && element.nodeName.toLowerCase() != 'select') {

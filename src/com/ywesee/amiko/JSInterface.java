@@ -20,10 +20,13 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import android.content.Context;
+import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
 public class JSInterface {
+	
+	private static final String TAG = "JSInterface"; // Tag for LogCat window
 	
 	Context mContext;
 
@@ -36,6 +39,11 @@ public class JSInterface {
 	public String showToast(String toast) {
 		Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
 		return toast;
+	}
+
+	@JavascriptInterface
+	public void receiveValueFromJS(int searchCnt) {
+		Log.d(TAG, "Search result count = " + searchCnt);
 	}
 	
 	public int highlightKeyword(String key) {

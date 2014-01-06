@@ -738,6 +738,7 @@ public class MainActivity extends Activity {
 		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 		        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
 		        	if (mCurrentView==mShowView) {
+		        		// Searches forward
 		        		mWebView.findNext(true);
 		        	}
 		            return true;
