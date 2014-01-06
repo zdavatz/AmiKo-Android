@@ -13,6 +13,7 @@
         android:layout_alignParentTop="true"
         android:cursorVisible="true"
 		android:singleLine="true"
+		android:imeOptions="actionSearch"
         android:maxWidth="280dp"
         android:minWidth="280dp"
         android:hint="@string/search">

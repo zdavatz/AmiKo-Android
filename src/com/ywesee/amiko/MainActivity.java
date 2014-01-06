@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -80,6 +81,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.widget.ArrayAdapter;
@@ -202,6 +204,24 @@ public class MainActivity extends Activity {
 	}
 		
 	/**
+	 * Show soft keyboard
+	 */
+	private void showSoftKeyboard() {
+       	// This handler is used to schedule the runnable to be executed as some point in the future
+        Handler handler = new Handler();
+    	final Runnable r = new Runnable() {
+            @Override
+            public void run() {            	
+            	// Display keyboard
+            	InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            	imm.toggleSoftInputFromWindow(mCurrentView.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
+            }
+        };
+        // Runnable is executed in 300ms
+        handler.postDelayed(r, 300);
+	}
+	
+	/**
 	 * Hide soft keyboard
 	 */
 	private void hideSoftKeyboard() {
@@ -216,7 +236,7 @@ public class MainActivity extends Activity {
         			imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0); 
             }
         };
-        // Runnable is executed in 1000ms
+        // Runnable is executed in 700ms
         handler.postDelayed(r, 700);
 	}
 	
@@ -713,6 +733,19 @@ public class MainActivity extends Activity {
 			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
 		}
 		
+		mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+		    @Override
+		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+		        	if (mCurrentView==mShowView) {
+		        		mWebView.findNext(true);
+		        	}
+		            return true;
+		        }
+		        return false;
+		    }
+		});
+		
 		mSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (hasFocus) {
@@ -721,7 +754,7 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
-
+		
 		mSearch.requestFocus();
 		
 		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
@@ -744,7 +777,7 @@ public class MainActivity extends Activity {
 				performSearch(mSearch.getText().toString());
 				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );	    		
 			}
-		} );
+		});
 		
 		mDelete.setOnClickListener(new OnClickListener() {
 			@Override
@@ -752,7 +785,7 @@ public class MainActivity extends Activity {
 				mSearch.setText("");
 			}
 		});
-		
+
 		return true;
 	}
 	
@@ -768,12 +801,24 @@ public class MainActivity extends Activity {
 					Log.d(TAG, "Time for performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			} else if (mCurrentView==mShowView) {
 				if (mWebView!=null) {
+					
+					// Native solution
 					if (search_key.length()>2) {
-				    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
+						mWebView.findAllAsync(search_key);
+						try {
+							Method m = WebView.class.getMethod("setFindIsUp",  Boolean.TYPE);
+							m.invoke(mWebView, true);
+						} catch(Exception ignored) {}
+					}
+					// Old solution: uses javascript
+					/*					
+					if (search_key.length()>2) {
+				    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");
 					}
 					else {
 						mWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
 					}
+					*/
 				}
 			} else if (mCurrentView==mReportView) {
 				if (search_key.length()>2) {
@@ -904,6 +949,10 @@ public class MainActivity extends Activity {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {		
 		switch (item.getItemId()) {
+		case (R.id.menu_search): {
+			showSoftKeyboard();
+			return true;
+		}
 		case (R.id.aips_button): {
 			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
 			// Switch to AIPS database
