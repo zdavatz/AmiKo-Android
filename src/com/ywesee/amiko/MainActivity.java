@@ -370,6 +370,9 @@ public class MainActivity extends Activity {
 		ActionBar ab = getActionBar();
 		// Disable activity title
 		ab.setDisplayShowTitleEnabled(false);
+		// Hide caret symbol ("<") upper left corner
+		ab.setDisplayHomeAsUpEnabled(false);
+		ab.setHomeButtonEnabled(false);
 		setTabNavigation(ab);
 						
 		// Sets current content view
@@ -727,7 +730,7 @@ public class MainActivity extends Activity {
 		
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.setVisible(true);		
-		
+			
 		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
 		if (mSearch != null) {
 			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
