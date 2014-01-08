@@ -56,6 +56,7 @@ import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -84,6 +85,7 @@ import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
+import android.webkit.WebView.FindListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -164,7 +166,12 @@ public class MainActivity extends Activity {
 
 	// Global flag for checking if a search is in progress
 	private boolean mSearchInProgress = false;
-		
+
+	// In-text-search hits counter
+	private TextView mSearchHitsCntView = null;
+	private int mSearchHitsCounter = 0;
+	private int mActiveHitOrdinal = 0;
+	
 	/** 
 	 * The download manager is a system service that handles long-running HTTP downloads. 
 	 * Clients may request that a URI be downloaded to a particular destination file. 
@@ -224,9 +231,10 @@ public class MainActivity extends Activity {
 	/**
 	 * Hide soft keyboard
 	 */
-	private void hideSoftKeyboard() {
+	private void hideSoftKeyboard(int duration) {
        	// This handler is used to schedule the runnable to be executed as some point in the future
         Handler handler = new Handler();
+        final int d = duration;
     	final Runnable r = new Runnable() {
             @Override
             public void run() {            	
@@ -237,7 +245,7 @@ public class MainActivity extends Activity {
             }
         };
         // Runnable is executed in 700ms
-        handler.postDelayed(r, 700);
+        handler.postDelayed(r, d);
 	}
 	
 	/**
@@ -279,7 +287,7 @@ public class MainActivity extends Activity {
         	// Update currently visible view
         	mCurrentView = newCurrentView;        	
         	// Hide keyboard
-        	hideSoftKeyboard();
+        	hideSoftKeyboard(700);
     	}
     }
        
@@ -360,6 +368,8 @@ public class MainActivity extends Activity {
 		
 		// Flag for enabling the Action Bar on top
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+		// Enable overlay mode for action bar
+		getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
 		
 		// Create action bar
 		int mode = ActionBar.NAVIGATION_MODE_TABS;		
@@ -367,12 +377,16 @@ public class MainActivity extends Activity {
 			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
 		}
 		// Retrieve reference to the activity's action bar
-		ActionBar ab = getActionBar();
+		ActionBar ab = getActionBar();	
 		// Disable activity title
 		ab.setDisplayShowTitleEnabled(false);
 		// Hide caret symbol ("<") upper left corner
 		ab.setDisplayHomeAsUpEnabled(false);
 		ab.setHomeButtonEnabled(false);
+		// Sets color of action bar (including alpha-channel)
+		ab.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));
+
+		// Sets tab navigators
 		setTabNavigation(ab);
 						
 		// Sets current content view
@@ -411,6 +425,13 @@ public class MainActivity extends Activity {
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
+		mWebView.setFindListener(new FindListener() {
+			@Override
+			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
+				mActiveHitOrdinal = activeMatchOrdinal;
+				mSearchHitsCounter = numberOfMatches;
+			}
+		});
 		
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
@@ -497,6 +518,8 @@ public class MainActivity extends Activity {
 	private void setupGestureDetector(WebView webView) {
 		GestureDetector.SimpleOnGestureListener simpleOnGestureListener = 
 				new GestureDetector.SimpleOnGestureListener() {
+			
+			@Override
 			public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
 				if (event1==null || event2==null)
 					return false;
@@ -509,7 +532,7 @@ public class MainActivity extends Activity {
 						if (diffX>80 && Math.abs(velocityX)>200) {
 							setSuggestView();	
 							return true;
-						}
+						} 
 					} catch (Exception e) {
 						// Handle exceptions...
 					}
@@ -523,7 +546,10 @@ public class MainActivity extends Activity {
 		webView.setOnTouchListener(new View.OnTouchListener() {			
 			@Override
 			public boolean onTouch(View v, MotionEvent event) {
-				return detector.onTouchEvent(event);
+				if (detector.onTouchEvent(event))
+					return true;				
+				hideSoftKeyboard(50);
+				return false;
 			}
 		});			
 	}
@@ -729,20 +755,30 @@ public class MainActivity extends Activity {
 		menu.findItem(R.id.menu_pref1).setChecked(false);
 		
 		mSearchItem = menu.findItem(R.id.menu_search);
-		mSearchItem.setVisible(true);		
-			
+		mSearchItem.setVisible(true);				
+		
 		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
 		if (mSearch != null) {
 			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
 		}
 		
+		mSearchHitsCntView = (TextView) mSearchItem.getActionView().findViewById(R.id.hits_counter);
+		mSearchHitsCntView.setVisibility(View.GONE);
+		
 		mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 		    @Override
 		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 		        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-		        	if (mCurrentView==mShowView) {
+		        	if (mCurrentView==mSuggestView) {
+		        		// Hide keyboard
+		        		hideSoftKeyboard(700);
+		        	}
+		        	else if (mCurrentView==mShowView) {
 		        		// Searches forward
 		        		mWebView.findNext(true);
+		        		// Update hits counter
+		        		mSearchHitsCntView.setVisibility(View.VISIBLE);
+		        		mSearchHitsCntView.setText((mActiveHitOrdinal+1) + "/" + mSearchHitsCounter);
 		        	}
 		            return true;
 		        }
@@ -753,8 +789,7 @@ public class MainActivity extends Activity {
 		mSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (hasFocus) {
-					getWindow().setSoftInputMode(
-							WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 				}
 			}
 		});
@@ -786,6 +821,10 @@ public class MainActivity extends Activity {
 		mDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				if (mCurrentView==mShowView) {
+					mSearchHitsCntView.setVisibility(View.GONE);
+					mWebView.clearMatches();
+				}
 				mSearch.setText("");
 			}
 		});
@@ -804,8 +843,7 @@ public class MainActivity extends Activity {
 				if (Constants.DEBUG)
 					Log.d(TAG, "Time for performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			} else if (mCurrentView==mShowView) {
-				if (mWebView!=null) {
-					
+				if (mWebView!=null) {					
 					// Native solution
 					if (search_key.length()>2) {
 						mWebView.findAllAsync(search_key);
@@ -815,7 +853,7 @@ public class MainActivity extends Activity {
 						} catch(Exception ignored) {}
 					}
 					// Old solution: uses javascript
-					/*					
+					/*
 					if (search_key.length()>2) {
 				    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");
 					}

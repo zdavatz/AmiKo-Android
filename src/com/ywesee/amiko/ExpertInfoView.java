@@ -28,7 +28,7 @@ public class ExpertInfoView {
 		
 		// Activate JavaScriptInterface in given context
 		mWebView.addJavascriptInterface(new JSInterface(context), "jsInterface");				
-		
+				
 		WebSettings wsettings = mWebView.getSettings();		    		
 		// Sets whether WebView loads pages in overview mode
 		wsettings.setLoadWithOverviewMode(true);

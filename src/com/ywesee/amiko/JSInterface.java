@@ -27,6 +27,7 @@ import android.widget.Toast;
 public class JSInterface {
 	
 	private static final String TAG = "JSInterface"; // Tag for LogCat window
+	private int mSearchHits = 0;
 	
 	Context mContext;
 
@@ -42,8 +43,13 @@ public class JSInterface {
 	}
 
 	@JavascriptInterface
-	public void receiveValueFromJS(int searchCnt) {
-		Log.d(TAG, "Search result count = " + searchCnt);
+	public void receiveValueFromJS(int searchHits) {
+		Log.d(TAG, "Num searhc hist = " + searchHits);
+		mSearchHits = searchHits;
+	}
+	
+	public int getSearchHits() {
+		return mSearchHits;
 	}
 	
 	public int highlightKeyword(String key) {
