@@ -169,8 +169,7 @@ public class MainActivity extends Activity {
 
 	// In-text-search hits counter
 	private TextView mSearchHitsCntView = null;
-	private int mSearchHitsCounter = 0;
-	private int mActiveHitOrdinal = 0;
+
 	
 	/** 
 	 * The download manager is a system service that handles long-running HTTP downloads. 
@@ -260,8 +259,9 @@ public class MainActivity extends Activity {
     	if (mViewHolder!=null) {
     		// Set direction of transitation old view to new view
     		int direction = 1;
-    		if (mCurrentView==mShowView || mCurrentView==mReportView)
+    		if (mCurrentView==mShowView || mCurrentView==mReportView) {
     			direction = -1;
+    		}
     		// Remove current view    		
     		if (mCurrentView!=null) {
 	    		if (withAnimation==true) {
@@ -296,6 +296,8 @@ public class MainActivity extends Activity {
      */
     public void setSuggestView() {
     	setCurrentView(mSuggestView, true);
+    	mSearchHitsCntView.setVisibility(View.GONE);
+    	mSearch.setText("");
 		mSearch.setHint(getString(R.string.search) + " " + mActionName);   	
     }
     
@@ -368,8 +370,8 @@ public class MainActivity extends Activity {
 		
 		// Flag for enabling the Action Bar on top
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
-		// Enable overlay mode for action bar
-		getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
+		// Enable overlay mode for action bar (no good, search results disappear behind it...)
+		// getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
 		
 		// Create action bar
 		int mode = ActionBar.NAVIGATION_MODE_TABS;		
@@ -425,14 +427,39 @@ public class MainActivity extends Activity {
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
+		// Add find listeners
+		// TODO: do better!!
 		mWebView.setFindListener(new FindListener() {
 			@Override
 			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
-				mActiveHitOrdinal = activeMatchOrdinal;
-				mSearchHitsCounter = numberOfMatches;
+				// Update hits counter
+				if (isDoneCounting) {
+	    			if (activeMatchOrdinal<numberOfMatches) {
+	        			mSearchHitsCntView.setVisibility(View.VISIBLE);
+		        		mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
+	    			} else {			
+	    				mSearchHitsCntView.setVisibility(View.GONE);
+	    				mWebView.clearMatches();
+	    			}
+				}
 			}
 		});
-		
+		mReportWebView.setFindListener(new FindListener() {
+			@Override
+			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
+				// Update hits counter
+				if (isDoneCounting) {
+	    			if (activeMatchOrdinal<numberOfMatches) {
+	        			mSearchHitsCntView.setVisibility(View.VISIBLE);
+		        		mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
+	    			} else {			
+	    				mSearchHitsCntView.setVisibility(View.GONE);
+	    				mReportWebView.clearMatches();
+	    			}
+				}
+			}
+		});
+				
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
 		setupGestureDetector(mReportWebView);
@@ -772,13 +799,12 @@ public class MainActivity extends Activity {
 		        	if (mCurrentView==mSuggestView) {
 		        		// Hide keyboard
 		        		hideSoftKeyboard(700);
-		        	}
-		        	else if (mCurrentView==mShowView) {
+		        	} else if (mCurrentView==mShowView) {
 		        		// Searches forward
 		        		mWebView.findNext(true);
-		        		// Update hits counter
-		        		mSearchHitsCntView.setVisibility(View.VISIBLE);
-		        		mSearchHitsCntView.setText((mActiveHitOrdinal+1) + "/" + mSearchHitsCounter);
+		        	} else if (mCurrentView==mReportView) {
+		        		// Searches forward
+		        		mReportWebView.findNext(true);
 		        	}
 		            return true;
 		        }
@@ -824,6 +850,9 @@ public class MainActivity extends Activity {
 				if (mCurrentView==mShowView) {
 					mSearchHitsCntView.setVisibility(View.GONE);
 					mWebView.clearMatches();
+				} else if (mCurrentView==mReportView) {
+					mSearchHitsCntView.setVisibility(View.GONE);
+					mReportWebView.clearMatches();
 				}
 				mSearch.setText("");
 			}
@@ -848,9 +877,15 @@ public class MainActivity extends Activity {
 					if (search_key.length()>2) {
 						mWebView.findAllAsync(search_key);
 						try {
-							Method m = WebView.class.getMethod("setFindIsUp",  Boolean.TYPE);
+							Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
+							m.setAccessible(true);
 							m.invoke(mWebView, true);
-						} catch(Exception ignored) {}
+						} catch(Exception ignored) {
+							// Exception is ignored
+						}
+					} else {
+						mSearchHitsCntView.setVisibility(View.GONE);
+						mWebView.clearMatches();
 					}
 					// Old solution: uses javascript
 					/*
@@ -863,11 +898,29 @@ public class MainActivity extends Activity {
 					*/
 				}
 			} else if (mCurrentView==mReportView) {
-				if (search_key.length()>2) {
-					mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
-				}
-				else {
-					mReportWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
+				if (mReportWebView!=null) {					
+					// Native solution
+					if (search_key.length()>2) {
+						mReportWebView.findAllAsync(search_key);
+						try {
+							Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
+							m.setAccessible(true);
+							m.invoke(mReportWebView, true);
+						} catch(Exception ignored) {
+							// Exception is ignored
+						}
+					} else {
+						mSearchHitsCntView.setVisibility(View.GONE);
+						mReportWebView.clearMatches();
+					}
+					/*
+					if (search_key.length()>2) {
+						mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
+					}
+					else {
+						mReportWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
+					}
+					*/
 				}
 			}
 		} else {
