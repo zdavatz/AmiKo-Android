@@ -5,16 +5,19 @@
     android:background="@android:color/transparent"
     android:gravity="right" >
  
+    <!-- flagNoExtractUi is import for cell phones
+    	 see also: http://developer.android.com/reference/android/widget/TextView.html#attr_android:imeOptions -->
+    
     <EditText
         android:id="@+id/search_box"
         android:drawableLeft="@drawable/ic_action_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:cursorVisible="true"
 		android:singleLine="true"
-		android:imeOptions="actionSearch"
+		android:imeOptions="actionSearch|flagNoExtractUi"
         android:hint="@string/search">
     </EditText>
     

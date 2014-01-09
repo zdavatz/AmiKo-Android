@@ -121,6 +121,8 @@ public class MainActivity extends Activity {
 	private String mHtmlString;
 	// Current action bar tab
 	private String mActionName = "";
+	// Current search query
+	private String mSearchQuery = "";
 	// Minimum number of characters used for SQLite query (default: min 1-chars search)
 	private int mMinCharSearch = 0;	
 	// Global timer used for benchmarking app
@@ -298,6 +300,7 @@ public class MainActivity extends Activity {
     	setCurrentView(mSuggestView, true);
     	mSearchHitsCntView.setVisibility(View.GONE);
     	mSearch.setText("");
+    	mSearch.append(mSearchQuery);
 		mSearch.setHint(getString(R.string.search) + " " + mActionName);   	
     }
     
@@ -795,7 +798,7 @@ public class MainActivity extends Activity {
 		mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 		    @Override
 		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		        if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+		        if (actionId==EditorInfo.IME_ACTION_SEARCH || actionId==EditorInfo.IME_ACTION_DONE) {
 		        	if (mCurrentView==mSuggestView) {
 		        		// Hide keyboard
 		        		hideSoftKeyboard(700);
@@ -869,6 +872,7 @@ public class MainActivity extends Activity {
 				// The distinction is made in the function getResults
 				mAsyncSearchTask = new AsyncSearchTask();						
 				mAsyncSearchTask.execute(search_key);
+				mSearchQuery = search_key;
 				if (Constants.DEBUG)
 					Log.d(TAG, "Time for performing search: "+Long.toString(System.currentTimeMillis()-t0)+"ms");
 			} else if (mCurrentView==mShowView) {
