@@ -64,6 +64,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
+import android.text.Selection;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
@@ -156,7 +157,6 @@ public class MainActivity extends Activity {
 	private View mSuggestView = null;	
 	private View mShowView = null;
 	private View mReportView = null;	
-	
 	// This is the currently visible view
 	private View mCurrentView = null;
 	
@@ -166,12 +166,15 @@ public class MainActivity extends Activity {
 	// This is the global toast object
 	private CustomToast mToastObject = null;
 
-	// Global flag for checking if a search is in progress
-	private boolean mSearchInProgress = false;
-
 	// In-text-search hits counter
 	private TextView mSearchHitsCntView = null;
-
+	
+	// Global flag for checking if a search is in progress
+	private boolean mSearchInProgress = false;	
+	// Global flag for checking of we are restoring a state
+	private boolean mRestoringState = false;
+	// Global flag to signal that update is in progress
+	private boolean mUpdateInProgress = false;
 	
 	/** 
 	 * The download manager is a system service that handles long-running HTTP downloads. 
@@ -181,8 +184,6 @@ public class MainActivity extends Activity {
 	 * and system reboots.
 	 */
 	private DownloadManager mDownloadManager = null;
-	// Global flag to signal that update is in progress
-	private boolean mUpdateInProgress = false;
 	private long mDatabaseId = 0;
 	private long mReportId = 0;
 	private long mDownloadedFileCount = 0;
@@ -297,11 +298,23 @@ public class MainActivity extends Activity {
      * Changes to "suggestView" - called from ExpertInfoView
      */
     public void setSuggestView() {
+    	// Enable flag    	
+    	mRestoringState = true;
+    	// Set view
     	setCurrentView(mSuggestView, true);
+    	// Remove search hit counter
     	mSearchHitsCntView.setVisibility(View.GONE);
-    	mSearch.setText("");
-    	mSearch.append(mSearchQuery);
+    	// Old search query
+    	mSearch.setText(mSearchQuery);
+    	Editable s = mSearch.getText();    	
+    	// Set cursor at the end
+    	Selection.setSelection(s, s.length());
+   		// Restore search results
+    	showResults(mMedis);
+    	// Restore hint
 		mSearch.setHint(getString(R.string.search) + " " + mActionName);   	
+		// Disable flag
+		mRestoringState = false;
     }
     
 	/**
@@ -340,8 +353,10 @@ public class MainActivity extends Activity {
 			mFragment = Fragment.instantiate(mActivity, mFragName);
 			ft.add(android.R.id.content, mFragment);		
 			mActionName = mTabName;
-			if (mMedis!=null)
+			if (mMedis!=null) {
+				mTimer = System.currentTimeMillis();
 				showResults(mMedis);
+			}
 			if (mSearch!=null) {
 				// Note: Don't reset search
 				// 	mSearch.setText("");
@@ -431,7 +446,6 @@ public class MainActivity extends Activity {
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
 		// Add find listeners
-		// TODO: do better!!
 		mWebView.setFindListener(new FindListener() {
 			@Override
 			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
@@ -462,7 +476,6 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
-				
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
 		setupGestureDetector(mReportWebView);
@@ -546,9 +559,7 @@ public class MainActivity extends Activity {
 	 * @param webView
 	 */
 	private void setupGestureDetector(WebView webView) {
-		GestureDetector.SimpleOnGestureListener simpleOnGestureListener = 
-				new GestureDetector.SimpleOnGestureListener() {
-			
+		GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {			
 			@Override
 			public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
 				if (event1==null || event2==null)
@@ -559,7 +570,7 @@ public class MainActivity extends Activity {
 					try {
 						float diffX = event1.getX() - event2.getX();
 						// right to left swipe... return to mSuggestView
-						if (diffX>80 && Math.abs(velocityX)>200) {
+						if (diffX>120 && Math.abs(velocityX)>300) {
 							setSuggestView();	
 							return true;
 						} 
@@ -842,8 +853,10 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {	
-				performSearch(mSearch.getText().toString());
-				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );	    		
+				if (!mRestoringState) {
+					performSearch(mSearch.getText().toString());
+					mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );
+				}
 			}
 		});
 		
@@ -1019,8 +1032,10 @@ public class MainActivity extends Activity {
 	   		// Set adapter to listview		
 	   		mListView.setAdapter(custom_adapter);	
 	   		// Give some feedback about the search to the user (could be done better!)
-	   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
-	   				Toast.LENGTH_SHORT);
+	   		if (!mRestoringState) {
+		   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
+		   				Toast.LENGTH_SHORT);
+	   		}
 	   	}
 	}	
 	
