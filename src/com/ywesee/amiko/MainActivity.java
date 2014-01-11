@@ -79,6 +79,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
@@ -339,13 +340,14 @@ public class MainActivity extends Activity {
 		@Override
 		public void onTabReselected(Tab tab, FragmentTransaction ft) {
 			if (mSearch!=null) {				
-				// Note: don't reset search
-				// 	mSearch.setText("");
 				// Set hint
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);			
 			}
 			// Change content view
-   			setCurrentView(mSuggestView, true);
+			if (mCurrentView==mSuggestView)
+				setCurrentView(mSuggestView, true);
+			else if (mCurrentView==mShowView || mCurrentView==mReportView)
+				setSuggestView();
 		}
 
 		@Override
@@ -358,13 +360,14 @@ public class MainActivity extends Activity {
 				showResults(mMedis);
 			}
 			if (mSearch!=null) {
-				// Note: Don't reset search
-				// 	mSearch.setText("");
 				// Set hint
 				mSearch.setHint(getString(R.string.search) + " " + mTabName);
 			}
 			// Change content view
-   			setCurrentView(mSuggestView, true);
+			if (mCurrentView==mSuggestView)
+				setCurrentView(mSuggestView, true);
+			else if (mCurrentView==mShowView || mCurrentView==mReportView)
+				setSuggestView();
 		}
 
 		@Override
@@ -793,7 +796,7 @@ public class MainActivity extends Activity {
 		// Inflate the menu. Add items to the action bar if present.
 		getMenuInflater().inflate(R.menu.actionbar, menu);
 
-		menu.findItem(R.id.menu_pref1).setChecked(false);
+		// menu.findItem(R.id.menu_pref1).setChecked(false);
 		
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.setVisible(true);				
@@ -930,14 +933,6 @@ public class MainActivity extends Activity {
 						mSearchHitsCntView.setVisibility(View.GONE);
 						mReportWebView.clearMatches();
 					}
-					/*
-					if (search_key.length()>2) {
-						mReportWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");									
-					}
-					else {
-						mReportWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
-					}
-					*/
 				}
 			}
 		} else {
@@ -1093,6 +1088,7 @@ public class MainActivity extends Activity {
 			invalidateOptionsMenu();
 			return true;
 		}
+		/*
 		case (R.id.menu_pref1): {
 			mToastObject.show(getString(R.string.menu_pref1), Toast.LENGTH_SHORT);
 			if (!item.isChecked()) {
@@ -1104,8 +1100,11 @@ public class MainActivity extends Activity {
 			}			
 			return true;
 		}
+		*/
 		case (R.id.menu_pref2): {
 			mToastObject.show("Error Report", Toast.LENGTH_SHORT);	
+			// Enable restoring state flag
+			mRestoringState = true;
 			// Reset and change search hint
 			if (mSearch != null) {
 				mSearch.setText("");
@@ -1123,6 +1122,8 @@ public class MainActivity extends Activity {
 
 			// Display report
 			setCurrentView(mReportView, true);	
+			// Disable restoring state
+			mRestoringState = false;
 			
 			/*
 			FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -1139,6 +1140,11 @@ public class MainActivity extends Activity {
 				downloadUpdates();
 			return true;
 		}
+		case (R.id.menu_help): {
+			mToastObject.show("About", Toast.LENGTH_SHORT);
+			// TODO:
+			return true;
+		}		
 		default:
 			break;
 		}
@@ -1599,6 +1605,24 @@ public class MainActivity extends Activity {
 		    	}
 	    	});	
 		 	
+		    // Long click listener
+		    mView.setOnLongClickListener(new OnLongClickListener() {
+		    	@Override
+		    	public boolean onLongClick(View v) {
+		    		if (mActionName.equals(getString(R.string.tab_name_4))) {			    				
+			    		Medication m = mMediDataSource.searchId(med.getId());
+			    		String[] atc_items = m.getAtcCode().split(";");
+			    		if (atc_items!=null) {
+			    			mSearch.setText(atc_items[0]);
+			    			Editable s = mSearch.getText();    	
+			    			// Set cursor at the end
+			    			Selection.setSelection(s, s.length());
+			    		}
+		    		}
+		    		return true;
+		    	}
+		    });
+		    
 			return mView;
 		}
 	}

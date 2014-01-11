@@ -3,7 +3,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" 
     android:background="@android:color/transparent"
-    android:gravity="right" >
+    android:gravity="left" >
  
     <!-- flagNoExtractUi is import for cell phones
     	 see also: http://developer.android.com/reference/android/widget/TextView.html#attr_android:imeOptions -->
