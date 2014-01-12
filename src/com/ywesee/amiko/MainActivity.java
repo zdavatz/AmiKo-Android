@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.regex.Matcher;
@@ -113,6 +114,7 @@ public class MainActivity extends Activity {
 		"Indications", "Posologie", "Précautions", "Interactions", "Grossesse/All.", 
 		"Conduite", "Effets indésir.", "Surdosage", "Propriétés/Effets", "Cinétique", "Préclinique", 
 		"Remarques", "Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};	
+	
 	// Main AsyncTask
 	private AsyncSearchTask mAsyncSearchTask = null;
 	// SQLite database adapter
@@ -188,20 +190,7 @@ public class MainActivity extends Activity {
 	private long mDatabaseId = 0;
 	private long mReportId = 0;
 	private long mDownloadedFileCount = 0;
-		
-	/**
-	 * Returns the language of the app
-	 * @return
-	 */
-	private String appLanguage() {
-		if (Constants.APP_NAME.equals(Constants.AMIKO_NAME)) {
-			return "de";
-		} else if (Constants.APP_NAME.equals(Constants.COMED_NAME)) {
-			return "fr";
-		}
-		return "";
-	}
-	
+			
 	/**
 	 * Check if app runs on phone or tablet
 	 * @param context
@@ -1028,8 +1017,13 @@ public class MainActivity extends Activity {
 	   		mListView.setAdapter(custom_adapter);	
 	   		// Give some feedback about the search to the user (could be done better!)
 	   		if (!mRestoringState) {
-		   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
-		   				Toast.LENGTH_SHORT);
+	   			if (Constants.appLanguage().equals("de")) {
+			   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
+			   				Toast.LENGTH_SHORT);
+	   			} else if (Constants.appLanguage().equals("fr")) {
+	   				mToastObject.show(medis.size() + " résultats de la recherche en " + (System.currentTimeMillis()-mTimer) + "ms", 
+			   				Toast.LENGTH_SHORT);
+	   			}
 	   		}
 	   	}
 	}	
@@ -1102,7 +1096,7 @@ public class MainActivity extends Activity {
 		}
 		*/
 		case (R.id.menu_pref2): {
-			mToastObject.show("Error Report", Toast.LENGTH_SHORT);	
+			mToastObject.show(getString(R.string.menu_pref2), Toast.LENGTH_SHORT);	
 			// Enable restoring state flag
 			mRestoringState = true;
 			// Reset and change search hint
@@ -1111,13 +1105,7 @@ public class MainActivity extends Activity {
 				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.report_search));
 			}
 			// Load report from file
-			String parse_report = "";
-			if (appLanguage().equals("de"))
-				parse_report = loadReport("amiko_report_de.html");
-			else if (appLanguage().equals("fr"))
-				parse_report = loadReport("amiko_report_fr.html");
-			else
-				parse_report = loadReport("amiko_report.html");
+			String parse_report = loadReport(Constants.appReportFile());
 			mReportWebView.loadDataWithBaseURL("app:myhtml", parse_report, "text/html", "utf-8", null);
 
 			// Display report
@@ -1134,15 +1122,17 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_pref3): {
-			mToastObject.show("Update", Toast.LENGTH_SHORT);
+			mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
 			// Download new database (blocking call)
 			if (!mUpdateInProgress)
 				downloadUpdates();
 			return true;
 		}
 		case (R.id.menu_help): {
-			mToastObject.show("About", Toast.LENGTH_SHORT);
-			// TODO:
+			mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
+			// TODO: Start external browser, use link http://www.ywesee.com/AmiKo/Index
+			Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ywesee.com/AmiKo/Index"));
+			startActivity(browserIntent);
 			return true;
 		}		
 		default:
@@ -1161,8 +1151,8 @@ public class MainActivity extends Activity {
 		mDownloadedFileCount = 0;
 		
 		// File URIs
-		Uri databaseUri = Uri.parse("http://pillbox.oddb.org/amiko_db_full_idx_de.zip");
-		Uri reportUri = Uri.parse("http://pillbox.oddb.org/amiko_report_de.html");
+		Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
+		Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
 		
 		// NOTE: the default download destination is a shared volume where the system might delete your file if 
 		// it needs to reclaim space for system use
@@ -1181,12 +1171,12 @@ public class MainActivity extends Activity {
 		requestDatabase.setDescription("Updating the AmiKo database.");
 		requestReport.setDescription("Updating the AmiKo error report.");
 		// Set local destination to standard directory (place where files downloaded by the user are placed)
-		requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_db_full_idx_de.zip");
-		requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "amiko_report_de.html");
+		requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
+		requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
         
 		// Check if file exist, if yes, delete it 
-		deleteDownloadedFile("amiko_db_full_idx_de.zip");
-		deleteDownloadedFile("amiko_report_de.html");
+		deleteDownloadedFile(Constants.appZippedDatabase());
+		deleteDownloadedFile(Constants.appReportFile());
 		
 		// The downloadId is unique across the system. It is used to make future calls related to this download.
 		mDatabaseId = mDownloadManager.enqueue(requestDatabase);
@@ -1328,7 +1318,7 @@ public class MainActivity extends Activity {
 		    // ImageView image_logo = (ImageView) mView.findViewById(R.id.mlogo);		    
         	// viewHolder.image_logo.setImageResource(R.drawable.logo_desitin);	
 		    
-		    if (appLanguage().equals("de")) {
+		    if (Constants.appLanguage().equals("de")) {
 		    	title_str = "k.A.";		 
 		    	auth_str = "k.A.";		 
 		    	regnr_str = "k.A.";		 
@@ -1336,7 +1326,7 @@ public class MainActivity extends Activity {
 		    	atc_class_str = "k.A.";	 
 		    	substances_str = "k.A.";	
 		    	application_str = "k.A."; 
-		    } else if (appLanguage().equals("fr")) {
+		    } else if (Constants.appLanguage().equals("fr")) {
             	title_str = "n.s.";			
             	auth_str = "n.s.";			
             	regnr_str = "n.s.";			
@@ -1563,29 +1553,7 @@ public class MainActivity extends Activity {
 					    // Close any open drawers
 						if (mDrawerLayout != null)
 							mDrawerLayout.closeDrawers();
-						/** What follows is all actionbardrawer-related
-					    // ActionBarDrawerToggle ties together the the proper interactions
-					    // between the sliding drawer and the action bar app icon
-					    ActionBarDrawerToggle dt = new ActionBarDrawerToggle(
-					            MainActivity.this, 		// host activity
-					            dl,         			// DrawerLayout object
-					            R.drawable.ic_drawer,  	// nav drawer image to replace 'Up' caret
-					            R.string.drawer_open,  	// "open drawer" description for accessibility
-					            R.string.drawer_close  	// "close drawer" description for accessibility ) {
-					        public void onDrawerClosed(View view) {
-								// Do nothing
-					        }
 
-					        public void onDrawerOpened(View drawerView) {
-								// Do nothing
-					        }
-					    };
-					    dl.setDrawerListener(dt);					    
-						// enable ActionBar app icon to behave as action to toggle nav drawer
-					    getActionBar().setIcon(R.drawable.ic_drawer);
-					    getActionBar().setDisplayHomeAsUpEnabled(true);
-					    getActionBar().setHomeButtonEnabled(true);					    
-						***/
 			    		// Add section title view
 			    		String[] id_items = m.getSectionIds().split(",");
 			    		List<String> section_ids = Arrays.asList(id_items);		    		
@@ -1730,17 +1698,19 @@ public class MainActivity extends Activity {
 		    
 		    if (title != null ) {
 		    	// Use German abbreviation if possible
-		    	if (appLanguage().equals("de")) {
+		    	if (Constants.appLanguage().equals("de")) {
+		    		Locale german = Locale.GERMAN;
 		    		for (String s : SectionTitle_DE) {
-		    			if (title.contains(s)) {
+		    			if (title.toLowerCase(german).contains(s.toLowerCase(german))) {
 		    				title = s;
 		    				break;
 		    			}
 		    		}
-		    	} else if (appLanguage().equals("fr")) {
+		    	} else if (Constants.appLanguage().equals("fr")) {
 		    		// Use French abbreviation if possible
+		    		Locale french = Locale.FRENCH;
 		    		for (String s : SectionTitle_FR) {
-			    		if (title.contains(s)) {
+			    		if (title.toLowerCase(french).contains(s.toLowerCase(french))) {
 			    			title = s;
 			    			break;
 			    		}

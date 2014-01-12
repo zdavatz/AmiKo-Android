@@ -44,7 +44,6 @@ public class JSInterface {
 
 	@JavascriptInterface
 	public void receiveValueFromJS(int searchHits) {
-		Log.d(TAG, "Num searhc hist = " + searchHits);
 		mSearchHits = searchHits;
 	}
 	

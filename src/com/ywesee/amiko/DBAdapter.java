@@ -20,7 +20,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +28,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
 import java.util.Observer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -49,7 +47,6 @@ public class DBAdapter {
 	private final Context mContext;	
 	private SQLiteDatabase mDb;
 	private DataBaseHelper mDbHelper;	
-	private Observer mObserver;
 	private int mNumRecords;
 	private boolean mDatabaseCreated = false;
 	
@@ -108,7 +105,7 @@ public class DBAdapter {
 	public int getSizeZippedDatabaseFile() {
 		ZipEntry ze = null;
 		try {
-			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
+			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appZippedDatabase();
 			// Chmod src file
 			chmod(zipFile, 755);
 			InputStream is = new FileInputStream(zipFile);
@@ -141,8 +138,8 @@ public class DBAdapter {
 	 * 
 	 */
 	public void copyReportFile() throws IOException {
-		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_report_de.html";
-		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + "amiko_report_de.html";
+		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appReportFile();
+		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + Constants.appReportFile();
 		
 		Log.d(TAG, "Dst report file = " + dstReportFile);
 		
@@ -187,7 +184,7 @@ public class DBAdapter {
 	 */
 	public void overwrite() throws IOException {
 		try {
-			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/amiko_db_full_idx_de.zip";
+			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appZippedDatabase();
 			mDbHelper.overwriteDataBase(downloadFile);
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");

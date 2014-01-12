@@ -24,12 +24,74 @@ public class Constants {
 	
 	public static final String AMIKO_NAME = "AmiKo";
 	public static final String COMED_NAME = "CoMed";
-	public static final String DB_NAME_BASE = "amiko_db_full_idx_";
 	
 	// --> Note: uncomment name of app to compile!
 	public static final String APP_NAME = AMIKO_NAME;
 	// public static final String APP_NAME = COMED_NAME;	
-	public static final String APP_VERSION = "1.2.1";
-	public static final String GEN_DATE = "04.01.2013";
-	public static final int DB_VERSION = 128; 	// Database (1.2.7), AmiKo Release 1.2.0 (06/12/2013)
+	public static final String APP_VERSION = "1.2.0";
+	public static final String GEN_DATE = "12.01.2014";
+	public static final int DB_VERSION = 120; 	
+	
+	/** Release history
+	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
+	 *  08/04/2013 - AmiKo/CoMed Release = 1.1.0, Database = 110
+	 *  16/04/2013 - AmiKo/CoMed Release = 1.1.1, Database = 111
+	 *  22/04/2013 - AmiKo/CoMed Release = 1.1.2, Database = 112
+	 *  02/05/2013 - AmiKo/CoMed Release = 1.1.4, Database = 114
+	 *  06/05/2013 - AmiKo/CoMed Release = 1.1.5, Database = 115
+     *	12/01/2014 - AmiKo/CoMed Release = 1.2.0, Database = 120
+	*/
+	
+	/**
+	 * Returns the language of the app
+	 * @return
+	 */
+	public static String appLanguage() {
+		if (APP_NAME.equals(AMIKO_NAME)) {
+			return "de";
+		} else if (APP_NAME.equals(COMED_NAME)) {
+			return "fr";
+		}
+		return "";
+	}
+	
+	/**
+	 * Returns the database used in the app
+	 * @return
+	 */
+	public static String appDatabase() {
+		if (appLanguage().equals("de"))
+			return "amiko_db_full_idx_de.db";
+		else if (appLanguage().equals("fr"))
+			return "amiko_db_full_idx_fr.db";
+		else
+			return "amiko_db_full_idx_de.db";
+	}
+	
+	/**
+	 * Returns the name of the zipped database
+	 * @return
+	 */
+	public static String appZippedDatabase() {
+		if (appLanguage().equals("de"))
+			return "amiko_db_full_idx_de.zip";
+		else if (appLanguage().equals("fr"))
+			return "amiko_db_full_idx_fr.zip";
+		else
+			return "amiko_db_full_idx_de.zip";
+	}
+	
+	/**
+	 * Returns the name of the report file
+	 * @return
+	 */
+	public static String appReportFile() {
+		if (appLanguage().equals("de"))
+			return "amiko_report_de.html";
+		else if (appLanguage().equals("fr"))
+			return "amiko_report_fr.html";
+		else
+			return "amiko_report_de.html";
+	}
+	
 }

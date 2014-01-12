@@ -40,8 +40,9 @@ import android.util.Log;
 public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
-	private static String DB_NAME = "amiko_db_full_idx_de.db";
-	private static String REPORT_NAME = "amiko_report_de.html";
+
+	private static String mDBName = "";
+	private static String mReportName = "";
 	private static String mDBPath = "";
 
 	private SQLiteDatabase mDataBase;
@@ -54,8 +55,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
      * @param context
      */
-	public DataBaseHelper(Context context) {
-		super(context, DB_NAME, null, Constants.DB_VERSION);
+	public DataBaseHelper(Context context) {	
+		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
+		mDBName = Constants.appDatabase();
+		mReportName = Constants.appReportFile();
 		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
 		this.mContext = context;
 	}
@@ -126,7 +129,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @return true if it exists, false if it doesn't
      */		
 	private boolean checkDataBase() {
-		File dbFile = new File(mDBPath + DB_NAME);
+		File dbFile = new File(mDBPath + mDBName);
 		return dbFile.exists();
 	}
 	
@@ -135,7 +138,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 */
 	public long getSizeDatabaseFile() {
 		if (checkDataBase()) {
-			File dbFile = new File(mDBPath + DB_NAME);
+			File dbFile = new File(mDBPath + mDBName);
 			return dbFile.length();
 		}
 		return 0;
@@ -148,7 +151,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * @throws IOException
      * */
 	private void copyDataBase() throws IOException {
-		copyFromAssetFolder(DB_NAME, mDBPath + DB_NAME);
+		copyFromAssetFolder(mDBName, mDBPath + mDBName);
 	}
 	
 	/**
@@ -157,7 +160,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @throws IOException
 	 */
 	private void copyReportFile() throws IOException {
-		copyFromAssetFolder(REPORT_NAME, mDBPath + REPORT_NAME);
+		copyFromAssetFolder(mReportName, mDBPath + mReportName);
 	}
 	
 	/**
@@ -187,7 +190,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		if (!zipped) {
 			// Open database
 			InputStream mInput = new FileInputStream(srcFile);
-			String dbFileName = mDBPath + DB_NAME;
+			String dbFileName = mDBPath + mDBName;
 			OutputStream mOutput = new FileOutputStream(dbFileName);
 			
 			// Transfer bytes from input to output
@@ -214,7 +217,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				ZipEntry ze;
 				
 				while ((ze = zis.getNextEntry()) != null) {
-					FileOutputStream fout = new FileOutputStream(mDBPath + DB_NAME);
+					FileOutputStream fout = new FileOutputStream(mDBPath + mDBName);
 					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
 
 					while ((bytesRead = zis.read(buffer)) != -1) {
@@ -256,7 +259,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @throws SQLException
 	 */
 	public boolean openDataBase() throws SQLException {
-		String mPath = mDBPath + DB_NAME;
+		String mPath = mDBPath + mDBName;
 		try {
 			mDataBase = SQLiteDatabase.openDatabase(mPath,  null, SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLException sqle ) {
