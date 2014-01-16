@@ -30,7 +30,7 @@ public class Constants {
 	// public static final String APP_NAME = COMED_NAME;	
 	public static final String APP_VERSION = "1.2.0";
 	public static final String GEN_DATE = "12.01.2014";
-	public static final int DB_VERSION = 120; 	
+	public static final int DB_VERSION = 127; 	
 	
 	/** Release history
 	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
@@ -39,7 +39,7 @@ public class Constants {
 	 *  22/04/2013 - AmiKo/CoMed Release = 1.1.2, Database = 112
 	 *  02/05/2013 - AmiKo/CoMed Release = 1.1.4, Database = 114
 	 *  06/05/2013 - AmiKo/CoMed Release = 1.1.5, Database = 115
-     *	12/01/2014 - AmiKo/CoMed Release = 1.2.0, Database = 120
+     *	12/01/2014 - AmiKo/CoMed Release = 1.2.0, Database = 127
 	*/
 	
 	/**

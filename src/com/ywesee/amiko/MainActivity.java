@@ -22,6 +22,7 @@ package com.ywesee.amiko;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -39,6 +40,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.animation.LayoutTransition;
+import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
@@ -56,10 +58,16 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Picture;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.PictureDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -371,6 +379,38 @@ public class MainActivity extends Activity {
 		return mMedis;
 	}
 	
+	@TargetApi(16)
+	void setLayoutTransition() {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			LayoutTransition lt = new LayoutTransition();		
+			lt.enableTransitionType(LayoutTransition.CHANGING);
+			lt.setDuration(LayoutTransition.APPEARING, 500);
+			lt.setDuration(LayoutTransition.DISAPPEARING, 100);
+			mViewHolder.setLayoutTransition(lt);
+		}
+	}
+	
+	@TargetApi(16)
+	void setFindListener(final WebView webView) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			webView.setFindListener(new FindListener() {
+				@Override
+				public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
+					// Update hits counter
+					if (isDoneCounting) {
+		    			if (activeMatchOrdinal<numberOfMatches) {
+		        			mSearchHitsCntView.setVisibility(View.VISIBLE);
+			        		mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
+		    			} else {			
+		    				mSearchHitsCntView.setVisibility(View.GONE);
+		    				webView.clearMatches();
+		    			}
+					}
+				}
+			});
+		}
+	}
+	
 	/**
 	 * Overrides onCreate method
 	 */
@@ -415,12 +455,8 @@ public class MainActivity extends Activity {
 		mViewHolder.addView(mShowView);	
 		mViewHolder.addView(mReportView);
 		
-		LayoutTransition lt = new LayoutTransition();		
-		lt.enableTransitionType(LayoutTransition.CHANGING);
-		lt.setDuration(LayoutTransition.APPEARING, 500);
-		lt.setDuration(LayoutTransition.DISAPPEARING, 100);
-		mViewHolder.setLayoutTransition(lt);
-			
+		setLayoutTransition();
+		
 		// Set visibility of views
 		mSuggestView.setVisibility(View.VISIBLE);			
 		mShowView.setVisibility(View.GONE);			
@@ -438,36 +474,8 @@ public class MainActivity extends Activity {
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
 		// Add find listeners
-		mWebView.setFindListener(new FindListener() {
-			@Override
-			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
-				// Update hits counter
-				if (isDoneCounting) {
-	    			if (activeMatchOrdinal<numberOfMatches) {
-	        			mSearchHitsCntView.setVisibility(View.VISIBLE);
-		        		mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
-	    			} else {			
-	    				mSearchHitsCntView.setVisibility(View.GONE);
-	    				mWebView.clearMatches();
-	    			}
-				}
-			}
-		});
-		mReportWebView.setFindListener(new FindListener() {
-			@Override
-			public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
-				// Update hits counter
-				if (isDoneCounting) {
-	    			if (activeMatchOrdinal<numberOfMatches) {
-	        			mSearchHitsCntView.setVisibility(View.VISIBLE);
-		        		mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
-	    			} else {			
-	    				mSearchHitsCntView.setVisibility(View.GONE);
-	    				mReportWebView.clearMatches();
-	    			}
-				}
-			}
-		});
+		setFindListener(mWebView);
+		setFindListener(mReportWebView);
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
 		setupGestureDetector(mReportWebView);
@@ -869,6 +877,20 @@ public class MainActivity extends Activity {
 		return true;
 	}
 	
+	@TargetApi(16)
+	void findAll(String key, WebView webView) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+			webView.findAllAsync(key);
+			try {
+				Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
+				m.setAccessible(true);
+				m.invoke(webView, true);
+			} catch(Exception ignored) {
+				// Exception is ignored
+			}
+		}
+	}
+	
 	void performSearch(String search_key) {	
 		if (!search_key.isEmpty()) {
 			if (mCurrentView==mSuggestView) {
@@ -884,40 +906,17 @@ public class MainActivity extends Activity {
 				if (mWebView!=null) {					
 					// Native solution
 					if (search_key.length()>2) {
-						mWebView.findAllAsync(search_key);
-						try {
-							Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
-							m.setAccessible(true);
-							m.invoke(mWebView, true);
-						} catch(Exception ignored) {
-							// Exception is ignored
-						}
+						findAll(search_key, mWebView);
 					} else {
 						mSearchHitsCntView.setVisibility(View.GONE);
 						mWebView.clearMatches();
 					}
-					// Old solution: uses javascript
-					/*
-					if (search_key.length()>2) {
-				    	mWebView.loadUrl("javascript:MyApp_HighlightAllOccurencesOfString('" + search_key + "')");
-					}
-					else {
-						mWebView.loadUrl("javascript:MyApp_RemoveAllHighlights()");								
-					}
-					*/
 				}
 			} else if (mCurrentView==mReportView) {
 				if (mReportWebView!=null) {					
 					// Native solution
 					if (search_key.length()>2) {
-						mReportWebView.findAllAsync(search_key);
-						try {
-							Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
-							m.setAccessible(true);
-							m.invoke(mReportWebView, true);
-						} catch(Exception ignored) {
-							// Exception is ignored
-						}
+						findAll(search_key, mReportWebView);
 					} else {
 						mSearchHitsCntView.setVisibility(View.GONE);
 						mReportWebView.clearMatches();
@@ -1082,19 +1081,6 @@ public class MainActivity extends Activity {
 			invalidateOptionsMenu();
 			return true;
 		}
-		/*
-		case (R.id.menu_pref1): {
-			mToastObject.show(getString(R.string.menu_pref1), Toast.LENGTH_SHORT);
-			if (!item.isChecked()) {
-				item.setChecked(true);
-				mMinCharSearch = 1;
-			} else {
-				item.setChecked(false);
-				mMinCharSearch = 0;
-			}			
-			return true;
-		}
-		*/
 		case (R.id.menu_pref2): {
 			mToastObject.show(getString(R.string.menu_pref2), Toast.LENGTH_SHORT);	
 			// Enable restoring state flag
@@ -1112,13 +1098,6 @@ public class MainActivity extends Activity {
 			setCurrentView(mReportView, true);	
 			// Disable restoring state
 			mRestoringState = false;
-			
-			/*
-			FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
-            ft.show(mReportFragment);
-            ft.commit();
-			*/
 			return true;
 		}
 		case (R.id.menu_pref3): {
@@ -1126,6 +1105,20 @@ public class MainActivity extends Activity {
 			// Download new database (blocking call)
 			if (!mUpdateInProgress)
 				downloadUpdates();
+			return true;
+		}
+		case (R.id.menu_share): {
+			// Remove softkeyboard
+			hideSoftKeyboard(10);
+			// Take screenshot and start email activity after 500ms (wait for the keyboard to disappear)
+			final Handler handler = new Handler();
+		    handler.postDelayed(new Runnable() {
+		        @Override
+		        public void run() {					
+					mToastObject.show(getString(R.string.menu_share), Toast.LENGTH_SHORT);
+					sendFeedbackScreenshot(MainActivity.this);
+		        }
+		    }, 500);			
 			return true;
 		}
 		case (R.id.menu_help): {
@@ -1143,7 +1136,59 @@ public class MainActivity extends Activity {
 	}    
 
 	/**
-	 * Downloads the database
+	 * Takes screenshot of the whole screen
+	 * @param activity
+	 */
+	public void sendFeedbackScreenshot(final Activity activity) {
+		try {			
+			// Get root windows
+			final View rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content).getRootView();
+			rootView.setDrawingCacheEnabled(true);
+			Bitmap bitmap = rootView.getDrawingCache();
+			// The file be saved to the download folder
+			File outputFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/amiko_screenshot.png");
+			FileOutputStream fOutStream = new FileOutputStream(outputFile);
+			// Picture is then compressed
+			bitmap.compress(Bitmap.CompressFormat.PNG, 100, fOutStream);
+			rootView.setDrawingCacheEnabled(false);
+			fOutStream.close();
+			// Start email activity
+			startEmailActivity(activity, Uri.fromFile(outputFile));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Starts email activity
+	 * @param context
+	 * @param attachment
+	 */
+	public void startEmailActivity(Context context, Uri attachment) {
+		Intent sendEmailIntent = new Intent(Intent.ACTION_SEND);
+		sendEmailIntent.setType("message/rfc822");
+		sendEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{""});
+		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, "AmiKo Android");
+		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo Android\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\n\nEnjoy!");
+		sendEmailIntent.putExtra(Intent.EXTRA_STREAM, attachment);
+		context.startActivity(Intent.createChooser(sendEmailIntent, "Send email"));
+	}
+
+	/**
+	 * Converts given picture to a bitmap
+	 * @param picture
+	 * @return
+	 */
+	private static Bitmap pictureDrawable2Bitmap(Picture picture){
+		PictureDrawable pictureDrawable = new PictureDrawable(picture);
+	    Bitmap bitmap = Bitmap.createBitmap(pictureDrawable.getIntrinsicWidth(),pictureDrawable.getIntrinsicHeight(), Config.ARGB_8888);
+	    Canvas canvas = new Canvas(bitmap);
+	    canvas.drawPicture(pictureDrawable.getPicture());
+	    return bitmap;
+	}
+	
+	/**
+	 * Downloads and updates the SQLite database and the error report file
 	 */
 	public void downloadUpdates() {
 		// Signal that update is in progress
@@ -1190,8 +1235,9 @@ public class MainActivity extends Activity {
 		File filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 		File file = new File(filePath, fileName);
 		if (file.exists()) {
-			Log.d(TAG, "Downloaded file found and deleted.");
-			return file.delete();
+			boolean ret = file.delete();
+			Log.d(TAG, "Downloaded file found and deleted. Code = " + ret);
+			return ret;
 		} else {
 			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
 		}
@@ -1596,15 +1642,18 @@ public class MainActivity extends Activity {
 	}
 	
 	private String loadReport(String file_name) {	
-		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
-    
-		String file_content = loadFromApplicationFolder(file_name, "UTF-8");
-
+		// Old Javascript-based solution... superseeded -> maybe useful for older version of android!
+		/*		
+		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");    
         file_content = "<html><head>"
         		+ "<script type=\"text/javascript\">" + js_str + "</script></head>"
         		+ "<body>" + file_content + "</body></html>";
+        */
+		// New solution without Javascript...
+		String file_content = loadFromApplicationFolder(file_name, "UTF-8");		
+        file_content = "<html><body>" + file_content + "</body></html>";
         
-		return file_content;
+        return file_content;
 	}	
 	
 	private String loadFromAssetsFolder(String file_name, String encoding) {
@@ -1649,13 +1698,19 @@ public class MainActivity extends Activity {
 	}
 	
 	private String createHtml( String style_str, String content_str ) {
-		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
-		
+		// Old Javascript-based solution... superseeded -> maybe useful for older version of android!
+		/*		
+		String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");		
 		String html_str = "<html><head>"
 				+ "<script type=\"text/javascript\">" + js_str + "</script>"				
 				+ "<style type=\"text/css\">" + style_str + "</style>"
 				+ "</head><body>" + content_str + "</body></html>";
-
+		*/
+		
+		String html_str = "<html><head>"			
+				+ "<style type=\"text/css\">" + style_str + "</style>"
+				+ "</head><body>" + content_str + "</body></html>";
+		
 		return html_str;
 	}	 		
 	
@@ -1751,3 +1806,62 @@ public class MainActivity extends Activity {
 		return super.onKeyDown(keyCode, event);
 	}	 	
 }
+
+
+/*
+try {
+	// String test = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AamirPDF";            
+    FileOutputStream fout = new FileOutputStream(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/FachInfo.pdf");
+	Document document = new Document(PageSize.A4);
+	document.addAuthor("ywesee GmbH");
+	document.addCreator("AmiKo");
+	PdfWriter pdfWriter = PdfWriter.getInstance(document, fout);
+    document.open();
+
+    for (int i=0; i<3; ++i) {
+    	mWebView.scrollBy(0, mWebView.getHeight()*i);
+    	mWebView.setDrawingCacheEnabled(true);
+    	mWebView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), 
+    			MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+    	mWebView.layout(0, 0, mWebView.getWidth(), mWebView.getHeight());
+
+    	mWebView.buildDrawingCache(true);
+    	Bitmap bmp = Bitmap.createBitmap(mWebView.getDrawingCache());
+    	mWebView.setDrawingCacheEnabled(false);
+
+    	ByteArrayOutputStream out = null;
+    	byte[] byteArchadeImage = null;
+    	try {
+    		out = new ByteArrayOutputStream();
+    		if (out != null) {
+    			bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
+    			byteArchadeImage = out.toByteArray();
+    			out.flush();
+    			out.close();
+    		}
+    	} catch (Exception e) {
+    		Log.d(TAG, e.getLocalizedMessage());
+    	}
+
+    	try {
+    		Image image = Image.getInstance(byteArchadeImage);
+    		image.scaleAbsolute(600, 800);
+    		image.setAlignment(Image.MIDDLE | Image.ALIGN_MIDDLE);
+    		document.add(image);
+    	} catch (MalformedURLException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	} catch (IOException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    	}
+    }
+    
+	document.close();
+	fout.flush();
+	fout.close();
+
+} catch (Exception e) {
+	e.printStackTrace();
+} 
+*/

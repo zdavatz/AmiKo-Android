@@ -19,11 +19,11 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
-import com.ywesee.amiko.de.R;
-
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+
+import com.ywesee.amiko.de.R;
 
 public class UserSettings extends PreferenceActivity {
 	
