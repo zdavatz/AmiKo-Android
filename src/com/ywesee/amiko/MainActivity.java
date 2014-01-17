@@ -44,6 +44,7 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
 import android.app.DownloadManager.Request;
@@ -52,6 +53,7 @@ import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.Service;
+import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -187,6 +189,9 @@ public class MainActivity extends Activity {
 	// Global flag to signal that update is in progress
 	private boolean mUpdateInProgress = false;
 	
+	// Splash screen dialog
+	private Dialog mSplashDialog = null; 
+	
 	/** 
 	 * The download manager is a system service that handles long-running HTTP downloads. 
 	 * Clients may request that a URI be downloaded to a particular destination file. 
@@ -248,6 +253,57 @@ public class MainActivity extends Activity {
         handler.postDelayed(r, d);
 	}
 	
+	@Override
+	public Object onRetainNonConfigurationInstance() {
+		return mMedis;
+	}	
+    
+    /**
+     * Shows the splash screen over the full Activity
+     */
+    protected void showSplashScreen() {
+    	mSplashDialog = new Dialog(this, android.R.style.Theme_Holo);// .Theme_Translucent_NoTitleBar_Fullscreen);
+    	mSplashDialog.setContentView(R.layout.splash_screen);
+    	mSplashDialog.setCancelable(false);
+    	mSplashDialog.show();
+
+    	mMediDataSource = new DBAdapter(MainActivity.this);
+    	try {
+    		// Creates database
+    		mMediDataSource.create();
+    		// Opens database
+    		mMediDataSource.open();	
+    	} catch( IOException e) {
+    		Log.d(TAG, "Unable to create database!");
+    		throw new Error("Unable to create database");
+    	}	
+
+    	// Enable flag (disable toast message)
+    	mRestoringState = true;    	
+    	// Set Runnable to remove splash screen just in case
+    	final Handler handler = new Handler();
+    	handler.postDelayed(new Runnable() {
+    		@Override
+    		public void run() {
+    			removeSplashScreen();
+    	    	// Re-enable toaster once the splash screen has been removed...
+    	    	mRestoringState = false;
+    	    	// Hide keyboard
+            	hideSoftKeyboard(100);
+    		}
+    	}, 3000);
+    }
+    
+    /**
+     * Removes the dialog that displays the splash screen
+     */
+    protected void removeSplashScreen() {
+        if (mSplashDialog != null) {
+            mSplashDialog.dismiss();
+            mSplashDialog = null;
+        }
+    }    
+    
 	/**
 	 * Sets currently visible view
 	 * @param newCurrentView
@@ -372,13 +428,8 @@ public class MainActivity extends Activity {
 			ft.remove( mFragment );
 			mFragment = null;
 		}
-	}	
-
-	@Override
-	public Object onRetainNonConfigurationInstance() {
-		return mMedis;
-	}
-	
+	}		
+		
 	@TargetApi(16)
 	void setLayoutTransition() {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -422,12 +473,16 @@ public class MainActivity extends Activity {
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 		// Enable overlay mode for action bar (no good, search results disappear behind it...)
 		// getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
-		
+
 		// Create action bar
 		int mode = ActionBar.NAVIGATION_MODE_TABS;		
 		if (savedInstanceState != null) {
 			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
-		}
+		}			
+		
+		// Show splashscreen while database is being initialized...
+		showSplashScreen();	
+
 		// Retrieve reference to the activity's action bar
 		ActionBar ab = getActionBar();	
 		// Disable activity title
@@ -498,16 +553,20 @@ public class MainActivity extends Activity {
 		// Initialize download manager
 		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
 		
-		// Initialize database (including DownloadManager)
+		/* 
+		 * Initialize database (including DownloadManager)
+		 * @maxl 17.01.2014: This is done while the splash screen is running! 
 		try {
 			AsyncInitDBTask initDBTask = new AsyncInitDBTask(this);						
 			initDBTask.execute();		
 		} catch (Exception e) {
 			Log.e(TAG, "AsyncInitDBTask-init exception caught!");
 		}
-
+		*/
+		
 		// Setup initial view
 		setCurrentView(mSuggestView, false);
+		// Load database!
 		performSearch("");
 		
 		// Get search intent
@@ -1121,6 +1180,20 @@ public class MainActivity extends Activity {
 		    }, 500);			
 			return true;
 		}
+		case (R.id.menu_rate): {
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+		    // Try Google play
+		    intent.setData(Uri.parse("market://details?id=com.ywesee.amiko.de"));
+		    if (myStartActivity(intent)==false) {
+		        // Market (Google play) app seems not installed, let's try to open a webbrowser
+		        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.de"));
+		        if (myStartActivity(intent)==false) {
+		            // Well if this also fails, we have run out of options, inform the user.
+		            mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
+		        }
+		    }
+			return true;
+		}
 		case (R.id.menu_help): {
 			mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
 			// TODO: Start external browser, use link http://www.ywesee.com/AmiKo/Index
@@ -1174,6 +1247,15 @@ public class MainActivity extends Activity {
 		context.startActivity(Intent.createChooser(sendEmailIntent, "Send email"));
 	}
 
+	private boolean myStartActivity(Intent aIntent) {
+	    try {
+	        startActivity(aIntent);
+	        return true;
+	    } catch (ActivityNotFoundException e) {
+	        return false;
+	    }
+	}
+	
 	/**
 	 * Converts given picture to a bitmap
 	 * @param picture
@@ -1610,7 +1692,7 @@ public class MainActivity extends Activity {
 			    		// Implements swiping mechanism!
 						mSectionView = (ListView) findViewById(R.id.section_title_view);
 						// Make it clickable
-		    			mSectionView.setClickable(true);	    	
+		    			mSectionView.setClickable(true);
 			    			
 		    			SectionTitlesAdapter sectionTitles = 
 		    					new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);

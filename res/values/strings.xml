@@ -23,10 +23,12 @@
     
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">Min. 2 Buchstaben  </string>
-    <string name="menu_pref2">Error Report</string>
-    <string name="menu_pref3">Update</string>
     <string name="menu_send_pdf">Send Pdf</string>
-    <string name="menu_share">Share This App</string>
+    
+    <string name="menu_pref2">Report</string>
+    <string name="menu_pref3">Update</string>
+    <string name="menu_share">Share</string>
+    <string name="menu_rate">Rate</string>
     <string name="menu_help">About</string>
     
     <string name="search">Suche</string>

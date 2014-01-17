@@ -39,10 +39,15 @@
 	    android:orderInCategory="6"
 	    android:showAsAction="collapseActionView" />
 
+	<item android:id="@+id/menu_rate"
+	    android:title="@string/menu_rate"
+	    android:orderInCategory="7"
+	    android:showAsAction="collapseActionView" />	
+	
 	<item android:id="@+id/menu_help"
 	    android:title="@string/menu_help"
 	    android:icon="@drawable/ic_action_help"	
-	    android:orderInCategory="7"		    
+	    android:orderInCategory="8"		    
 	    android:showAsAction="collapseActionView" />	    
 
 </menu>
