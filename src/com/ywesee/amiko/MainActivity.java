@@ -1242,7 +1242,7 @@ public class MainActivity extends Activity {
 		sendEmailIntent.setType("message/rfc822");
 		sendEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{""});
 		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, "AmiKo Android");
-		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo Android\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\n\nEnjoy!");
+		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo Android\r\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\r\n\nEnjoy!");
 		sendEmailIntent.putExtra(Intent.EXTRA_STREAM, attachment);
 		context.startActivity(Intent.createChooser(sendEmailIntent, "Send email"));
 	}

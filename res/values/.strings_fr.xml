@@ -23,8 +23,12 @@
 	
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">min. 2 paragraphes  </string>
-    <string name="menu_pref2">Error Report</string>
+    <string name="menu_send_pdf">Send Pdf</string>
+    
+    <string name="menu_pref2">Rapport</string>
     <string name="menu_pref3">Mise à jour</string>
+    <string name="menu_share">Partager</string>
+	<string name="menu_rate">Evaluer</string>    
     <string name="menu_help">A propos</string>	
     
     <string name="search">Recherche</string>
