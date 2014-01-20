@@ -371,6 +371,28 @@ public class MainActivity extends Activity {
 		mRestoringState = false;
     }
     
+    /**
+     * Restore view state
+     */
+    public void resetView() {
+		mRestoringState = true;
+		// Set database
+		mDatabaseUsed = "aips";	
+		// Change view
+		setCurrentView(mSuggestView, true);
+		// Set tab
+		getActionBar().setSelectedNavigationItem(0);
+    	// Restore hint
+		mActionName = getString(R.string.tab_name_1); // Präparat
+		mSearch.setHint(getString(R.string.search) + " " + mActionName); 		
+		// Reset search
+		mSearch.setText("");
+		performSearch("");
+		// Request menu update
+		invalidateOptionsMenu();
+		mRestoringState = false;
+    }
+    
 	/**
 	 * Implements listeners for action bar
 	 * @author MaxL
@@ -760,6 +782,9 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "mMediDataSource open!");			
 			if (progressBar.isShowing())
 				progressBar.dismiss();
+			// Reset view
+			resetView();
+			// Friendly message
 			mToastObject.show("Database initialized successfully", Toast.LENGTH_LONG);
 		}
 	}
