@@ -22,14 +22,20 @@ package com.ywesee.amiko;
 public class Constants {
 	public static final boolean DEBUG = false;
 	
+	public static final int DB_SIZE = 160000000;
+	
 	public static final String AMIKO_NAME = "AmiKo";
 	public static final String COMED_NAME = "CoMed";
+	public static final String MEDDRUGS_NAME = "med-drugs";
+	public static final String MEDDRUGS_FR_NAME = "med-drugs fr";	
 	
 	// --> Note: uncomment name of app to compile!
-	public static final String APP_NAME = AMIKO_NAME;
-	// public static final String APP_NAME = COMED_NAME;	
-	public static final String APP_VERSION = "1.2.3";
-	public static final String GEN_DATE = "20.01.2014";
+	// public static final String APP_NAME = AMIKO_NAME;
+	// public static final String APP_NAME = COMED_NAME;
+	public static final String APP_NAME = MEDDRUGS_NAME;
+	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
+	public static final String APP_VERSION = "1.2.5";
+	public static final String GEN_DATE = "25.02.2014";
 	public static final int DB_VERSION = 128; 	
 	
 	/** Release history
@@ -43,6 +49,8 @@ public class Constants {
      *  16/01/2014 - AmiKo/CoMed Release = 1.2.1, Database = 128
      *  19/01/2014 - AmiKo/CoMed Release = 1.2.2, Database = 128
      *  20/01/2014 - AmiKo/CoMed Release = 1.2.3, Database = 128
+     *  14/02/2014 - AmiKo/CoMed Release = 1.2.4, Database = 128
+     *  25/02/2014 - AmiKo/CoMed Release = 1.2.5, Database = 128 (med-drugs release)
 	*/
 	
 	/**
@@ -50,11 +58,23 @@ public class Constants {
 	 * @return
 	 */
 	public static String appLanguage() {
-		if (APP_NAME.equals(AMIKO_NAME)) {
+		if (APP_NAME.equals(AMIKO_NAME) || APP_NAME.equals(MEDDRUGS_NAME)) {
 			return "de";
-		} else if (APP_NAME.equals(COMED_NAME)) {
+		} else if (APP_NAME.equals(COMED_NAME) || APP_NAME.equals(MEDDRUGS_FR_NAME)) {
 			return "fr";
 		}
+		return "";
+	}
+	
+	/**
+	 * Returns app owner
+	 * 
+	 */
+	public static String appOwner() {
+		if (APP_NAME.equals(AMIKO_NAME) || APP_NAME.equals(COMED_NAME))
+			return "ywesee";
+		else if (APP_NAME.equals(MEDDRUGS_NAME) || APP_NAME.equals(MEDDRUGS_FR_NAME))
+			return "meddrugs";
 		return "";
 	}
 	

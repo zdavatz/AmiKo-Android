@@ -105,7 +105,8 @@ public class DBAdapter {
 	public int getSizeZippedDatabaseFile() {
 		ZipEntry ze = null;
 		try {
-			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appZippedDatabase();
+			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+					+ "/" + Constants.appZippedDatabase();
 			// Chmod src file
 			chmod(zipFile, 755);
 			InputStream is = new FileInputStream(zipFile);
@@ -138,7 +139,8 @@ public class DBAdapter {
 	 * 
 	 */
 	public void copyReportFile() throws IOException {
-		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appReportFile();
+		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+				+ "/" + Constants.appReportFile();
 		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + Constants.appReportFile();
 		
 		Log.d(TAG, "Dst report file = " + dstReportFile);
@@ -172,8 +174,8 @@ public class DBAdapter {
 			else {
 				overwrite();
 			}
-		} catch (IOException ioe) {
-			Log.e(TAG, ioe.toString() + " Unable to create database");
+		} catch (IOException e) {
+			Log.e(TAG, e.toString() + " Unable to create database");
 			throw new Error("Unable to create database");
 		}
 	}
@@ -184,7 +186,8 @@ public class DBAdapter {
 	 */
 	public void overwrite() throws IOException {
 		try {
-			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + "/"+Constants.appZippedDatabase();
+			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+					+ "/" + Constants.appZippedDatabase();
 			mDbHelper.overwriteDataBase(downloadFile);
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");
@@ -200,7 +203,7 @@ public class DBAdapter {
 		try {
 			mDbHelper.openDataBase();
 			mDbHelper.close();
-			mDb = mDbHelper.getReadableDatabase();		
+			mDb = mDbHelper.getReadableDatabase();
 			mNumRecords = getNumRecords();
 		} catch (SQLException sqle) {
 			Log.e(TAG, "open >> " + sqle.toString() + " with " + mNumRecords + "entries");
@@ -222,9 +225,15 @@ public class DBAdapter {
 	 */
 	public int getNumRecords() {
 		String query = "select count(*) from " + DATABASE_TABLE; 
-		Cursor mCursor = mDb.rawQuery(query, null);		
-		mCursor.moveToNext();
-		return mCursor.getInt(0);
+		// rawQuery often throws an exception!!
+		try {
+			Cursor mCursor = mDb.rawQuery(query, null);		
+			mCursor.moveToNext();
+			return mCursor.getInt(0);
+		} catch (Exception e) {
+			Log.e(TAG, "exception thrown while getting number of records in database.");
+			return 0;
+		}
 	}
 	
 	/**

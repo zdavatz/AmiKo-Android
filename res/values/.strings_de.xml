@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">med-drugs</string>
+    <string name="app_name">AmiKo</string>
     <string name="hello_world">Hello world!</string>
-	<string name="title_main_activity">med-drugs</string>
+	<string name="title_main_activity">AmiKo</string>
     <string name="section_frag">Abschnitt</string>
 	<string name="info_frag">Information</string>
     

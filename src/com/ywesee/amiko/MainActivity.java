@@ -67,6 +67,8 @@ import android.graphics.Color;
 import android.graphics.Picture;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.PictureDrawable;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -261,12 +263,14 @@ public class MainActivity extends Activity {
     /**
      * Shows the splash screen over the full Activity
      */
-    protected void showSplashScreen() {
-    	mSplashDialog = new Dialog(this, android.R.style.Theme_Holo);// .Theme_Translucent_NoTitleBar_Fullscreen);
-    	mSplashDialog.setContentView(R.layout.splash_screen);
-    	mSplashDialog.setCancelable(false);
-    	mSplashDialog.show();
-
+    protected void showSplashScreen(boolean showIt) {
+    	if (showIt) {
+    		mSplashDialog = new Dialog(this, android.R.style.Theme_Holo);// .Theme_Translucent_NoTitleBar_Fullscreen);
+    		mSplashDialog.setContentView(R.layout.splash_screen);
+    		mSplashDialog.setCancelable(false);
+    		mSplashDialog.show();
+    	}
+    	
     	mMediDataSource = new DBAdapter(MainActivity.this);
     	try {
     		// Creates database
@@ -276,22 +280,24 @@ public class MainActivity extends Activity {
     	} catch( IOException e) {
     		Log.d(TAG, "Unable to create database!");
     		throw new Error("Unable to create database");
-    	}	
-
-    	// Enable flag (disable toast message)
-    	mRestoringState = true;    	
-    	// Set Runnable to remove splash screen just in case
-    	final Handler handler = new Handler();
-    	handler.postDelayed(new Runnable() {
-    		@Override
-    		public void run() {
-    			removeSplashScreen();
-    	    	// Re-enable toaster once the splash screen has been removed...
-    	    	mRestoringState = false;
-    	    	// Hide keyboard
-            	hideSoftKeyboard(100);
-    		}
-    	}, 3000);
+    	}	 	
+    	
+    	if (showIt) {
+    	   	// Enable flag (disable toast message)
+        	mRestoringState = true;       		
+	    	// Set Runnable to remove splash screen just in case
+	    	final Handler handler = new Handler();
+	    	handler.postDelayed(new Runnable() {
+	    		@Override
+	    		public void run() {
+	    			removeSplashScreen();
+	    	    	// Re-enable toaster once the splash screen has been removed...
+	    	    	mRestoringState = false;
+	    	    	// Hide keyboard
+	            	hideSoftKeyboard(100);
+	    		}
+	    	}, 3000);
+    	}
     }
     
     /**
@@ -503,7 +509,11 @@ public class MainActivity extends Activity {
 		}			
 		
 		// Show splashscreen while database is being initialized...
-		showSplashScreen();	
+		if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
+				&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME))
+			showSplashScreen(true);
+		else 
+			showSplashScreen(false);
 
 		// Retrieve reference to the activity's action bar
 		ActionBar ab = getActionBar();	
@@ -730,9 +740,10 @@ public class MainActivity extends Activity {
 			if (mMediDataSource==null) {
 				mMediDataSource = new DBAdapter(this.context);
 				mSizeDatabaseFile = mMediDataSource.getSizeDatabaseFile();
-			}
-			// Database adapter already exists, reuse it!
-			else {
+	        	if (mSizeDatabaseFile<0)
+	        		mSizeDatabaseFile = Constants.DB_SIZE;				
+			} else {
+				// Database adapter already exists, reuse it!				
 				try {
 					// Move report file to appropriate folder
 					mMediDataSource.copyReportFile();	
@@ -743,7 +754,7 @@ public class MainActivity extends Activity {
 	        	// Get size of database file (zipped version)
 	        	mSizeDatabaseFile = mMediDataSource.getSizeZippedDatabaseFile();
 	        	if (mSizeDatabaseFile<0)
-	        		mSizeDatabaseFile = 0;
+	        		mSizeDatabaseFile = Constants.DB_SIZE;
 	        	Log.d(TAG, "Size downloaded zip = " + mSizeDatabaseFile);
 			}
 			try {
@@ -1206,7 +1217,7 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_rate): {
-			Intent intent = new Intent(Intent.ACTION_VIEW);
+			Intent intent = new Intent(Intent.ACTION_VIEW);			
 		    // Try Google play
 		    intent.setData(Uri.parse("market://details?id=com.ywesee.amiko.de"));
 		    if (myStartActivity(intent)==false) {
@@ -1221,9 +1232,21 @@ public class MainActivity extends Activity {
 		}
 		case (R.id.menu_help): {
 			mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
-			// TODO: Start external browser, use link http://www.ywesee.com/AmiKo/Index
-			Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ywesee.com/AmiKo/Index"));
-			startActivity(browserIntent);
+			if (Constants.appOwner().equals("ywesee")) {
+				Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ywesee.com/AmiKo/Index"));
+				startActivity(browserIntent);
+			} else if (Constants.appOwner().equals("meddrugs")) {
+				/*
+				 * MEDDRUGS
+				 */
+				if (Constants.appLanguage().equals("de")) {
+					Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.just-medical.com/shop/index.cfm?fuseaction=openShopOverview&catID=4&language=1&lang=1"));
+					startActivity(browserIntent);
+				} else if (Constants.appLanguage().equals("fr")) {
+					Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.just-medical.com/shop/index.cfm?fuseaction=openShopOverview&catID=4&language=2&lang=2"));
+					startActivity(browserIntent);
+				}
+			}
 			return true;
 		}		
 		default:
@@ -1266,8 +1289,8 @@ public class MainActivity extends Activity {
 		Intent sendEmailIntent = new Intent(Intent.ACTION_SEND);
 		sendEmailIntent.setType("message/rfc822");
 		sendEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{""});
-		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, "AmiKo Android");
-		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo Android\r\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\r\n\nEnjoy!");
+		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, "AmiKo for Android");
+		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo for Android\r\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\r\n\nEnjoy!");
 		sendEmailIntent.putExtra(Intent.EXTRA_STREAM, attachment);
 		context.startActivity(Intent.createChooser(sendEmailIntent, "Send email"));
 	}
@@ -1302,37 +1325,46 @@ public class MainActivity extends Activity {
 		mUpdateInProgress = true;
 		mDownloadedFileCount = 0;
 		
-		// File URIs
-		Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
-		Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
+		// First check network connection
+		ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 		
-		// NOTE: the default download destination is a shared volume where the system might delete your file if 
-		// it needs to reclaim space for system use
-		DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
-		DownloadManager.Request requestReport = new DownloadManager.Request(reportUri);
-		// Allow download only over WIFI
-		requestDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI);
-		requestReport.setAllowedNetworkTypes(Request.NETWORK_WIFI);
-		// Download visible and shows in notifications while in progress and after completion
-		requestDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-		requestReport.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-		// Set the title of this download, to be displayed in notifications (if enabled).
-		requestDatabase.setTitle("AmiKo Database Update");
-		requestReport.setTitle("AmiKo Report Update");
-		// Set a description of this download, to be displayed in notifications (if enabled)
-		requestDatabase.setDescription("Updating the AmiKo database.");
-		requestReport.setDescription("Updating the AmiKo error report.");
-		// Set local destination to standard directory (place where files downloaded by the user are placed)
-		requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
-		requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
-        
-		// Check if file exist, if yes, delete it 
-		deleteDownloadedFile(Constants.appZippedDatabase());
-		deleteDownloadedFile(Constants.appReportFile());
-		
-		// The downloadId is unique across the system. It is used to make future calls related to this download.
-		mDatabaseId = mDownloadManager.enqueue(requestDatabase);
-		mReportId = mDownloadManager.enqueue(requestReport);
+		// Fetch data...
+		if (networkInfo!=null && networkInfo.isConnected()) {
+			// File URIs
+			Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
+			Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
+			
+			// NOTE: the default download destination is a shared volume where the system might delete your file if 
+			// it needs to reclaim space for system use
+			DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
+			DownloadManager.Request requestReport = new DownloadManager.Request(reportUri);
+			// Allow download only over WIFI
+			requestDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
+			requestReport.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
+			// Download visible and shows in notifications while in progress and after completion
+			requestDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+			requestReport.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+			// Set the title of this download, to be displayed in notifications (if enabled).
+			requestDatabase.setTitle("AmiKo Database Update");
+			requestReport.setTitle("AmiKo Report Update");
+			// Set a description of this download, to be displayed in notifications (if enabled)
+			requestDatabase.setDescription("Updating the AmiKo database.");
+			requestReport.setDescription("Updating the AmiKo error report.");
+			// Set local destination to standard directory (place where files downloaded by the user are placed)
+			requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
+			requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
+	        
+			// Check if file exist, if yes, delete it 
+			deleteDownloadedFile(Constants.appZippedDatabase());
+			deleteDownloadedFile(Constants.appReportFile());
+			
+			// The downloadId is unique across the system. It is used to make future calls related to this download.
+			mDatabaseId = mDownloadManager.enqueue(requestDatabase);
+			mReportId = mDownloadManager.enqueue(requestReport);
+		} else {
+			// Display error report
+		}
 	}
 		
 	/**
