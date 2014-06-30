@@ -114,7 +114,7 @@ import com.ywesee.amiko.de.R;
 
 public class MainActivity extends Activity {
 
-	private static final String TAG = "MainActivity";	
+	private static final String TAG = "MainActivity";
 	
 	// German section title abbreviations
 	private static final String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen", 
@@ -160,7 +160,9 @@ public class MainActivity extends Activity {
 	// Reference to favorites' datastore
 	private DataStore mFavoriteData = null;
 	// This is the currently used database
-	private String mDatabaseUsed = "aips";	
+	private String mDatabaseUsed = "aips";
+	// Searching for interactions?
+	private boolean mSearchInteractions = false;
 
 	// Actionbar menu items
 	private MenuItem mSearchItem = null;
@@ -872,7 +874,6 @@ public class MainActivity extends Activity {
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
-		
 		if (mWebView!=null) {
 			// Checks the orientation of the screen
 			if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
@@ -1064,13 +1065,11 @@ public class MainActivity extends Activity {
 	 		medis = mMediDataSource.searchTitle((query!=null ? query.toString() : "@@@@"));
 	 	else if (mActionName.equals(getString(R.string.tab_name_2)))
 	 		medis = mMediDataSource.searchAuth((query!=null ? query.toString() : "@@@@"));
-		else if (mActionName.equals(getString(R.string.tab_name_3)))	 		
+	 	else if (mActionName.equals(getString(R.string.tab_name_3)))
+	 		medis = mMediDataSource.searchATC((query!=null ? query.toString() : "@@@@")); 			
+		else if (mActionName.equals(getString(R.string.tab_name_4)))	 		
 	 		medis = mMediDataSource.searchRegnr((query!=null ? query.toString() : "@@@@"));			
-	 	else if (mActionName.equals(getString(R.string.tab_name_4)))
-	 		medis = mMediDataSource.searchATC((query!=null ? query.toString() : "@@@@")); 	
 		else if (mActionName.equals(getString(R.string.tab_name_5)))
-	 		medis = mMediDataSource.searchSubstance((query!=null ? query.toString() : "@@@@"));
-		else if (mActionName.equals(getString(R.string.tab_name_6)))
 	 		medis = mMediDataSource.searchApplication((query!=null ? query.toString() : "@@@@"));
 		
 		// Filter according to favorites
@@ -1133,12 +1132,20 @@ public class MainActivity extends Activity {
     public boolean onPrepareOptionsMenu(Menu menu) {
     	MenuItem aipsButton = menu.findItem(R.id.aips_button);
     	MenuItem favoritesButton = menu.findItem(R.id.favorites_button);
-    	if (mDatabaseUsed.equals("aips")) {
-    		aipsButton.setIcon(R.drawable.aips_icon_wh);
-    		favoritesButton.setIcon(R.drawable.favorites_icon_gy);
-    	} else if (mDatabaseUsed.equals("favorites")) {
+    	MenuItem interactionsButton = menu.findItem(R.id.interactions_button);
+    	if (mSearchInteractions==false) {
+       		interactionsButton.setIcon(R.drawable.interactions_icon_gy);    		
+    		if (mDatabaseUsed.equals("aips")) {
+    			aipsButton.setIcon(R.drawable.aips_icon_wh);
+    			favoritesButton.setIcon(R.drawable.favorites_icon_gy);
+    		} else if (mDatabaseUsed.equals("favorites")) {
+    			aipsButton.setIcon(R.drawable.aips_icon_gy);
+    			favoritesButton.setIcon(R.drawable.favorites_icon_wh);
+    		}
+    	} else {
     		aipsButton.setIcon(R.drawable.aips_icon_gy);
-    		favoritesButton.setIcon(R.drawable.favorites_icon_wh);
+    		favoritesButton.setIcon(R.drawable.favorites_icon_gy);
+    		interactionsButton.setIcon(R.drawable.interactions_icon_wh);
     	}
     	return super.onPrepareOptionsMenu(menu);
     }
@@ -1154,6 +1161,7 @@ public class MainActivity extends Activity {
 			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
 			// Switch to AIPS database
 			mDatabaseUsed = "aips";	
+			mSearchInteractions = false;
 			// Change view
 			setCurrentView(mSuggestView, true);
 			// Reset search
@@ -1167,11 +1175,22 @@ public class MainActivity extends Activity {
 			mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);
 			// Switch to favorites database
 			mDatabaseUsed = "favorites";
+			mSearchInteractions = false;
 			// Change view
 			setCurrentView(mSuggestView, true);
 			// Reset search
 			mSearch.setText("");
 			performSearch("");
+			// Request menu update
+			invalidateOptionsMenu();
+			return true;
+		}
+		case (R.id.interactions_button): {
+			mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);
+			// Keep used database
+			mSearchInteractions = true;
+			// Change view
+			
 			// Request menu update
 			invalidateOptionsMenu();
 			return true;
@@ -1411,10 +1430,6 @@ public class MainActivity extends Activity {
 		tab = actionBar.newTab().setText(R.string.tab_name_5)
 				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
 		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_6)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_6)));
-		actionBar.addTab(tab);		
 	}	
 	
 	/**
@@ -1443,11 +1458,11 @@ public class MainActivity extends Activity {
 
     	String title_str = "k.A.";		 // tab_name_1 = Präparat
     	String auth_str = "k.A.";		 // tab_name_2 = Inhaber
-    	String regnr_str = "k.A.";		 // tab_name_3 = Reg.Nr.
-    	String atc_code_str = "k.A.";	 // tab_name_4 = ATC Code 
+    	String atc_code_str = "k.A.";	 // tab_name_3 = Wirkstoff / ATC Code 
+    	String atc_title_str = "k.A.";
     	String atc_class_str = "k.A.";	 //			   = ATC Klasse	
-    	String substances_str = "k.A.";	 // tab_name_5 = Wirkstoff
-    	String application_str = "k.A."; // tab_name_6 = Therapie / Indications
+    	String regnr_str = "k.A.";		 // tab_name_4 = Reg.Nr.
+    	String application_str = "k.A."; // tab_name_5 = Therapie / Indications
     	String pack_info_str = "";		
 		
 		public CustomListAdapter(Context context, int textViewResourceId , List<T> list ) {
@@ -1507,17 +1522,17 @@ public class MainActivity extends Activity {
 		    	title_str = "k.A.";		 
 		    	auth_str = "k.A.";		 
 		    	regnr_str = "k.A.";		 
-		    	atc_code_str = "k.A.";	
+		    	atc_code_str = "k.A.";
+		    	atc_title_str = "k.A.";
 		    	atc_class_str = "k.A.";	 
-		    	substances_str = "k.A.";	
 		    	application_str = "k.A."; 
 		    } else if (Constants.appLanguage().equals("fr")) {
             	title_str = "n.s.";			
             	auth_str = "n.s.";			
             	regnr_str = "n.s.";			
-            	atc_code_str = "n.s.";		
+            	atc_code_str = "n.s.";
+		    	atc_title_str = "n.s.";            	
             	atc_class_str = "n.s.";		
-            	substances_str = "n.s.";	
             	application_str = "n.s.";	 
         	}
 	    	pack_info_str = "";
@@ -1556,8 +1571,7 @@ public class MainActivity extends Activity {
 		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }		 		
-		 	}
-		 	else if (mActionName.equals(getString(R.string.tab_name_2))) {
+		 	} else if (mActionName.equals(getString(R.string.tab_name_2))) {
 		 		// Display "Präparatname" and "Inhaber"		 					    
 			    if (med!=null ) {    	 
 			    	if (med.getTitle()!=null) 
@@ -1574,8 +1588,41 @@ public class MainActivity extends Activity {
 		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
-		 	}
-			else if (mActionName.equals(getString(R.string.tab_name_3))) {
+		 	} else if (mActionName.equals(getString(R.string.tab_name_3))) {
+		 		// Display "Präparatname" and "ATC Code" (atccode) and "Inhaber" (author)		 		
+			    if (med!=null) {   
+			    	if (med.getTitle()!=null)
+			    		title_str = med.getTitle();
+				    List<String> atc = Arrays.asList(med.getAtcCode().split("\\s*;\\s*"));			    				        
+			    	if (atc.size()>1) {
+			    		if (atc.get(0)!=null)
+			    			atc_code_str = atc.get(0);
+			    		if (atc.get(1)!=null)
+			    			atc_title_str = atc.get(1);
+			    	}
+			    	String[] m_class = med.getAtcClass().split(";");
+			    	if (m_class.length==2) {
+			    		atc_class_str = m_class[1];
+				    	viewHolder.text_title.setText(title_str);			     
+				    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str);			    	
+			        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+			        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));	
+			    	} else if (m_class.length==3) {
+						String[] atc_class_l4_and_l5 = m_class[2].split("#");
+						if (atc_class_l4_and_l5.length>0)
+							atc_class_str = atc_class_l4_and_l5[atc_class_l4_and_l5.length-1];
+				    	viewHolder.text_title.setText(title_str);			     
+				    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str);			    	
+			        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
+			        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));							
+			    	}	        
+		        	if (med.getCustomerId()==1) {
+			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);			        	
+		        	} else {
+		        		viewHolder.owner_logo.setVisibility(View.GONE);
+		        	}
+			    }		 		
+		 	} else if (mActionName.equals(getString(R.string.tab_name_4))) {
 				// Display name, registration number (swissmedicno5) and author			    
 			    if (med!=null ) {  
 			    	if (med.getTitle()!=null) 
@@ -1595,53 +1642,7 @@ public class MainActivity extends Activity {
 		        		viewHolder.owner_logo.setVisibility(View.GONE);
 		        	}
 			    }
-			}
-		 	else if (mActionName.equals(getString(R.string.tab_name_4))) {
-		 		// Display "Präparatname" and "ATC Code" (atccode) and "Inhaber" (author)		 		
-			    if (med!=null) {   
-			    	if (med.getTitle()!=null)
-			    		title_str = med.getTitle();
-				    List<String> atc = Arrays.asList(med.getAtcCode().split("\\s*;\\s*"));			    				        
-			    	if (atc.size()>1) {
-			    		if (atc.get(0)!=null)
-			    			atc_code_str = atc.get(0);
-			    		if (atc.get(1)!=null)
-			    			atc_class_str = atc.get(1);
-			    	}
-			    	
-			    	viewHolder.text_title.setText(title_str);			     
-			    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_class_str);			    	
-		        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
-		        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
-		        	if (med.getCustomerId()==1) {
-			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);			        	
-		        	} else {
-		        		viewHolder.owner_logo.setVisibility(View.GONE);
-		        	}
-			    }		 		
-		 	}		 	
-	 		else if (mActionName.equals(getString(R.string.tab_name_5))) {
-	 			// Display substances, name and author			    
-			    if (med!=null) {
-			    	if (med.getSubstances()!=null)
-			    		substances_str = med.getSubstances();
-			    	if (med.getTitle()!=null)
-			    		title_str = med.getTitle();
-			    	if (med.getAuth()!=null)
-			    		auth_str = med.getAuth();
-			    	
-			    	viewHolder.text_title.setText(substances_str);			     
-			    	viewHolder.text_subtitle.setText(title_str + " - " + auth_str);
-			        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
-			        viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));		        
-		        	if (med.getCustomerId()==1) {
-			        	viewHolder.owner_logo.setVisibility(View.VISIBLE);			        	
-		        	} else {
-		        		viewHolder.owner_logo.setVisibility(View.GONE);
-		        	}
-			    }
-	 		}
-			else if (mActionName.equals(getString(R.string.tab_name_6))) {
+			} else if (mActionName.equals(getString(R.string.tab_name_5))) {
 				// Display name and "Therapy/Kurzbeschrieb"			    
 			    if (med!=null ) {    	 
 			    	if (med.getTitle()!=null)
@@ -1762,7 +1763,7 @@ public class MainActivity extends Activity {
 		    mView.setOnLongClickListener(new OnLongClickListener() {
 		    	@Override
 		    	public boolean onLongClick(View v) {
-		    		if (mActionName.equals(getString(R.string.tab_name_4))) {			    				
+		    		if (mActionName.equals(getString(R.string.tab_name_3))) {			    				
 			    		Medication m = mMediDataSource.searchId(med.getId());
 			    		String[] atc_items = m.getAtcCode().split(";");
 			    		if (atc_items!=null) {

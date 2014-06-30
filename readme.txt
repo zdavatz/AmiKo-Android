@@ -16,11 +16,11 @@ else if (meddrugs)
 
 end
 
-5a. if (AMiKo) in AndroiManifest.xml set package = "com.ywesee.amiko.de"
-5b. if (CoMed) in AndroidManifest.xml set package = "com.ywesee.amiko.fr"
+5a. if (AMiKo, med-drugs) in AndroiManifest.xml set package = "com.ywesee.amiko.de"
+5b. if (CoMed, med-drugs fr) in AndroidManifest.xml set package = "com.ywesee.amiko.fr"
 
-6a. if (AMiKo) rename "amiko_db_full_idx_fr.db" to ".amiko_db_full_idx_fr.db"
-6b. if (CoMed) rename "amiko_db_full_idx_de.db" to ".amiko_db_full_idx_de.db"
+6a. if (AMiKo, med-drugs) rename "amiko_db_full_idx_fr.db" to ".amiko_db_full_idx_fr.db"
+6b. if (CoMed, med-drugs fr) rename "amiko_db_full_idx_de.db" to ".amiko_db_full_idx_de.db"
 
 if (ywesee)
 

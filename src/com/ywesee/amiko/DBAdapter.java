@@ -376,7 +376,10 @@ public class DBAdapter {
 				+ KEY_ATCCODE + " like " + "'" + atccode + "%' or "
 				+ KEY_ATCCODE + " like " + "'% " + atccode + "%' or "
 				+ KEY_ATCCLASS + " like " + "'" + atccode + "%' or "
-				+ KEY_ATCCLASS + " like " + "'%;" + atccode + "%'";
+				+ KEY_ATCCLASS + " like " + "'%;" + atccode + "%' or "
+				+ KEY_ATCCLASS + " like " + "'%#" + atccode + "%' or "
+				+ KEY_SUBSTANCES + " like " + "'%, " + atccode + "%' or "
+				+ KEY_SUBSTANCES + " like " + "'" + atccode + "%'";
 		
 		searchQuery(query, medis);			
 		

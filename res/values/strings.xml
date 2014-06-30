@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">med-drugs</string>
+    <string name="app_name">AmiKo</string>
     <string name="hello_world">Hello world!</string>
-	<string name="title_main_activity">med-drugs</string>
+	<string name="title_main_activity">AmiKo</string>
     <string name="section_frag">Abschnitt</string>
 	<string name="info_frag">Information</string>
     
@@ -20,6 +20,7 @@
 
     <string name="aips_button">AIPS</string>
     <string name="favorites_button">Favorites</string>
+    <string name="interactions_button">Interactions</string>
     
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">Min. 2 Buchstaben  </string>
@@ -34,10 +35,9 @@
     <string name="search">Suche</string>
     <string name="tab_name_1">Präparat</string>
     <string name="tab_name_2">Inhaber</string>
-    <string name="tab_name_3">Reg.Nr.</string>
-    <string name="tab_name_4">ATC Code</string>
-    <string name="tab_name_5">Wirkstoff</string>
-    <string name="tab_name_6">Therapie</string>
+    <string name="tab_name_3">Wirk./ATC</string>
+    <string name="tab_name_4">Reg.Nr.</string>
+    <string name="tab_name_5">Therapie</string>
     <string name="full_text_search">in Fachinfo</string>
     <string name="report_search">in Error Report</string>
     

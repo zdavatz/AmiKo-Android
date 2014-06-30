@@ -22,32 +22,38 @@
 	    android:orderInCategory="3"
 	    android:showAsAction="ifRoom|collapseActionView" />
 
+	<item android:id="@+id/interactions_button"
+	    android:title="@string/interactions_button"
+	    android:icon="@drawable/interactions_icon_wh"
+	    android:orderInCategory="4"
+	    android:showAsAction="ifRoom|collapseActionView" />
+	
 	<item android:id="@+id/menu_pref2"
 	    android:title="@string/menu_pref2"
 	    android:icon="@drawable/ic_action_about"
-	    android:orderInCategory="4"
+	    android:orderInCategory="5"
 		android:showAsAction="collapseActionView" />			
 	
 	<item android:id="@+id/menu_pref3"
 	    android:title="@string/menu_pref3"
 	    android:icon="@drawable/ic_action_refresh"			    
-		android:orderInCategory="5"	    
+		android:orderInCategory="6"	    
 	    android:showAsAction="collapseActionView" />
 		
 	<item android:id="@+id/menu_share"
 	    android:title="@string/menu_share"
-	    android:orderInCategory="6"
+	    android:orderInCategory="7"
 	    android:showAsAction="collapseActionView" />
 
 	<item android:id="@+id/menu_rate"
 	    android:title="@string/menu_rate"
-	    android:orderInCategory="7"
+	    android:orderInCategory="8"
 	    android:showAsAction="collapseActionView" />	
 	
 	<item android:id="@+id/menu_help"
 	    android:title="@string/menu_help"
 	    android:icon="@drawable/ic_action_help"	
-	    android:orderInCategory="8"		    
+	    android:orderInCategory="9"		    
 	    android:showAsAction="collapseActionView" />	    
 
 </menu>
