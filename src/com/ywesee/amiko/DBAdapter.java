@@ -102,11 +102,9 @@ public class DBAdapter {
 	/**
 	 * 
 	 */
-	public int getSizeZippedDatabaseFile() {
+	public int getSizeZippedFile(String zipFile) {
 		ZipEntry ze = null;
 		try {
-			String zipFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
-					+ "/" + Constants.appZippedDatabase();
 			// Chmod src file
 			chmod(zipFile, 755);
 			InputStream is = new FileInputStream(zipFile);
@@ -119,6 +117,22 @@ public class DBAdapter {
 		if (ze!=null)
 			return (int)ze.getSize();	// returns -1 if size is UNKNOWN...
 		return 0;
+	}
+	
+	/**
+	 * 
+	 */
+	public int getSizeZippedDatabaseFile() {
+		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+				+ "/" + Constants.appZippedDatabase() );
+	}
+
+	/**
+	 * 
+	 */
+	public int getSizeZippedInteractionsFile() {
+		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+				+ "/" + Constants.appZippedInteractionsFile() );
 	}
 	
 	/**
@@ -188,6 +202,7 @@ public class DBAdapter {
 		try {
 			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 					+ "/" + Constants.appZippedDatabase();
+			// copies and overwrites (if necessary) while unzipping (if necessary)
 			mDbHelper.overwriteDataBase(downloadFile);
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");

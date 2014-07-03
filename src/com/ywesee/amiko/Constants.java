@@ -80,7 +80,7 @@ public class Constants {
 	}
 	
 	/**
-	 * Returns the database used in the app
+	 * Returns the name SQLite database
 	 * @return
 	 */
 	public static String appDatabase() {
@@ -93,7 +93,7 @@ public class Constants {
 	}
 	
 	/**
-	 * Returns the name of the zipped database
+	 * Returns the name of the zipped SQLite database
 	 * @return
 	 */
 	public static String appZippedDatabase() {
@@ -118,4 +118,27 @@ public class Constants {
 			return "amiko_report_de.html";
 	}
 	
+	/**
+	 * Returns the name of the zipped drug interactions file
+	 */
+	public static String appInteractionsFile() {
+		if (appLanguage().equals("de"))
+			return "drug_interactions_csv_de.csv";
+		else if (appLanguage().equals("fr"))
+			return "drug_interactions_csv_fr.csv";
+		else
+			return "drug_interactions_csv_de.csv";
+	}
+	
+	/**
+	 * Returns the name of the zipped drug interactions file
+	 */ 
+	public static String appZippedInteractionsFile() {
+		if (appLanguage().equals("de"))
+			return "drug_interactions_csv_de.zip";
+		else if (appLanguage().equals("fr"))
+			return "drug_interactions_csv_fr.zip";
+		else
+			return "drug_interactions_csv_de.zip";
+	}
 }

@@ -204,8 +204,9 @@ public class MainActivity extends Activity {
 	 * and system reboots.
 	 */
 	private DownloadManager mDownloadManager = null;
-	private long mDatabaseId = 0;
-	private long mReportId = 0;
+	private long mDatabaseId = 0;		// SQLite DB (zipped)
+	private long mReportId = 0;			// Report file (html)
+	private long mInteractionsId = 0;	// Drug interactions file (zipped)
 	private long mDownloadedFileCount = 0;
 			
 	/**
@@ -616,10 +617,10 @@ public class MainActivity extends Activity {
 				String action = intent.getAction();
 				if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
 					long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-					if (downloadId==mDatabaseId || downloadId==mReportId)
+					if (downloadId==mDatabaseId || downloadId==mReportId || downloadId==mInteractionsId)
 						mDownloadedFileCount++;
-					// Before proceeding make sure both files have been downloaded
-					if (mDownloadedFileCount==2) {
+					// Before proceeding make sure all files have been downloaded before proceeding
+					if (mDownloadedFileCount==3) {
 						Query query = new Query();
 						query.setFilterById(downloadId);
 						Cursor c = mDownloadManager.query(query);
@@ -635,7 +636,7 @@ public class MainActivity extends Activity {
 									Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
 								}			
 								// Toast
-								mToastObject.show("Database downloaded successfully. Installing...", Toast.LENGTH_SHORT);
+								mToastObject.show("Databases downloaded successfully. Installing...", Toast.LENGTH_SHORT);
 								mUpdateInProgress = false;
 							}
 						}
@@ -738,7 +739,7 @@ public class MainActivity extends Activity {
 			if (Constants.DEBUG)
 				Log.d(TAG, "doInBackground: open/overwrite database");
 			// Creates, opens or overwrites database (singleton)
-			// TODO: implement proper singleton pattern (getInstance())
+			// TODO: there is only one database, so implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null) {
 				mMediDataSource = new DBAdapter(this.context);
 				mSizeDatabaseFile = mMediDataSource.getSizeDatabaseFile();
@@ -1353,34 +1354,42 @@ public class MainActivity extends Activity {
 			// File URIs
 			Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
 			Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
+			Uri interactionsUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedInteractionsFile());
 			
 			// NOTE: the default download destination is a shared volume where the system might delete your file if 
 			// it needs to reclaim space for system use
 			DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
 			DownloadManager.Request requestReport = new DownloadManager.Request(reportUri);
-			// Allow download only over WIFI
+			DownloadManager.Request requestInteractions = new DownloadManager.Request(interactionsUri);
+			// Allow download only over WIFI and Mobile network
 			requestDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
 			requestReport.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
+			requestInteractions.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
 			// Download visible and shows in notifications while in progress and after completion
 			requestDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 			requestReport.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+			requestInteractions.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 			// Set the title of this download, to be displayed in notifications (if enabled).
-			requestDatabase.setTitle("AmiKo Database Update");
-			requestReport.setTitle("AmiKo Report Update");
+			requestDatabase.setTitle("AmiKo SQLite database update");
+			requestReport.setTitle("AmiKo report update");
+			requestInteractions.setTitle("AmiKo drug interactions update");
 			// Set a description of this download, to be displayed in notifications (if enabled)
 			requestDatabase.setDescription("Updating the AmiKo database.");
 			requestReport.setDescription("Updating the AmiKo error report.");
+			requestInteractions.setDescription("Updating the AmiKo drug interactions.");
 			// Set local destination to standard directory (place where files downloaded by the user are placed)
 			requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
 			requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
-	        
+			requestInteractions.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedInteractionsFile());	        
 			// Check if file exist, if yes, delete it 
 			deleteDownloadedFile(Constants.appZippedDatabase());
 			deleteDownloadedFile(Constants.appReportFile());
+			deleteDownloadedFile(Constants.appZippedInteractionsFile());
 			
 			// The downloadId is unique across the system. It is used to make future calls related to this download.
 			mDatabaseId = mDownloadManager.enqueue(requestDatabase);
 			mReportId = mDownloadManager.enqueue(requestReport);
+			mInteractionsId = mDownloadManager.enqueue(requestInteractions);
 		} else {
 			// Display error report
 		}

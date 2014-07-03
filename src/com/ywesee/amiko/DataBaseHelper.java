@@ -43,6 +43,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 	private static String mDBName = "";
 	private static String mReportName = "";
+	private static String mInteractionsName = "";
 	private static String mDBPath = "";
 
 	private SQLiteDatabase mDataBase;
@@ -59,6 +60,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
 		mDBName = Constants.appDatabase();
 		mReportName = Constants.appReportFile();
+		mInteractionsName = Constants.appInteractionsFile();
 		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
 		this.mContext = context;
 	}
@@ -104,6 +106,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Error("Error copying report file!");
 			}
+			try {
+				// Copy report file from assets
+				copyInteractionsFile();
+				if (Constants.DEBUG)
+					Log.d(TAG, "createDataBase(): drug interactions file copied");
+			} catch (IOException e) {
+				throw new Error("Error copying drug interactions file!");
+			}
+			
 		}
 	}
 	
@@ -116,7 +127,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		close();
 		try {
 			// Copy database from src to dst
-			copyDataBase(srcFile, true);
+			copyDataBaseToPath(srcFile, mDBPath + mDBName, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
@@ -164,6 +175,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
+     * Copies drug interactions file from local assets-folder to system folder, from where it can 
+     * be accessed and handled. This is done by transferring bytestream.
+	 * @throws IOException
+	 */
+	private void copyInteractionsFile() throws IOException {
+		copyFromAssetFolder(mInteractionsName, mDBPath + mReportName);
+	}
+	
+	/**
 	 * Copy srcFile in Assets folder to dstPath
 	 * @param srcFile
 	 * @param dstPath
@@ -186,11 +206,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mInput.close();
 	}	
 	
-	private void copyDataBase(String srcFile, boolean zipped) throws IOException {
+	private void copyDataBaseToPath(String srcFile, String dbFileName, boolean zipped) throws IOException {
 		if (!zipped) {
 			// Open database
 			InputStream mInput = new FileInputStream(srcFile);
-			String dbFileName = mDBPath + mDBName;
 			OutputStream mOutput = new FileOutputStream(dbFileName);
 			
 			// Transfer bytes from input to output
@@ -217,7 +236,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				ZipEntry ze;
 				
 				while ((ze = zis.getNextEntry()) != null) {
-					FileOutputStream fout = new FileOutputStream(mDBPath + mDBName);
+					FileOutputStream fout = new FileOutputStream(dbFileName);
 					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
 
 					while ((bytesRead = zis.read(buffer)) != -1) {
