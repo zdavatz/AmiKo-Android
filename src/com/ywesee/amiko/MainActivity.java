@@ -742,7 +742,7 @@ public class MainActivity extends Activity {
 			// TODO: there is only one database, so implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null) {
 				mMediDataSource = new DBAdapter(this.context);
-				mSizeDatabaseFile = mMediDataSource.getSizeDatabaseFile();
+				mSizeDatabaseFile = mMediDataSource.getSizeSQLiteDatabaseFile();
 	        	if (mSizeDatabaseFile<0)
 	        		mSizeDatabaseFile = Constants.DB_SIZE;				
 			} else {
@@ -755,7 +755,7 @@ public class MainActivity extends Activity {
 					Log.d(TAG, "Error copying report file!");
 				}
 	        	// Get size of database file (zipped version)
-	        	mSizeDatabaseFile = mMediDataSource.getSizeZippedDatabaseFile();
+	        	mSizeDatabaseFile = mMediDataSource.getSizeZippedSQLiteDatabaseFile();
 	        	if (mSizeDatabaseFile<0)
 	        		mSizeDatabaseFile = Constants.DB_SIZE;
 	        	Log.d(TAG, "Size downloaded zip = " + mSizeDatabaseFile);

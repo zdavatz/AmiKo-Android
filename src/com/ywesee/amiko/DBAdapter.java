@@ -95,8 +95,12 @@ public class DBAdapter {
 		mDbHelper.addObserver(observer);
 	}
 	
-	public int getSizeDatabaseFile() {
-		return (int)mDbHelper.getSizeDatabaseFile();
+	public int getSizeSQLiteDatabaseFile() {
+		return (int)mDbHelper.getSizeSQLiteDatabaseFile();
+	}
+	
+	public int getSizeInteractionsFile() {
+		return (int)mDbHelper.getSizeInteractionsFile();
 	}
 	
 	/**
@@ -122,7 +126,7 @@ public class DBAdapter {
 	/**
 	 * 
 	 */
-	public int getSizeZippedDatabaseFile() {
+	public int getSizeZippedSQLiteDatabaseFile() {
 		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 				+ "/" + Constants.appZippedDatabase() );
 	}

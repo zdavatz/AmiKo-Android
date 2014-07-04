@@ -58,57 +58,73 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      */
 	public DataBaseHelper(Context context) {	
 		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
+		this.mContext = context;		
+		// Initialize all databases and related files
 		mDBName = Constants.appDatabase();
 		mReportName = Constants.appReportFile();
 		mInteractionsName = Constants.appInteractionsFile();
+		// Initialize persistant storage where databases will go
 		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
-		this.mContext = context;
 	}
 	
 	/**
-	 * 
+	 * Adds observer
+	 * @param observer
 	 */
 	public void addObserver(Observer observer) {
 		mObserver = observer;
 	}
 	
 	/**
-	 * 
+	 * Notifies observer
+	 * @param totBytes: total downloaded bytes
 	 */
 	public void notifyObserver(int totBytes) {
 		mObserver.update(null, totBytes);
 	}
+	
+    /**
+     * Check if file already exist to avoid re-copying it each time when application starts.
+     * @return true if it exists, false if it doesn't
+     */		
+	private boolean checkFileExistsAtPath(String fileName, String path) {
+		File dbFile = new File(path + fileName);
+		return dbFile.exists();
+	}
 		
 	/**
-     * Creates a empty database on the system and rewrites it with your own database.
+     * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */	
 	public void createDataBase() throws IOException {
 		// If database does not exist, copy it from assets folder		
-		boolean dbExist = checkDataBase();
-
+		boolean dbExist = checkFileExistsAtPath(mDBName, mDBPath);
 		if (!dbExist) {
 		// if (dbExist) {  // Used only for debugging purposes!
 			this.getReadableDatabase();
 			this.close();
 			try {
-				// Copy database from assets
-				copyDataBase();
+				// Copy SQLite database from assets
+				copyFileFromAssetsToPath(mDBName, mDBPath);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
 				throw new Error("Error copying database!");
 			}
+		}
+		if (checkFileExistsAtPath(mReportName, mDBPath)) {
 			try {
 				// Copy report file from assets
-				copyReportFile();
+				copyFileFromAssetsToPath(mReportName, mDBPath);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): report file copied");
 			} catch (IOException e) {
 				throw new Error("Error copying report file!");
 			}
+		}
+		if (checkFileExistsAtPath(mInteractionsName, mDBPath)) {
 			try {
 				// Copy report file from assets
-				copyInteractionsFile();
+				copyFileFromAssetsToPath(mInteractionsName, mDBPath);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): drug interactions file copied");
 			} catch (IOException e) {
@@ -117,81 +133,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			
 		}
 	}
-	
+		
 	/**
-	 * Overwrite database
-	 */
-	public void overwriteDataBase(String srcFile) throws IOException {
-		getReadableDatabase();
-		// Close database
-		close();
-		try {
-			// Copy database from src to dst
-			copyDataBaseToPath(srcFile, mDBPath + mDBName, true);
-			if (Constants.DEBUG)
-				Log.d(TAG, "overwriteDataBase(): old database overwritten");
-		} catch (IOException e) {
-			throw new Error("Error overwriting database!");
-		}
-	}	
-	
-    /**
-     * Check if the database already exist to avoid re-copying the file each time you open the application.
-     * @return true if it exists, false if it doesn't
-     */		
-	private boolean checkDataBase() {
-		File dbFile = new File(mDBPath + mDBName);
-		return dbFile.exists();
-	}
-	
-	/**
-	 * 
-	 */
-	public long getSizeDatabaseFile() {
-		if (checkDataBase()) {
-			File dbFile = new File(mDBPath + mDBName);
-			return dbFile.length();
-		}
-		return 0;
-	}
-	
-    /**
-     * Copies database from local assets-folder to just created empty database in the
-     * system folder, from where it can be accessed and handled.
-     * This is done by transferring bytestream.
-     * @throws IOException
-     * */
-	private void copyDataBase() throws IOException {
-		copyFromAssetFolder(mDBName, mDBPath + mDBName);
-	}
-	
-	/**
-     * Copies report file from local assets-folder to system folder, from where it can 
-     * be accessed and handled. This is done by transferring bytestream.
-	 * @throws IOException
-	 */
-	private void copyReportFile() throws IOException {
-		copyFromAssetFolder(mReportName, mDBPath + mReportName);
-	}
-	
-	/**
-     * Copies drug interactions file from local assets-folder to system folder, from where it can 
-     * be accessed and handled. This is done by transferring bytestream.
-	 * @throws IOException
-	 */
-	private void copyInteractionsFile() throws IOException {
-		copyFromAssetFolder(mInteractionsName, mDBPath + mReportName);
-	}
-	
-	/**
-	 * Copy srcFile in Assets folder to dstPath
+     * Copies file from local assets-folder to system folder (persistant storage), 
+     * from where it can be accessed and handled. This is done by transferring bytestream.
 	 * @param srcFile
 	 * @param dstPath
 	 */
-	private void copyFromAssetFolder(String srcFile, String dstPath) throws IOException {
+	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {
 		// Open shipped database from assets folder
 		InputStream mInput = mContext.getAssets().open(srcFile);
-		OutputStream mOutput = new FileOutputStream(dstPath);
+		OutputStream mOutput = new FileOutputStream(dstPath+srcFile);
 		
 		// Transfer bytes from input to output
 		byte[] mBuffer = new byte[1024];
@@ -204,13 +156,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mOutput.flush();
 		mOutput.close();
 		mInput.close();
-	}	
-	
-	private void copyDataBaseToPath(String srcFile, String dbFileName, boolean zipped) throws IOException {
+	}
+		
+	private void copyFileFromSrcToPath(String srcFile, String dstFile, boolean zipped) throws IOException {
 		if (!zipped) {
 			// Open database
 			InputStream mInput = new FileInputStream(srcFile);
-			OutputStream mOutput = new FileOutputStream(dbFileName);
+			OutputStream mOutput = new FileOutputStream(dstFile);
 			
 			// Transfer bytes from input to output
 			byte[] mBuffer = new byte[1024];
@@ -236,7 +188,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				ZipEntry ze;
 				
 				while ((ze = zis.getNextEntry()) != null) {
-					FileOutputStream fout = new FileOutputStream(dbFileName);
+					FileOutputStream fout = new FileOutputStream(dstFile);
 					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
 
 					while ((bytesRead = zis.read(buffer)) != -1) {
@@ -289,6 +241,42 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
+	 * Overwrite database
+	 */
+	public void overwriteDataBase(String srcFile) throws IOException {
+		getReadableDatabase();
+		// Close database
+		close();
+		try {
+			// Copy database from src to dst and unzip it!
+			copyFileFromSrcToPath(srcFile, mDBPath + mDBName, true);
+			if (Constants.DEBUG)
+				Log.d(TAG, "overwriteDataBase(): old database overwritten");
+		} catch (IOException e) {
+			throw new Error("Error overwriting database!");
+		}
+	}	
+	
+	/**
+	 * 
+	 */
+	public long getSizeSQLiteDatabaseFile() {
+		if (checkFileExistsAtPath(mDBName, mDBPath)) {
+			File file = new File(mDBPath + mDBName);
+			return file.length();
+		}
+		return 0;
+	}	
+
+	public long getSizeInteractionsFile() {
+		if (checkFileExistsAtPath(mInteractionsName, mDBPath)) {
+			File file = new File(mDBPath + mInteractionsName);
+			return file.length();
+		}
+		return 0;
+	}		
+	
+	/**
 	 * Closes SQLite database
 	 */
 	@Override
@@ -297,7 +285,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			mDataBase.close();
 		super.close();
 	}
-		
+	
 	/**
 	 * Called if database version is increased
 	 */
@@ -307,7 +295,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			if (Constants.DEBUG)
 				Log.d(TAG, "onUpgrade(): upgrading database from version " + oldVersion + " to version " + newVersion);
 			try { 
-				copyDataBase(); 
+				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
 			} catch (IOException e) { 
 				throw new Error("Error upgrading database");
 		    } 
