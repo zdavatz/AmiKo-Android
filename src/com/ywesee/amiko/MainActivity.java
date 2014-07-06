@@ -19,13 +19,9 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -133,6 +129,8 @@ public class MainActivity extends Activity {
 	private DBAdapter mMediDataSource;
 	// List of medications returned by SQLite query
 	private List<Medication> mMedis = null;
+	// Index of most recently clicked medication
+	private long mMedIndex = -1;
 	// Html string displayed in show_view
 	private String mHtmlString;
 	// Current action bar tab
@@ -148,7 +146,7 @@ public class MainActivity extends Activity {
 	private ListView mListView = null;	
 	// ListView of section titles (shortcuts)
 	private ListView mSectionView = null;
-	// Webview used to display "Fachinformation"
+	// Webview used to display "Fachinformation" and the "med interaction basket"
 	private WebView mWebView;	
 	// Webview used to display the report (About-File)
 	private WebView mReportWebView;
@@ -163,7 +161,10 @@ public class MainActivity extends Activity {
 	private String mDatabaseUsed = "aips";
 	// Searching for interactions?
 	private boolean mSearchInteractions = false;
-
+	// Drug interaction basket
+	private Interactions mMedInteractionBasket = null;
+	
+	
 	// Actionbar menu items
 	private MenuItem mSearchItem = null;
 	private EditText mSearch = null;
@@ -173,10 +174,10 @@ public class MainActivity extends Activity {
 	private ViewGroup mViewHolder = null;	
 	private View mSuggestView = null;	
 	private View mShowView = null;
-	private View mReportView = null;	
+	private View mReportView = null;
 	// This is the currently visible view
 	private View mCurrentView = null;
-	
+		
 	// This is the drawerlayout for the section titles in expert view
 	private DrawerLayout mDrawerLayout = null;
 	
@@ -209,17 +210,6 @@ public class MainActivity extends Activity {
 	private long mInteractionsId = 0;	// Drug interactions file (zipped)
 	private long mDownloadedFileCount = 0;
 			
-	/**
-	 * Check if app runs on phone or tablet
-	 * @param context
-	 * @return
-	 */
-	private boolean isTablet(Context context) {
-	    boolean ret = (context.getResources().getConfiguration().screenLayout
-	            & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE;   
-	    return ret;
-	}
-		
 	/**
 	 * Show soft keyboard
 	 */
@@ -278,14 +268,17 @@ public class MainActivity extends Activity {
     	try {
     		// Creates database
     		mMediDataSource.create();
-    		// Opens database
-    		mMediDataSource.open();	
+    		// Opens SQLite database
+    		mMediDataSource.openSQLiteDB();	
     	} catch( IOException e) {
-    		Log.d(TAG, "Unable to create database!");
-    		throw new Error("Unable to create database");
+    		Log.d(TAG, "Unable to create SQLite database!");
+    		throw new Error("Unable to create SQLite database");
     	}	 	
-    	
-    	if (showIt) {
+
+   		// Open drug interactions csv file 
+   		mMediDataSource.openInteractionsFile();
+
+   		if (showIt) {
     	   	// Enable flag (disable toast message)
         	mRestoringState = true;       		
 	    	// Set Runnable to remove splash screen just in case
@@ -534,6 +527,9 @@ public class MainActivity extends Activity {
 		// Sets current content view
 		setContentView(R.layout.activity_main);	
 		
+		// Sets up med interaction basket
+		mMedInteractionBasket = new Interactions(this);
+		
 		// Initialize views
 		mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
@@ -544,28 +540,30 @@ public class MainActivity extends Activity {
 		mViewHolder.addView(mSuggestView);		
 		mViewHolder.addView(mShowView);	
 		mViewHolder.addView(mReportView);
-		
+
 		setLayoutTransition();
 		
 		// Set visibility of views
 		mSuggestView.setVisibility(View.VISIBLE);			
 		mShowView.setVisibility(View.GONE);			
-		mReportView.setVisibility(View.GONE);			
+		mReportView.setVisibility(View.GONE);
 		
 		// Setup webviews
 		setupReportView();
+		
 		// Load CSS from asset folder
-		if (isTablet(this))
-			mCSS_str = loadFromAssetsFolder("amiko_stylesheet.css", "UTF-8"); 
+		if (Utilities.isTablet(this))
+			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet.css", "UTF-8"); 
 		else
-			mCSS_str = loadFromAssetsFolder("amiko_stylesheet_phone.css", "UTF-8");
+			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet_phone.css", "UTF-8");
 		// Define and load webview
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
+		
 		// Add find listeners
 		setFindListener(mWebView);
-		setFindListener(mReportWebView);
+		setFindListener(mReportWebView);		
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
 		setupGestureDetector(mReportWebView);
@@ -702,7 +700,7 @@ public class MainActivity extends Activity {
 		// Enable javascript
 		mReportWebView.getSettings().setJavaScriptEnabled(true);		
 	}
-		
+
 	/**
 	 * Asynchronous thread launched to initialize the SQLite database
 	 * @author Max
@@ -713,7 +711,7 @@ public class MainActivity extends Activity {
 		// Progressbar
 		private ProgressDialog progressBar;
 		private Context context;
-		private int mSizeDatabaseFile;
+		private int fileType = -1;
 		
 		public AsyncInitDBTask(Context context) {
 			this.context = context;
@@ -725,7 +723,7 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "onPreExecute(): progressDialog");	
 	        // Initialize the dialog
 			progressBar = new ProgressDialog(MainActivity.this);
-	        progressBar.setMessage("Initializing database...");	        
+	        progressBar.setMessage("Initializing SQLite database...");	       
 	        // progressBar.setIndeterminate(true);
 	        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 	        progressBar.setProgress(0);
@@ -738,34 +736,33 @@ public class MainActivity extends Activity {
 		protected Void doInBackground(Void... voids) {
 			if (Constants.DEBUG)
 				Log.d(TAG, "doInBackground: open/overwrite database");
+			
+			// Case 1: mMediDataSource is not initialized 
 			// Creates, opens or overwrites database (singleton)
 			// TODO: there is only one database, so implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null) {
 				mMediDataSource = new DBAdapter(this.context);
-				mSizeDatabaseFile = mMediDataSource.getSizeSQLiteDatabaseFile();
-	        	if (mSizeDatabaseFile<0)
-	        		mSizeDatabaseFile = Constants.DB_SIZE;				
 			} else {
-				// Database adapter already exists, reuse it!				
+				// Case 2: mMediDataSource is initialized
+				// Database adapter already exists, reuse it!
 				try {
-					// Move report file to appropriate folder
+					// First, move report file to appropriate folder
 					mMediDataSource.copyReportFile();	
 				}
 				catch (IOException e) {
 					Log.d(TAG, "Error copying report file!");
-				}
-	        	// Get size of database file (zipped version)
-	        	mSizeDatabaseFile = mMediDataSource.getSizeZippedSQLiteDatabaseFile();
-	        	if (mSizeDatabaseFile<0)
-	        		mSizeDatabaseFile = Constants.DB_SIZE;
-	        	Log.d(TAG, "Size downloaded zip = " + mSizeDatabaseFile);
+				}       	
 			}
+			
 			try {
 				// Add observer to totally unzipped bytes (for the progress bar)
 				mMediDataSource.addObserver(new Observer() {
 					@Override
+					@SuppressWarnings({"unchecked"})
 					public void update(Observable o, Object arg) {
-						publishProgress((Integer)arg);
+						// Method will call onProgressUpdate(Progress...)
+						fileType = ((List<Integer>)arg).get(1);
+						publishProgress(((List<Integer>)arg).get(0));
 					}
 				});
 				// Creates or overwrites database (if it already exists)
@@ -774,8 +771,11 @@ public class MainActivity extends Activity {
 				Log.d(TAG, "Unable to create database!");
 				throw new Error("Unable to create database");
 			}	
-			// Opens database
-			mMediDataSource.open();	
+			
+			// Opens SQLite database
+			mMediDataSource.openSQLiteDB();
+	   		// Open drug interactions csv file 
+	   		mMediDataSource.openInteractionsFile();
 			
 			return null;
 		}
@@ -784,9 +784,14 @@ public class MainActivity extends Activity {
 		protected void onProgressUpdate(Integer... progress) {
 			super.onProgressUpdate(progress);
 			if (progress!=null) {
-				float percentCompleted = 100*(float)progress[0]/(float)mSizeDatabaseFile;
-				// Log.d(TAG, "observer -> " + percentCompleted + " / " + progress[0] + " / " + mSizeDownloadedZipFile);
-				progressBar.setProgress((int)percentCompleted);
+				if (progress[0]<1) {
+					if (fileType==1)
+						progressBar.setMessage("Initializing SQLite database...");
+					else if (fileType==2)
+						progressBar.setMessage("Initializing drug interactions...");
+				}
+				int percentCompleted = progress[0];
+				progressBar.setProgress(percentCompleted);
 			}
 		}
 				
@@ -799,7 +804,7 @@ public class MainActivity extends Activity {
 			// Reset view
 			resetView();
 			// Friendly message
-			mToastObject.show("Database initialized successfully", Toast.LENGTH_LONG);
+			mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
 		}
 	}
 	
@@ -965,7 +970,7 @@ public class MainActivity extends Activity {
 					mWebView.clearMatches();
 				} else if (mCurrentView==mReportView) {
 					mSearchHitsCntView.setVisibility(View.GONE);
-					mReportWebView.clearMatches();
+					mReportWebView.clearMatches();				
 				}
 				mSearch.setText("");
 			}
@@ -1190,8 +1195,16 @@ public class MainActivity extends Activity {
 			mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);
 			// Keep used database
 			mSearchInteractions = true;
+			// Add medi to drug interaction basket
+			Medication m = mMediDataSource.searchId(mMedIndex);
+			mMedInteractionBasket.addToBasket(m.getTitle(), m);
+			mMedInteractionBasket.updateInteractionsHtml();
+			String html_str = mMedInteractionBasket.getInteractionsHtml();
+			mWebView.loadDataWithBaseURL("app:myhtml", html_str, "text/html", "utf-8", null);
 			// Change view
-			
+			setCurrentView(mShowView, true);
+			// Reset search
+			mSearch.setText("");
 			// Request menu update
 			invalidateOptionsMenu();
 			return true;
@@ -1403,7 +1416,7 @@ public class MainActivity extends Activity {
 		File file = new File(filePath, fileName);
 		if (file.exists()) {
 			boolean ret = file.delete();
-			Log.d(TAG, "Downloaded file found and deleted. Code = " + ret);
+			Log.d(TAG, "Downloaded file found and deleted. Return code = " + ret);
 			return ret;
 		} else {
 			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
@@ -1509,7 +1522,7 @@ public class MainActivity extends Activity {
 		 		viewHolder.text_title = (TextView) mView.findViewById(R.id.mtitle);
 			    viewHolder.text_subtitle = (TextView) mView.findViewById(R.id.mauth);
 			    // Set text sizes
-			    if (!isTablet(MainActivity.this)) {
+			    if (!Utilities.isTablet(MainActivity.this)) {
 				    viewHolder.text_title.setTextSize(14);
 				    viewHolder.text_subtitle.setTextSize(12);
 			    }
@@ -1721,9 +1734,10 @@ public class MainActivity extends Activity {
 						mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
 					}					
 					
+					mMedIndex = med.getId();
 					if (Constants.DEBUG)
-						Log.d(TAG, "medi id = " + med.getId());					
-					Medication m = mMediDataSource.searchId(med.getId());
+						Log.d(TAG, "medi id = " + mMedIndex);					
+					Medication m = mMediDataSource.searchId(mMedIndex);
 					
 					if (m!=null) {
 						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
@@ -1799,53 +1813,12 @@ public class MainActivity extends Activity {
         		+ "<body>" + file_content + "</body></html>";
         */
 		// New solution without Javascript...
-		String file_content = loadFromApplicationFolder(file_name, "UTF-8");		
+		String file_content = Utilities.loadFromApplicationFolder(MainActivity.this, file_name, "UTF-8");		
         file_content = "<html><body>" + file_content + "</body></html>";
         
         return file_content;
 	}	
-	
-	private String loadFromAssetsFolder(String file_name, String encoding) {
-		String file_str = "";
 		
-        try {
-            InputStream is = getAssets().open(file_name); 
-            InputStreamReader isr = new InputStreamReader(is, encoding);
-            BufferedReader br = new BufferedReader(isr);
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                file_str += line;
-            }
-            is.close(); 
-        }
-        catch (Exception e) {
-        	// TODO: Handle exception        	
-        }
-        
-		return file_str;			
-	}
-	
-	private String loadFromApplicationFolder(String file_name, String encoding) {
-		String file_str = "";
-        try {
-            InputStream is = new FileInputStream(getApplicationInfo().dataDir + "/databases/" + file_name); 
-            InputStreamReader isr = new InputStreamReader(is, encoding);
-            BufferedReader br = new BufferedReader(isr);
-
-            String line;
-            while ((line = br.readLine()) != null) {
-                file_str += line;
-            }
-            is.close(); 
-        }
-        catch (Exception e) {
-        	// TODO: Handle exception        	
-        }
-        
-		return file_str;			
-	}
-	
 	private String createHtml( String style_str, String content_str ) {
 		// Old Javascript-based solution... superseeded -> maybe useful for older version of android!
 		/*		
@@ -1892,7 +1865,7 @@ public class MainActivity extends Activity {
 			}
 			
 		    TextView text_title = (TextView) mView.findViewById(R.id.absTitle); // R.id.textView
-		    if (!isTablet(MainActivity.this)) {
+		    if (!Utilities.isTablet(MainActivity.this)) {
 		    	text_title.setTextSize(12);	// in "scaled pixel units" (sp)
 		    } else {
 		    	// Defined in "section_item.xml" as 14sp
@@ -1955,62 +1928,3 @@ public class MainActivity extends Activity {
 		return super.onKeyDown(keyCode, event);
 	}	 	
 }
-
-
-/*
-try {
-	// String test = Environment.getExternalStorageDirectory().getAbsolutePath() + "/AamirPDF";            
-    FileOutputStream fout = new FileOutputStream(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/FachInfo.pdf");
-	Document document = new Document(PageSize.A4);
-	document.addAuthor("ywesee GmbH");
-	document.addCreator("AmiKo");
-	PdfWriter pdfWriter = PdfWriter.getInstance(document, fout);
-    document.open();
-
-    for (int i=0; i<3; ++i) {
-    	mWebView.scrollBy(0, mWebView.getHeight()*i);
-    	mWebView.setDrawingCacheEnabled(true);
-    	mWebView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED), 
-    			MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-    	mWebView.layout(0, 0, mWebView.getWidth(), mWebView.getHeight());
-
-    	mWebView.buildDrawingCache(true);
-    	Bitmap bmp = Bitmap.createBitmap(mWebView.getDrawingCache());
-    	mWebView.setDrawingCacheEnabled(false);
-
-    	ByteArrayOutputStream out = null;
-    	byte[] byteArchadeImage = null;
-    	try {
-    		out = new ByteArrayOutputStream();
-    		if (out != null) {
-    			bmp.compress(Bitmap.CompressFormat.JPEG, 100, out);
-    			byteArchadeImage = out.toByteArray();
-    			out.flush();
-    			out.close();
-    		}
-    	} catch (Exception e) {
-    		Log.d(TAG, e.getLocalizedMessage());
-    	}
-
-    	try {
-    		Image image = Image.getInstance(byteArchadeImage);
-    		image.scaleAbsolute(600, 800);
-    		image.setAlignment(Image.MIDDLE | Image.ALIGN_MIDDLE);
-    		document.add(image);
-    	} catch (MalformedURLException e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
-    	} catch (IOException e) {
-    		// TODO Auto-generated catch block
-    		e.printStackTrace();
-    	}
-    }
-    
-	document.close();
-	fout.flush();
-	fout.close();
-
-} catch (Exception e) {
-	e.printStackTrace();
-} 
-*/

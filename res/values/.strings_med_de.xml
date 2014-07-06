@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">AmiKo</string>
+    <string name="app_name">med-drugs</string>
     <string name="hello_world">Hello world!</string>
-	<string name="title_main_activity">AmiKo</string>
+	<string name="title_main_activity">med-drugs</string>
     <string name="section_frag">Abschnitt</string>
 	<string name="info_frag">Information</string>
     
@@ -20,6 +20,7 @@
 
     <string name="aips_button">AIPS</string>
     <string name="favorites_button">Favorites</string>
+    <string name="interactions_button">Interactions</string>
     
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">Min. 2 Buchstaben  </string>

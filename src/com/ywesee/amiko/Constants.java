@@ -19,10 +19,14 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import android.content.Context;
+import android.content.res.Configuration;
+
 public class Constants {
 	public static final boolean DEBUG = false;
 	
-	public static final int DB_SIZE = 160000000;
+	public static final int SQLITE_DB_SIZE = 160000000;
+	public static final int INTERACTIONS_FILE_SIZE = 10000000;
 	
 	public static final String AMIKO_NAME = "AmiKo";
 	public static final String COMED_NAME = "CoMed";
@@ -140,5 +144,5 @@ public class Constants {
 			return "drug_interactions_csv_fr.zip";
 		else
 			return "drug_interactions_csv_de.zip";
-	}
+	}		
 }

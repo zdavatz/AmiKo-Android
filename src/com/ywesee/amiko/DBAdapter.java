@@ -20,15 +20,20 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Observer;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -46,7 +51,8 @@ public class DBAdapter {
 	
 	private final Context mContext;	
 	private SQLiteDatabase mDb;
-	private DataBaseHelper mDbHelper;	
+	private Map<String,String> mInteractions = null;
+	private DataBaseHelper mDbHelper;
 	private int mNumRecords;
 	private boolean mDatabaseCreated = false;
 	
@@ -180,17 +186,33 @@ public class DBAdapter {
 	}
 	
 	/**
+	 * Opens drug interactions file
+	 */
+	void openInteractionsFile() {
+		mInteractions = mDbHelper.openInteractionsFile();
+	}		
+	
+	/**
+	 * Returns number of interactions in drug interactions map
+	 * @return
+	 */
+	public int getNumInteractions() {
+		return mInteractions.size();
+	}	
+	
+	/**
 	 * Creates database
 	 * @throws IOException
 	 */
 	public void create() throws IOException {
 		try {
 			if (!mDatabaseCreated) {
-				mDbHelper.createDataBase();
+				mDbHelper.copyFilesFromAssetFolder();
 				mDatabaseCreated = true;
 			}
 			else {
-				overwrite();
+				overwriteSQLiteDB();
+				overwriteInteractionsFile();
 			}
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to create database");
@@ -202,12 +224,12 @@ public class DBAdapter {
 	 * Overwrites old database
 	 * @throws IOException
 	 */
-	public void overwrite() throws IOException {
+	public void overwriteSQLiteDB() throws IOException {
 		try {
-			String downloadFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 					+ "/" + Constants.appZippedDatabase();
 			// copies and overwrites (if necessary) while unzipping (if necessary)
-			mDbHelper.overwriteDataBase(downloadFile);
+			mDbHelper.overwriteSQLiteDataBase(zippedFile, getSizeZippedFile(zippedFile));
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");
 			throw new Error("Unable to overwrite database");	
@@ -215,10 +237,27 @@ public class DBAdapter {
 	}
 	
 	/**
+	 * Overwrites old drug interactions file
+	 * @throws IOException
+	 */
+	public void overwriteInteractionsFile() throws IOException {
+		try {
+			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
+					+ "/" + Constants.appZippedInteractionsFile();
+			// copies and overwrites (if necessary) while unzipping (if necessary)
+			mDbHelper.overwriteInteractionsFile(zippedFile, getSizeZippedFile(zippedFile));
+		} catch (IOException e) {
+			Log.e(TAG, e.toString() + " Unable to overwrite drug interactions file");
+			throw new Error("Unable to overwrite drug interactions file");	
+		}
+	}
+		
+	
+	/**
 	 * Opens database and initializes number of stored records
 	 * @throws SQLException
 	 */
-	public void open() throws SQLException {
+	public void openSQLiteDB() throws SQLException {
 		try {
 			mDbHelper.openDataBase();
 			mDbHelper.close();
@@ -234,10 +273,10 @@ public class DBAdapter {
 	/**
 	 * Closes the database
 	 */
-	public void close() {
+	public void closeSQLiteDB() {
 		mDbHelper.close();		
 	}
-		
+	
 	/**
 	 * Queries the number of records in the database
 	 * @return number of records

@@ -20,14 +20,20 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Observer;
+import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -79,8 +85,16 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * Notifies observer
 	 * @param totBytes: total downloaded bytes
 	 */
-	public void notifyObserver(int totBytes) {
-		mObserver.update(null, totBytes);
+	public void notifyObserver(String fileName, int totBytes) {
+		List<Integer> args = new ArrayList<Integer>();
+
+		args.add(totBytes);
+		if (fileName.startsWith("amiko_db_full"))
+			args.add(1);
+		else if (fileName.startsWith("drug_interactions_csv"))
+			args.add(2);
+
+		mObserver.update(null, args);
 	}
 	
     /**
@@ -95,11 +109,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */	
-	public void createDataBase() throws IOException {
+	public void copyFilesFromAssetFolder() throws IOException {
 		// If database does not exist, copy it from assets folder		
-		boolean dbExist = checkFileExistsAtPath(mDBName, mDBPath);
-		if (!dbExist) {
-		// if (dbExist) {  // Used only for debugging purposes!
+		if (!checkFileExistsAtPath(mDBName, mDBPath)) {
+		// if (checkFileExistsAtPath(mDBName, mDBPath)) {  // Used only for debugging purposes!
 			this.getReadableDatabase();
 			this.close();
 			try {
@@ -111,7 +124,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				throw new Error("Error copying database!");
 			}
 		}
-		if (checkFileExistsAtPath(mReportName, mDBPath)) {
+		if (!checkFileExistsAtPath(mReportName, mDBPath)) {
 			try {
 				// Copy report file from assets
 				copyFileFromAssetsToPath(mReportName, mDBPath);
@@ -121,7 +134,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				throw new Error("Error copying report file!");
 			}
 		}
-		if (checkFileExistsAtPath(mInteractionsName, mDBPath)) {
+		if (!checkFileExistsAtPath(mInteractionsName, mDBPath)) {
 			try {
 				// Copy report file from assets
 				copyFileFromAssetsToPath(mInteractionsName, mDBPath);
@@ -158,7 +171,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mInput.close();
 	}
 		
-	private void copyFileFromSrcToPath(String srcFile, String dstFile, boolean zipped) throws IOException {
+	private void copyFileFromSrcToPath(String srcFile, String dstFile, int totBytes, boolean zipped) throws IOException {
 		if (!zipped) {
 			// Open database
 			InputStream mInput = new FileInputStream(srcFile);
@@ -178,7 +191,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		} else {
 			byte buffer[] = new byte[2048];
 			int bytesRead = -1;
-
+			
 			try {
 				// Chmod src file
 				chmod(srcFile, 755);
@@ -186,7 +199,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				InputStream is = new FileInputStream(srcFile);
 				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
 				ZipEntry ze;
-				
+			
 				while ((ze = zis.getNextEntry()) != null) {
 					FileOutputStream fout = new FileOutputStream(dstFile);
 					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
@@ -194,10 +207,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 					while ((bytesRead = zis.read(buffer)) != -1) {
 						fout.write(buffer, 0, bytesRead);
 						totBytesRead += bytesRead;
-						notifyObserver(totBytesRead);
+						notifyObserver(ze.getName(), (int)(100*(float)totBytesRead/(float)totBytes));
 					}
 					
-					Log.d(TAG, "Unzipped file " + ze.getName() + "(" + totBytesRead/1000 + "kB)");
+					Log.d(TAG, "Unzipped file " + ze.getName() + " (" + totBytesRead/1000 + "kB)");
 					
 					fout.close();
 					zis.closeEntry();
@@ -225,6 +238,32 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
+	 * Utility function: reads csv file as formatted by EPha.ch
+	 * @param filename
+	 * @return
+	 */
+	private Map<String,String> readFromCsvToMap(String filename) {
+		Map<String, String> map = new TreeMap<String, String>();
+		try {
+			File file = new File(filename);
+			if (!file.exists()) 
+				return null;
+			FileInputStream fis = new FileInputStream(filename);
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis, "UTF-8"));
+			String line;
+			while ((line = br.readLine()) != null) {
+				String token[] = line.split("\\|\\|");
+				map.put(token[0] + "-" + token[1], token[2]);
+			}
+			br.close();
+		} catch (Exception e) {
+			System.err.println(">> Error in reading csv file");
+		}
+		
+		return map;
+	}
+	
+	/**
 	 * Opens SQLite database in read-only mode
 	 * @return true if operation is successful, false otherwise
 	 * @throws SQLException
@@ -241,21 +280,47 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 	
 	/**
+	 * Opens drug interactions csv
+	 */
+	public Map<String,String> openInteractionsFile() {
+		String mPath = mDBPath + mInteractionsName;
+		return readFromCsvToMap( mPath );
+	}
+	
+	/**
 	 * Overwrite database
 	 */
-	public void overwriteDataBase(String srcFile) throws IOException {
+	public void overwriteSQLiteDataBase(String srcFile, int fileSize) throws IOException {
 		getReadableDatabase();
 		// Close database
 		close();
 		try {
+        	if (fileSize<0)
+        		fileSize = Constants.SQLITE_DB_SIZE;
 			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mDBPath + mDBName, true);
+			copyFileFromSrcToPath(srcFile, mDBPath + mDBName, fileSize, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
 			throw new Error("Error overwriting database!");
 		}
 	}	
+	
+	/**
+	 * Overwrite drug interactions file
+	 */
+	public void overwriteInteractionsFile(String srcFile, int fileSize) throws IOException {
+		try {
+        	if (fileSize<0)
+        		fileSize = Constants.INTERACTIONS_FILE_SIZE;			
+			// Copy database from src to dst and unzip it!
+			copyFileFromSrcToPath(srcFile, mDBPath + mInteractionsName, fileSize, true);
+			if (Constants.DEBUG)
+				Log.d(TAG, "overwriteDataBase(): old drug interactions file overwritten");
+		} catch (IOException e) {
+			throw new Error("Error overwriting drug interactions file!");
+		}
+	}
 	
 	/**
 	 * 
