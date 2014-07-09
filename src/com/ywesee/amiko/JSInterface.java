@@ -19,19 +19,24 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import java.util.Observer;
+
 import android.content.Context;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
 public class JSInterface {
 	
-	private static final String TAG = "JSInterface"; // Tag for LogCat window
-	private int mSearchHits = 0;
-	
+	private int mSearchHits = 0;	
 	Context mContext;
+	Observer mObserver;
 
 	JSInterface(Context c) {
 		mContext = c;
+	}
+	
+	public void addObserver(Observer observer) {
+		mObserver = observer;
 	}
 	
 	// Annotation as of API 17 (08.Dec.2013)
@@ -42,9 +47,16 @@ public class JSInterface {
 	}
 
 	@JavascriptInterface
+	public void sendMessage(String msg) {
+		// Toast.makeText(mContext, msg, Toast.LENGTH_SHORT).show();
+		// notify observer
+		mObserver.update(null, msg);
+	}
+	
+	@JavascriptInterface
 	public void receiveValueFromJS(int searchHits) {
 		mSearchHits = searchHits;
-	}
+	}	
 	
 	public int getSearchHits() {
 		return mSearchHits;

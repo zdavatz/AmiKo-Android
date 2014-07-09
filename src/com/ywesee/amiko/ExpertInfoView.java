@@ -11,6 +11,7 @@ public class ExpertInfoView {
 	private static final String TAG = "ExpertInfoView";
 	
 	private WebView mWebView = null;
+	private JSInterface mJSInterface = null;
 	
 	public ExpertInfoView(Context context, WebView webView) {
 		mWebView = webView;
@@ -27,7 +28,8 @@ public class ExpertInfoView {
 		mWebView.requestFocus(WebView.FOCUS_DOWN);
 		
 		// Activate JavaScriptInterface in given context
-		mWebView.addJavascriptInterface(new JSInterface(context), "jsInterface");				
+		mJSInterface = new JSInterface(context);
+		mWebView.addJavascriptInterface(mJSInterface, "jsInterface");				
 				
 		WebSettings wsettings = mWebView.getSettings();		    		
 		// Sets whether WebView loads pages in overview mode
@@ -49,6 +51,10 @@ public class ExpertInfoView {
 	
 	public WebView getWebView() {
 		return mWebView;
+	}
+	
+	public JSInterface getJSInterface() {
+		return mJSInterface;
 	}
 	
 	/**

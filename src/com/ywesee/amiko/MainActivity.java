@@ -164,7 +164,6 @@ public class MainActivity extends Activity {
 	// Drug interaction basket
 	private Interactions mMedInteractionBasket = null;
 	
-	
 	// Actionbar menu items
 	private MenuItem mSearchItem = null;
 	private EditText mSearch = null;
@@ -527,9 +526,6 @@ public class MainActivity extends Activity {
 		// Sets current content view
 		setContentView(R.layout.activity_main);	
 		
-		// Sets up med interaction basket
-		mMedInteractionBasket = new Interactions(this);
-		
 		// Initialize views
 		mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
@@ -560,13 +556,46 @@ public class MainActivity extends Activity {
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mWebView = mExpertInfoView.getWebView();
-		
+				
 		// Add find listeners
 		setFindListener(mWebView);
 		setFindListener(mReportWebView);		
 		// Setup gesture detectors
 		setupGestureDetector(mWebView);
 		setupGestureDetector(mReportWebView);
+		
+		// Sets up med interaction basket
+		mMedInteractionBasket = new Interactions(this);
+		
+		// Set up observer to JS messages
+		JSInterface jsinterface = mExpertInfoView.getJSInterface();
+		jsinterface.addObserver(new Observer()  {
+			@Override
+			public void update(Observable o, Object arg) {
+				String s = (String)arg;
+				if (s.equals("notify_interaction")) {
+					// Send email to ywesee					
+				} else { 
+					if (s.equals("delete_all")) {
+						mMedInteractionBasket.clearBasket();
+					} else {
+						mMedInteractionBasket.deleteFromBasket(s);
+					}
+					//
+					// TODO: please comment this "hack"
+					//
+					Handler mainHandler = new Handler(getMainLooper());
+					mainHandler.post(new Runnable() {
+					    @Override
+					    public void run() {
+							mMedInteractionBasket.updateInteractionsHtml();
+							String html_str = mMedInteractionBasket.getInteractionsHtml();					    	
+							mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
+					    }
+					});
+				}
+			}
+		});
 		
 		// Reset action name
 		mActionName = getString(R.string.tab_name_1);
@@ -1200,7 +1229,7 @@ public class MainActivity extends Activity {
 			mMedInteractionBasket.addToBasket(m.getTitle(), m);
 			mMedInteractionBasket.updateInteractionsHtml();
 			String html_str = mMedInteractionBasket.getInteractionsHtml();
-			mWebView.loadDataWithBaseURL("app:myhtml", html_str, "text/html", "utf-8", null);
+			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
 			// Change view
 			setCurrentView(mShowView, true);
 			// Reset search
@@ -1220,7 +1249,7 @@ public class MainActivity extends Activity {
 			}
 			// Load report from file
 			String parse_report = loadReport(Constants.appReportFile());
-			mReportWebView.loadDataWithBaseURL("app:myhtml", parse_report, "text/html", "utf-8", null);
+			mReportWebView.loadDataWithBaseURL("file:///android_res/drawable/", parse_report, "text/html", "utf-8", null);
 
 			// Display report
 			setCurrentView(mReportView, true);	
@@ -1753,7 +1782,7 @@ public class MainActivity extends Activity {
 							}
 						}							
 						
-						mWebView.loadDataWithBaseURL("app:myhtml", mHtmlString, "text/html", "utf-8", null);					
+						mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);					
 							
 						// Add NavigationDrawer, get handle to DrawerLayout
 						mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
