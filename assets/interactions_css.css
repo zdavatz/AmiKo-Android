@@ -1,5 +1,4 @@
 ﻿#interactions{margin-left:5px;margin-right:5px;margin-top:20px;margin-bottom:20px;font-family:"Verdana","Arial","Tahoma","Helvetica","Geneva","sans-serif";color:black;}
-
 #interactions input{font-family:"Verdana","sans-serif";font-size:0.9em;}
 #interactions div p{font-size:0.9em;}
 #interactions table{background-color:#eeeeee;font-family:"Verdana","sans-serif";font-size:0.9em;padding:0.5em;margin-top:0.9em;margin-bottom:0.9em;border-radius:0.3em;}
@@ -7,7 +6,6 @@
 #interactions td p{font-family:"Verdana","sans-serif";font-size:0.9em;}
 #interactions fieldset {border-bottom: none; border-left: none; border-right: none;}
 #interactions fieldset legend {font-weight: bold;}
-
 #interactions .delete-button{background: url{"28-star-ye.png"} left center no-repeat; padding-left: 15px;}
 #interactions .absTitle{font-size:0.9em;font-weight:bold;font-style:normal;margin-bottom:0.3em;}
 #interactions .footnote{font-weight:normal;font-style:normal;font-size:0.8em;margin-top:0.25em;margin-bottom:0.0em;}

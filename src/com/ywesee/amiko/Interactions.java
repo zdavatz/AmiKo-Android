@@ -61,28 +61,31 @@ public class Interactions {
 	}
 	
 	public void updateInteractionsHtml() {
-		// Redisplay selected meds
-		String basket_html_str = "<table id=\"Interaktionen\" width=\"98%25\">";
-		String delete_all_button_str = "";
-		String interactions_html_str = "";
-		String top_note_html_str = "";
-		String legend_html_str = "";
-		String bottom_note_html_str = "";
+		String basket_html_str = medBasketHtml();
+		String interactions_html_str = interactionsHtml();
+		String foot_note_html_str = footNoteHtml();
+
+		// Update main interactions html string
+		m_interactions_html_str = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
+				+ "<script type=\"text/javascript\">" + m_js_deleterow_str + "</script>" 
+				+ m_css_interactions_str + "</head><body>" 
+				+ basket_html_str + "<br>" + interactions_html_str + "<br>" + foot_note_html_str 
+				+ "</body></div></html>";
+	}
+	
+	private String medBasketHtml() {
+		String basket_html_str = "";
 		String atc_code1 = "";
-		String atc_code2 = "";
 		String name1 = "";
-		String delete_all_text = "Korb leeren";
 		String[] m_code1 = null;
-		String[] m_code2 = null;
 		int med_counter = 1;
-
-		if (Constants.appLanguage().equals("de"))
-			delete_all_text = "Korb leeren";
-		else if (Constants.appLanguage().equals("fr"))
-			delete_all_text = "Tout supprimer";
-
+		
 		// Build interaction basket table
-		if (m_med_basket!=null && m_med_basket.size()>0) {
+		if (m_med_basket!=null && m_med_basket.size()>0) {			
+			if (Constants.appLanguage().equals("de")) 
+				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</legend></fieldset></div><table id=\"InterTable\" width=\"100%25\">";
+			else if (Constants.appLanguage().equals("fr"))
+				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</legend></fieldset></div><table id=\"InterTable\" width=\"100%25\">";			
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
 				m_code1 = entry1.getValue().getAtcCode().split(";");
 				atc_code1 = "k.A.";
@@ -92,19 +95,20 @@ public class Interactions {
 					name1 = m_code1[1];
 				}
 				basket_html_str += "<tr>";
-				String trash_icon = "<input type=\"image\" src=\"trash_icon.png\"" 
-						+ " onclick=\"deleterow('Interaktionen',this)\" />";
-				basket_html_str += "<td>" + med_counter + "</td>" + "<td>"
-						+ entry1.getKey() + " </td> " + "<td>" + atc_code1
-						+ "</td>" + "<td>" + name1 + "</td>"
+				// Source folder for the images is /res/drawable
+				String trash_icon = "<input type=\"image\" src=\"trash_icon.png\" onclick=\"deleterow('Interaktionen',this)\" />";
+				basket_html_str += "<td>" + med_counter + "</td>" 
+						+ "<td>" + entry1.getKey() + " </td> " 
+						+ "<td>" + atc_code1 + "</td>" 
+						+ "<td>" + name1 + "</td>"
 						+ "<td align=\"right\">" + trash_icon + "</td>";
 				basket_html_str += "</tr>";
 				med_counter++;
 			}
-			basket_html_str += "</table>";
-			// Medikamentenkorb löschen
-			delete_all_button_str = "<div id=\"Delete_all\"><input type=\"button\" value=\""
-					+ delete_all_text + "\" onclick=\"deleterow('Delete_all',this)\" /></div>";
+			if (Constants.appLanguage().equals("de"))
+				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div>";
+			else if (Constants.appLanguage().equals("fr"))
+				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" /></div>";				
 		} else {
 			// Medikamentenkorb ist leer
 			if (Constants.appLanguage().equals("de"))
@@ -112,7 +116,18 @@ public class Interactions {
 			else if (Constants.appLanguage().equals("fr"))
 				basket_html_str = "<div>Votre panier de médicaments est vide.<br><br></div>";
 		}
-
+		
+		return basket_html_str;
+	}
+		
+	private String interactionsHtml() {
+		String interactions_html_str = "";
+		String atc_code1 = "";
+		String atc_code2 = "";
+		String[] m_code1 = null;
+		String[] m_code2 = null;
+	
+		
 		// Build list of interactions
 		m_section_titles_list = new ArrayList<String>();
 		// Add table to section titles
@@ -120,10 +135,15 @@ public class Interactions {
 			m_section_titles_list.add("Interaktionen");
 		else if (Constants.appLanguage().equals("fr"))
 			m_section_titles_list.add("Interactions");
-		if (med_counter > 1) {
+		
+		if (m_med_basket.size()>1) {
+			if (Constants.appLanguage().equals("de"))
+				interactions_html_str = "<fieldset><legend>Bekannte Interaktionen</legend></fieldset>";
+			else if (Constants.appLanguage().equals("fr"))
+				interactions_html_str = "<fieldset><legend>Interactions Connues</legend></fieldset>";				
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
 				m_code1 = entry1.getValue().getAtcCode().split(";");
-				if (m_code1.length > 1) {
+				if (m_code1.length>1) {
 					// Get ATC code of first drug, make sure to get the first in
 					// the list (the second one is not used)
 					atc_code1 = m_code1[0].split(",")[0];
@@ -150,43 +170,23 @@ public class Interactions {
 					}
 				}
 			}
-		}
-
-		if (m_med_basket.size() > 0 && m_section_titles_list.size() < 2) {
 			// Add note to indicate that there are no interactions
-			if (Constants.appLanguage().equals("de"))
-				top_note_html_str = "<p class=\"paragraph0\">Zur Zeit sind keine Interaktionen zwischen diesen Medikamenten in der EPha.ch-Datenbank vorhanden. Weitere Informationen finden Sie in der Fachinformation.</p><br><br>";
-			else if (Constants.appLanguage().equals("fr"))
-				top_note_html_str = "<p class=\"paragraph0\">Il n’y a aucune information dans la banque de données EPha.ch à propos d’une interaction entre les médicaments sélectionnés. Veuillez consulter les informations professionelles.</p><br><br>";
-		} else if (m_med_basket.size() > 0 && m_section_titles_list.size() > 1) {
-			// Add color legend
-			legend_html_str = addColorLegend();
-			// Add legend to section titles
-			if (Constants.appLanguage().equals("de"))
-				m_section_titles_list.add("Legende");
-			else if (Constants.appLanguage().equals("fr"))
-				m_section_titles_list.add("Légende");
+			if (m_section_titles_list.size()<2) {
+				if (Constants.appLanguage().equals("de")) {
+					interactions_html_str = "<p class=\"paragraph0\">Zur Zeit sind keine Interaktionen zwischen diesen Medikamenten bekannt.</p>" +
+							"<div id=\"Delete_all\"><input type=\"button\" value=\"Interaktion melden\" onclick=\"deleteRow('Notify_interaction',this)\" /></div><br>";
+				} else if (Constants.appLanguage().equals("fr")) {
+					interactions_html_str = "<p class=\"paragraph0\">Jusqu’ici il n’y pas d’interaction connue entre les médicaments.</p>" +
+							"<div id=\"Delete_all\"><input type=\"button\" value=\"Signaler une interaction\" onclick=\"deleteRow('Notify_interaction',this)\" /></div><br>";
+				} 
+			} else {
+				interactions_html_str = "<br>";
+			}
 		}
-		if (Constants.appLanguage().equals("de")) {
-			bottom_note_html_str += "<p class=\"footnote\">1. Datenquelle: Public Domain Daten von EPha.ch.</p> "
-					+ "<p class=\"footnote\">2. Unterstützt durch:  IBSA Institut Biochimique SA.</p>";
-		} else if (Constants.appLanguage().equals("fr")) {
-			bottom_note_html_str += "<p class=\"footnote\">1. Source des données: données du domaine publique de EPha.ch</p> "
-					+ "<p class=\"footnote\">2. Soutenu par: IBSA Institut Biochimique SA.</p>";
-		}
-		String jscript_str =  "<script type=\"text/javascript\">" + m_js_deleterow_str + "</script>";
-
-		// Update main interactions html string
-		m_interactions_html_str = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
-				+ jscript_str + m_css_interactions_str + "</head>" 
-				+ "<body><div id=\"interactions\">" + basket_html_str + delete_all_button_str + "<br><br>"
-				+ top_note_html_str	+ interactions_html_str + "<br>"
-				+ legend_html_str + "<br>"
-				+ bottom_note_html_str + "</body></div></html>";
+		return interactions_html_str;
 	}
 	
-	private String addColorLegend() {
-		String legend = "<table id=\"Legende\" width=\"98%25\">";
+	private String footNoteHtml() {
 	    /*
 	     Risikoklassen
 	     -------------
@@ -197,53 +197,36 @@ public class Interactions {
 		     X: Kontraindiziert (hellrot)
 		     0: Keine Angaben (grau)
 	    */
-		// Sets the anchor
+
+		String legend = "";
 		if (Constants.appLanguage().equals("de")) {
-			legend = "<table id=\"Legende\" width=\"98%25\">";
-			legend += "<tr><td bgcolor=\"#caff70\"></td>" +
-					"<td>A</td>" +
-					"<td>Keine Massnahmen notwendig</td></tr>";
-			legend += "<tr><td bgcolor=\"#ffec8b\"></td>" +
-					"<td>B</td>" +
-					"<td>Vorsichtsmassnahmen empfohlen</td></tr>";
-			legend += "<tr><td bgcolor=\"#ffb90f\"></td>" +
-					"<td>C</td>" +
-					"<td>Regelmässige Überwachung</td></tr>";
-			legend += "<tr><td bgcolor=\"#ff82ab\"></td>" +
-					"<td>D</td>" +
-					"<td>Kombination vermeiden</td></tr>";
-			legend += "<tr><td bgcolor=\"#ff6a6a\"></td>" +
-					"<td>X</td>" +
-					"<td>Kontraindiziert</td></tr>";				
+			legend = "<fieldset><legend>Fussnoten</legend></fieldset>" +
+					"<p class=\"footnote\">1. Farblegende: </p>" +
+					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Keine Massnahmen notwendig</td></tr>" +
+					"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Vorsichtsmassnahmen empfohlen</td></tr>" +
+					"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Regelmässige Überwachung</td></tr>" +
+					"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Kombination vermeiden</td></tr>" +
+					"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Kontraindiziert</td></tr>" +
+					"</table>" + 
+					"<p class=\"footnote\">2. Datenquelle: Public Domain Daten von EPha.ch.</p>" +
+					"<p class=\"footnote\">3. Unterstützt durch: IBSA Institut Biochimique SA.</p>";
 		} else if (Constants.appLanguage().equals("fr")) {
-			legend = "<table id=\"Légende\" width=\"98%25\">";
-			legend += "<tr><td bgcolor=\"#caff70\"></td>" +
-					"<td>A</td>" +
-					"<td>Aucune mesure nécessaire</td></tr>";
-			legend += "<tr><td bgcolor=\"#ffec8b\"></td>" +
-					"<td>B</td>" +
-					"<td>Mesures de précaution sont recommandées</td></tr>";
-			legend += "<tr><td bgcolor=\"#ffb90f\"></td>" +
-					"<td>C</td>" +
-					"<td>Doit être régulièrement surveillée</td></tr>";
-			legend += "<tr><td bgcolor=\"#ff82ab\"></td>" +
-					"<td>D</td>" +
-					"<td>Eviter la combinaison</td></tr>";
-			legend += "<tr><td bgcolor=\"#ff6a6a\"></td>" +
-					"<td>X</td>" +
-					"<td>Contre-indiquée</td></tr>";								
+			legend = "<fieldset><legend>Notes</legend></fieldset>" +
+					"<p class=\"footnote\">1. Légende des couleurs: </p>" +
+					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Aucune mesure nécessaire</td></tr>" +
+					"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Mesures de précaution sont recommandées</td></tr>" +
+					"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Doit être régulièrement surveillée</td></tr>" +
+					"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Eviter la combinaison</td></tr>" +
+					"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Contre-indiquée</td></tr>" +
+					"</table>" +
+					"<p class=\"footnote\">2. Source des données : données du domaine publique de EPha.ch.</p>" +
+					"<p class=\"footnote\">3. Soutenu par : IBSA Institut Biochimique SA.</p>";
 		}
-		/*
-		legend += "<tr><td bgcolor=\"#dddddd\"></td>" +
-				"<td>0</td>" +
-				"<td>Keine Angaben</td></tr>";				
-		*/
-		legend += "</table>";
-		
-		return legend;
+		return legend;		
 	}
-	
-	
+		
 	private Map<String,String> readFromCsvToMap(String filename) 
 	{
 		Map<String, String> map = new TreeMap<String, String>();
