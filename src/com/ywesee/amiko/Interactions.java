@@ -66,11 +66,13 @@ public class Interactions {
 		String foot_note_html_str = footNoteHtml();
 
 		// Update main interactions html string
-		m_interactions_html_str = "<html><head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
+		m_interactions_html_str = "<html>"
+				+ "<head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
 				+ "<script type=\"text/javascript\">" + m_js_deleterow_str + "</script>" 
-				+ m_css_interactions_str + "</head><body>" 
+				+ m_css_interactions_str + "</head>" 
+				+ "<body><div id=\"interactions\">" 
 				+ basket_html_str + "<br>" + interactions_html_str + "<br>" + foot_note_html_str 
-				+ "</body></div></html>";
+				+ "</div></body></html>";
 	}
 	
 	private String medBasketHtml() {
@@ -83,9 +85,11 @@ public class Interactions {
 		// Build interaction basket table
 		if (m_med_basket!=null && m_med_basket.size()>0) {			
 			if (Constants.appLanguage().equals("de")) 
-				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</legend></fieldset></div><table id=\"InterTable\" width=\"100%25\">";
+				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</fieldset></legend></div>";
 			else if (Constants.appLanguage().equals("fr"))
-				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</legend></fieldset></div><table id=\"InterTable\" width=\"100%25\">";			
+				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</fieldset></legend></div>";
+
+			basket_html_str += "<table id=\"InterTable\" width=\"100%25\">";			
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
 				m_code1 = entry1.getValue().getAtcCode().split(";");
 				atc_code1 = "k.A.";
@@ -94,19 +98,19 @@ public class Interactions {
 					atc_code1 = m_code1[0];
 					name1 = m_code1[1];
 				}
-				basket_html_str += "<tr>";
 				// Source folder for the images is /res/drawable
 				String trash_icon = "<input type=\"image\" src=\"trash_icon.png\" onclick=\"deleterow('Interaktionen',this)\" />";
-				basket_html_str += "<td>" + med_counter + "</td>" 
+				basket_html_str += "<tr>"
+						+ "<td>" + med_counter + "</td>" 
 						+ "<td>" + entry1.getKey() + " </td> " 
 						+ "<td>" + atc_code1 + "</td>" 
 						+ "<td>" + name1 + "</td>"
-						+ "<td align=\"right\">" + trash_icon + "</td>";
-				basket_html_str += "</tr>";
+						+ "<td align=\"right\">" + trash_icon + "</td>"
+						+ "</tr>";
 				med_counter++;
 			}
 			if (Constants.appLanguage().equals("de"))
-				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div>";
+				basket_html_str += "</table><br><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div>";
 			else if (Constants.appLanguage().equals("fr"))
 				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" /></div>";				
 		} else {
@@ -132,15 +136,16 @@ public class Interactions {
 		m_section_titles_list = new ArrayList<String>();
 		// Add table to section titles
 		if (Constants.appLanguage().equals("de"))
-			m_section_titles_list.add("Interaktionen");
+			m_section_titles_list.add("Medikamentenkorb");
 		else if (Constants.appLanguage().equals("fr"))
-			m_section_titles_list.add("Interactions");
+			m_section_titles_list.add("Panier de médicaments");
 		
-		if (m_med_basket.size()>1) {
+		if (m_med_basket!=null && m_med_basket.size()>1) {
 			if (Constants.appLanguage().equals("de"))
-				interactions_html_str = "<fieldset><legend>Bekannte Interaktionen</legend></fieldset>";
+				interactions_html_str = "<fieldset><legend>Bekannte Interaktionen</fieldset></legend>";
 			else if (Constants.appLanguage().equals("fr"))
-				interactions_html_str = "<fieldset><legend>Interactions Connues</legend></fieldset>";				
+				interactions_html_str = "<fieldset><legend>Interactions Connues</fieldset></legend>";				
+			
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
 				m_code1 = entry1.getValue().getAtcCode().split(";");
 				if (m_code1.length>1) {
@@ -170,6 +175,7 @@ public class Interactions {
 					}
 				}
 			}
+
 			// Add note to indicate that there are no interactions
 			if (m_section_titles_list.size()<2) {
 				if (Constants.appLanguage().equals("de")) {
@@ -179,10 +185,16 @@ public class Interactions {
 					interactions_html_str = "<p class=\"paragraph0\">Jusqu’ici il n’y pas d’interaction connue entre les médicaments.</p>" +
 							"<div id=\"Delete_all\"><input type=\"button\" value=\"Signaler une interaction\" onclick=\"deleteRow('Notify_interaction',this)\" /></div><br>";
 				} 
-			} else {
-				interactions_html_str = "<br>";
-			}
+			} else
+				interactions_html_str += "<br>";
+			
+			// Add table to section titles
+			if (Constants.appLanguage().equals("de"))
+				m_section_titles_list.add("Farblegende");
+			else if (Constants.appLanguage().equals("fr"))
+				m_section_titles_list.add("Légende des couleurs");			
 		}
+		
 		return interactions_html_str;
 	}
 	
@@ -200,7 +212,7 @@ public class Interactions {
 
 		String legend = "";
 		if (Constants.appLanguage().equals("de")) {
-			legend = "<fieldset><legend>Fussnoten</legend></fieldset>" +
+			legend = "<fieldset><legend>Fussnoten</fieldset></legend>" +
 					"<p class=\"footnote\">1. Farblegende: </p>" +
 					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
 					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Keine Massnahmen notwendig</td></tr>" +
@@ -212,7 +224,7 @@ public class Interactions {
 					"<p class=\"footnote\">2. Datenquelle: Public Domain Daten von EPha.ch.</p>" +
 					"<p class=\"footnote\">3. Unterstützt durch: IBSA Institut Biochimique SA.</p>";
 		} else if (Constants.appLanguage().equals("fr")) {
-			legend = "<fieldset><legend>Notes</legend></fieldset>" +
+			legend = "<fieldset><legend>Notes</fieldset></legend>" +
 					"<p class=\"footnote\">1. Légende des couleurs: </p>" +
 					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
 					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Aucune mesure nécessaire</td></tr>" +

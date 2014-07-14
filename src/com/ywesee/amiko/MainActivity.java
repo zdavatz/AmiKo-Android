@@ -165,6 +165,7 @@ public class MainActivity extends Activity {
 	private Interactions mMedInteractionBasket = null;
 	
 	// Actionbar menu items
+	private Menu mOptionsMenu = null;
 	private MenuItem mSearchItem = null;
 	private EditText mSearch = null;
 	private Button mDelete = null;	
@@ -926,6 +927,8 @@ public class MainActivity extends Activity {
 
 		// menu.findItem(R.id.menu_pref1).setChecked(false);
 		
+		mOptionsMenu = menu;
+		
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.setVisible(true);				
 		
@@ -1225,8 +1228,10 @@ public class MainActivity extends Activity {
 			// Keep used database
 			mSearchInteractions = true;
 			// Add medi to drug interaction basket
-			Medication m = mMediDataSource.searchId(mMedIndex);
-			mMedInteractionBasket.addToBasket(m.getTitle(), m);
+			if (mMedIndex>0) {
+				Medication m = mMediDataSource.searchId(mMedIndex);
+				mMedInteractionBasket.addToBasket(m.getTitle(), m);
+			}
 			mMedInteractionBasket.updateInteractionsHtml();
 			String html_str = mMedInteractionBasket.getInteractionsHtml();
 			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
@@ -1768,7 +1773,7 @@ public class MainActivity extends Activity {
 						Log.d(TAG, "medi id = " + mMedIndex);					
 					Medication m = mMediDataSource.searchId(mMedIndex);
 					
-					if (m!=null) {
+					if (m!=null && mSearchInteractions==false) {
 						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
 						mHtmlString = createHtml(mCSS_str, m.getContent());						
 						
@@ -1807,6 +1812,9 @@ public class MainActivity extends Activity {
 		    			SectionTitlesAdapter sectionTitles = 
 		    					new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);
 		    			mSectionView.setAdapter(sectionTitles);	
+					} else {
+						// TODO: Write separate function. This solution is not very clever...
+						onOptionsItemSelected(mOptionsMenu.findItem(R.id.interactions_button));
 					}
 		    	}
 	    	});	
