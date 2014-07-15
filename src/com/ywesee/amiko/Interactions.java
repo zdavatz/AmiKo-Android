@@ -20,6 +20,7 @@ public class Interactions {
 	private static final String TAG = "Interactions"; // Tag for LogCat window	
 	private Map<String, Medication> m_med_basket = new TreeMap<String, Medication>();
 	private Map<String, String> m_interactions_map = null;
+	private List<String> m_section_ids_list = null;
 	private List<String> m_section_titles_list = null;
 	private String m_interactions_html_str = null;
 	private String m_css_interactions_str = null;
@@ -60,6 +61,10 @@ public class Interactions {
 		return m_section_titles_list;
 	}
 	
+	public List<String> getInteractionTitleIds() {
+		return m_section_ids_list;
+	}
+	
 	public void updateInteractionsHtml() {
 		String basket_html_str = medBasketHtml();
 		String interactions_html_str = interactionsHtml();
@@ -85,9 +90,9 @@ public class Interactions {
 		// Build interaction basket table
 		if (m_med_basket!=null && m_med_basket.size()>0) {			
 			if (Constants.appLanguage().equals("de")) 
-				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</fieldset></legend></div>";
+				basket_html_str = "<br><div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</fieldset></legend></div>";
 			else if (Constants.appLanguage().equals("fr"))
-				basket_html_str = "<div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</fieldset></legend></div>";
+				basket_html_str = "<br><div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</fieldset></legend></div>";
 
 			basket_html_str += "<table id=\"InterTable\" width=\"100%25\">";			
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
@@ -110,9 +115,9 @@ public class Interactions {
 				med_counter++;
 			}
 			if (Constants.appLanguage().equals("de"))
-				basket_html_str += "</table><br><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div>";
+				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div><br>";
 			else if (Constants.appLanguage().equals("fr"))
-				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" /></div>";				
+				basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" /></div><br>";				
 		} else {
 			// Medikamentenkorb ist leer
 			if (Constants.appLanguage().equals("de"))
@@ -134,11 +139,15 @@ public class Interactions {
 		
 		// Build list of interactions
 		m_section_titles_list = new ArrayList<String>();
+		m_section_ids_list = new ArrayList<String>();
 		// Add table to section titles
-		if (Constants.appLanguage().equals("de"))
+		if (Constants.appLanguage().equals("de")) {
 			m_section_titles_list.add("Medikamentenkorb");
-		else if (Constants.appLanguage().equals("fr"))
+			m_section_ids_list.add("Medikamentenkorb");
+		} else if (Constants.appLanguage().equals("fr")) {
 			m_section_titles_list.add("Panier de médicaments");
+			m_section_ids_list.add("Medikamentenkorb");			
+		}
 		
 		if (m_med_basket!=null && m_med_basket.size()>1) {
 			if (Constants.appLanguage().equals("de"))
@@ -166,9 +175,10 @@ public class Interactions {
 									inter = inter.replaceAll(atc_code2,	entry2.getKey());
 									interactions_html_str += (inter + "");
 									// Add title to section title list
-									if (!inter.isEmpty())
-										m_section_titles_list.add("<html>" + entry1.getKey() + " &rarr; "
-												+ entry2.getKey() + "</html>");
+									if (!inter.isEmpty()) {
+										m_section_titles_list.add(entry1.getKey() + "\u2192 " + entry2.getKey());
+										m_section_ids_list.add(entry1.getKey() + "-" + entry2.getKey());
+									}
 								}
 							}
 						}
@@ -189,10 +199,13 @@ public class Interactions {
 				interactions_html_str += "<br>";
 			
 			// Add table to section titles
-			if (Constants.appLanguage().equals("de"))
+			if (Constants.appLanguage().equals("de")) {
 				m_section_titles_list.add("Farblegende");
-			else if (Constants.appLanguage().equals("fr"))
-				m_section_titles_list.add("Légende des couleurs");			
+				m_section_ids_list.add("Farblegende");
+			} else if (Constants.appLanguage().equals("fr")) {
+				m_section_titles_list.add("Légende des couleurs");
+				m_section_ids_list.add("Farblegende");				
+			}
 		}
 		
 		return interactions_html_str;

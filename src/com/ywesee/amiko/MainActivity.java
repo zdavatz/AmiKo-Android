@@ -1233,7 +1233,24 @@ public class MainActivity extends Activity {
 				mMedInteractionBasket.addToBasket(m.getTitle(), m);
 			}
 			mMedInteractionBasket.updateInteractionsHtml();
-			String html_str = mMedInteractionBasket.getInteractionsHtml();
+
+			// TODO: IMPROVE!
+			{
+				mMedInteractionBasket.getInteractionsTitles();				
+	    		// Add section title view
+	    		List<String> section_ids = mMedInteractionBasket.getInteractionTitleIds();
+	    		List<String> section_titles = mMedInteractionBasket.getInteractionsTitles();		    							
+	    		// Get reference to listview in DrawerLayout
+	    		// Implements swiping mechanism!
+				mSectionView = (ListView) findViewById(R.id.section_title_view);
+				// Make it clickable
+				mSectionView.setClickable(true);	    			
+				SectionTitlesAdapter sectionTitles = 
+						new SectionTitlesAdapter(this, R.layout.section_item, section_ids, section_titles);
+				mSectionView.setAdapter(sectionTitles);				
+			}
+			
+			String html_str = mMedInteractionBasket.getInteractionsHtml();			
 			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
 			// Change view
 			setCurrentView(mShowView, true);
@@ -1645,30 +1662,31 @@ public class MainActivity extends Activity {
 		        	}
 			    }
 		 	} else if (mActionName.equals(getString(R.string.tab_name_3))) {
-		 		// Display "Präparatname" and "ATC Code" (atccode) and "Inhaber" (author)		 		
+		 		// Display "Wirkstoff" and "ATC Code" (atccode)		 		
 			    if (med!=null) {   
 			    	if (med.getTitle()!=null)
 			    		title_str = med.getTitle();
-				    List<String> atc = Arrays.asList(med.getAtcCode().split("\\s*;\\s*"));			    				        
-			    	if (atc.size()>1) {
-			    		if (atc.get(0)!=null)
-			    			atc_code_str = atc.get(0);
-			    		if (atc.get(1)!=null)
-			    			atc_title_str = atc.get(1);
+				    List<String> m_atc = Arrays.asList(med.getAtcCode().split("\\s*;\\s*"));			    				        
+			    	if (m_atc.size()>1) {
+			    		if (m_atc.get(0)!=null)
+			    			atc_code_str = m_atc.get(0);
+			    		if (m_atc.get(1)!=null)
+			    			atc_title_str = m_atc.get(1);
 			    	}
 			    	String[] m_class = med.getAtcClass().split(";");
-			    	if (m_class.length==2) {
+			    	if (m_class.length==2) {			// *** Ver.<1.2
 			    		atc_class_str = m_class[1];
 				    	viewHolder.text_title.setText(title_str);			     
 				    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str);			    	
 			        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
 			        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));	
-			    	} else if (m_class.length==3) {
+			    	} else if (m_class.length==3) {		// *** Ver.>=1.2
 						String[] atc_class_l4_and_l5 = m_class[2].split("#");
-						if (atc_class_l4_and_l5.length>0)
-							atc_class_str = atc_class_l4_and_l5[atc_class_l4_and_l5.length-1];
+						int n = atc_class_l4_and_l5.length;
+						if (n>0)
+							atc_class_str = atc_class_l4_and_l5[n-1];
 				    	viewHolder.text_title.setText(title_str);			     
-				    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str);			    	
+				    	viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str + "\n" + m_class[1]);			    	
 			        	viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
 			        	viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));							
 			    	}	        
@@ -1813,7 +1831,7 @@ public class MainActivity extends Activity {
 		    					new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);
 		    			mSectionView.setAdapter(sectionTitles);	
 					} else {
-						// TODO: Write separate function. This solution is not very clever...
+						// TODO: Write separate function. This solution is not very clever...						
 						onOptionsItemSelected(mOptionsMenu.findItem(R.id.interactions_button));
 					}
 		    	}
@@ -1939,7 +1957,8 @@ public class MainActivity extends Activity {
 		    	@Override
 		    	public void onClick(View v) {
 		    		// Log.d(TAG, "section = "+ id);	
-		    		mWebView.loadUrl("app:myhtml#"+id);
+		    		// mWebView.loadUrl("app:myhtml#"+id);
+		    		mWebView.loadUrl("javascript:document.location='" + id + "'");
 		    		// Close section title view
 					if (mDrawerLayout != null)
 						mDrawerLayout.closeDrawers();
