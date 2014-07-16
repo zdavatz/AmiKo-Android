@@ -90,9 +90,9 @@ public class Interactions {
 		// Build interaction basket table
 		if (m_med_basket!=null && m_med_basket.size()>0) {			
 			if (Constants.appLanguage().equals("de")) 
-				basket_html_str = "<br><div id=\"Medikamentenkorb\"><fieldset><legend>Medikamentenkorb</fieldset></legend></div>";
+				basket_html_str = "<div id=\"Medikamentenkorb\"><br><fieldset><legend>Medikamentenkorb</fieldset></legend></div>";
 			else if (Constants.appLanguage().equals("fr"))
-				basket_html_str = "<br><div id=\"Medikamentenkorb\"><fieldset><legend>Panier des Médicaments</fieldset></legend></div>";
+				basket_html_str = "<div id=\"Medikamentenkorb\"><br><fieldset><legend>Panier des Médicaments</fieldset></legend></div>";
 
 			basket_html_str += "<table id=\"InterTable\" width=\"100%25\">";			
 			for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
@@ -222,32 +222,34 @@ public class Interactions {
 		     X: Kontraindiziert (hellrot)
 		     0: Keine Angaben (grau)
 	    */
-
 		String legend = "";
-		if (Constants.appLanguage().equals("de")) {
-			legend = "<fieldset><legend>Fussnoten</fieldset></legend>" +
-					"<p class=\"footnote\">1. Farblegende: </p>" +
-					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
-					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Keine Massnahmen notwendig</td></tr>" +
-					"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Vorsichtsmassnahmen empfohlen</td></tr>" +
-					"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Regelmässige Überwachung</td></tr>" +
-					"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Kombination vermeiden</td></tr>" +
-					"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Kontraindiziert</td></tr>" +
-					"</table>" + 
-					"<p class=\"footnote\">2. Datenquelle: Public Domain Daten von EPha.ch.</p>" +
-					"<p class=\"footnote\">3. Unterstützt durch: IBSA Institut Biochimique SA.</p>";
-		} else if (Constants.appLanguage().equals("fr")) {
-			legend = "<fieldset><legend>Notes</fieldset></legend>" +
-					"<p class=\"footnote\">1. Légende des couleurs: </p>" +
-					"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
-					"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Aucune mesure nécessaire</td></tr>" +
-					"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Mesures de précaution sont recommandées</td></tr>" +
-					"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Doit être régulièrement surveillée</td></tr>" +
-					"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Eviter la combinaison</td></tr>" +
-					"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Contre-indiquée</td></tr>" +
-					"</table>" +
-					"<p class=\"footnote\">2. Source des données : données du domaine publique de EPha.ch.</p>" +
-					"<p class=\"footnote\">3. Soutenu par : IBSA Institut Biochimique SA.</p>";
+
+		if (m_med_basket!=null && m_med_basket.size()>0) {	
+			if (Constants.appLanguage().equals("de")) {
+				legend = "<fieldset><legend>Fussnoten</fieldset></legend>" +
+						"<p class=\"footnote\">1. Farblegende: </p>" +
+						"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+						"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Keine Massnahmen notwendig</td></tr>" +
+						"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Vorsichtsmassnahmen empfohlen</td></tr>" +
+						"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Regelmässige Überwachung</td></tr>" +
+						"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Kombination vermeiden</td></tr>" +
+						"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Kontraindiziert</td></tr>" +
+						"</table>" + 
+						"<p class=\"footnote\">2. Datenquelle: Public Domain Daten von EPha.ch.</p>" +
+						"<p class=\"footnote\">3. Unterstützt durch: IBSA Institut Biochimique SA.</p>";
+			} else if (Constants.appLanguage().equals("fr")) {
+				legend = "<fieldset><legend>Notes</fieldset></legend>" +
+						"<p class=\"footnote\">1. Légende des couleurs: </p>" +
+						"<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+						"<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Aucune mesure nécessaire</td></tr>" +
+						"<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Mesures de précaution sont recommandées</td></tr>" +
+						"<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Doit être régulièrement surveillée</td></tr>" +
+						"<tr bgcolor=\"#ff82ab\"><td align=\"center\">D</td><td>Eviter la combinaison</td></tr>" +
+						"<tr bgcolor=\"#ff6a6a\"><td align=\"center\">X</td><td>Contre-indiquée</td></tr>" +
+						"</table>" +
+						"<p class=\"footnote\">2. Source des données : données du domaine publique de EPha.ch.</p>" +
+						"<p class=\"footnote\">3. Soutenu par : IBSA Institut Biochimique SA.</p>";
+			}
 		}
 		return legend;		
 	}

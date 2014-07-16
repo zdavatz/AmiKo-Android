@@ -933,9 +933,12 @@ public class MainActivity extends Activity {
 		mSearchItem.setVisible(true);				
 		
 		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
-		if (mSearch != null) {
-			mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
-		}
+		if (mSearch!=null) { 
+			if (mSearchInteractions==false)
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
+			else
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+		}				
 		
 		mSearchHitsCntView = (TextView) mSearchItem.getActionView().findViewById(R.id.hits_counter);
 		mSearchHitsCntView.setVisibility(View.GONE);
@@ -989,8 +992,8 @@ public class MainActivity extends Activity {
 			public void afterTextChanged(Editable s) {	
 				if (!mRestoringState) {
 					performSearch(mSearch.getText().toString());
-					mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );
 				}
+				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
 			}
 		});
 		
@@ -1227,35 +1230,18 @@ public class MainActivity extends Activity {
 			mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);
 			// Keep used database
 			mSearchInteractions = true;
-			// Add medi to drug interaction basket
-			if (mMedIndex>0) {
-				Medication m = mMediDataSource.searchId(mMedIndex);
-				mMedInteractionBasket.addToBasket(m.getTitle(), m);
-			}
-			mMedInteractionBasket.updateInteractionsHtml();
-
-			// TODO: IMPROVE!
-			{
-				mMedInteractionBasket.getInteractionsTitles();				
-	    		// Add section title view
-	    		List<String> section_ids = mMedInteractionBasket.getInteractionTitleIds();
-	    		List<String> section_titles = mMedInteractionBasket.getInteractionsTitles();		    							
-	    		// Get reference to listview in DrawerLayout
-	    		// Implements swiping mechanism!
-				mSectionView = (ListView) findViewById(R.id.section_title_view);
-				// Make it clickable
-				mSectionView.setClickable(true);	    			
-				SectionTitlesAdapter sectionTitles = 
-						new SectionTitlesAdapter(this, R.layout.section_item, section_ids, section_titles);
-				mSectionView.setAdapter(sectionTitles);				
-			}
-			
+			// Update interaction basket
+			updateInteractionBasket();
+			// Reset and change search hint
+			if (mSearch!=null) {
+				mSearch.setText("");
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+			}			
+			// Update webview
 			String html_str = mMedInteractionBasket.getInteractionsHtml();			
 			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
 			// Change view
-			setCurrentView(mShowView, true);
-			// Reset search
-			mSearch.setText("");
+			setCurrentView(mShowView, true);				
 			// Request menu update
 			invalidateOptionsMenu();
 			return true;
@@ -1272,7 +1258,6 @@ public class MainActivity extends Activity {
 			// Load report from file
 			String parse_report = loadReport(Constants.appReportFile());
 			mReportWebView.loadDataWithBaseURL("file:///android_res/drawable/", parse_report, "text/html", "utf-8", null);
-
 			// Display report
 			setCurrentView(mReportView, true);	
 			// Disable restoring state
@@ -1340,6 +1325,33 @@ public class MainActivity extends Activity {
 		return true;
 	}    
 
+	/**
+	 * 
+	 */
+	public void updateInteractionBasket() {
+		// Add medi to drug interaction basket
+		if (mMedIndex>0) {
+			Medication m = mMediDataSource.searchId(mMedIndex);
+			mMedInteractionBasket.addToBasket(m.getTitle(), m);
+		}
+		// Update it
+		mMedInteractionBasket.updateInteractionsHtml();
+		
+		// Get all section titles
+		mMedInteractionBasket.getInteractionsTitles();				
+   		// Add section title view
+   		List<String> section_ids = mMedInteractionBasket.getInteractionTitleIds();
+   		List<String> section_titles = mMedInteractionBasket.getInteractionsTitles();		    							
+   		// Get reference to listview in DrawerLayout
+   		// Implements swiping mechanism!
+		mSectionView = (ListView) findViewById(R.id.section_title_view);
+		// Make it clickable
+		mSectionView.setClickable(true);	    			
+		SectionTitlesAdapter sectionTitles = 
+				new SectionTitlesAdapter(this, R.layout.section_item, section_ids, section_titles);
+		mSectionView.setAdapter(sectionTitles);				
+	}
+	
 	/**
 	 * Takes screenshot of the whole screen
 	 * @param activity
@@ -1779,19 +1791,18 @@ public class MainActivity extends Activity {
 					} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
 						mWebView.getSettings().setTextZoom(125);						
 					}
-		    		
-					// Reset and change search hint
-					if (mSearch != null) {
-						mSearch.setText("");
-						mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
-					}					
-					
+		    											
 					mMedIndex = med.getId();
 					if (Constants.DEBUG)
 						Log.d(TAG, "medi id = " + mMedIndex);					
 					Medication m = mMediDataSource.searchId(mMedIndex);
 					
 					if (m!=null && mSearchInteractions==false) {
+						// Reset and change search hint
+						if (mSearch != null) {
+							mSearch.setText("");
+							mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
+						}							
 						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
 						mHtmlString = createHtml(mCSS_str, m.getContent());						
 						
@@ -1830,9 +1841,19 @@ public class MainActivity extends Activity {
 		    			SectionTitlesAdapter sectionTitles = 
 		    					new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);
 		    			mSectionView.setAdapter(sectionTitles);	
-					} else {
-						// TODO: Write separate function. This solution is not very clever...						
-						onOptionsItemSelected(mOptionsMenu.findItem(R.id.interactions_button));
+					} else {						
+						// Update interaction basket
+						updateInteractionBasket();
+						// Reset and change search hint
+						if (mSearch!=null) {
+							mSearch.setText("");
+							mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+						}			
+						// Update webview
+						String html_str = mMedInteractionBasket.getInteractionsHtml();			
+						mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
+						// Change view
+						setCurrentView(mShowView, true);				
 					}
 		    	}
 	    	});	
@@ -1956,9 +1977,10 @@ public class MainActivity extends Activity {
 		    mView.setOnClickListener(new OnClickListener() {			    	
 		    	@Override
 		    	public void onClick(View v) {
-		    		// Log.d(TAG, "section = "+ id);	
-		    		// mWebView.loadUrl("app:myhtml#"+id);
-		    		mWebView.loadUrl("javascript:document.location='" + id + "'");
+		    		// 16.07.2014: It's weird, but it works...
+		    		String url_str = "file:///android_res/drawable/#" + id;
+		    		// Log.d(TAG, url_str);	
+		    		mWebView.loadUrl(url_str);
 		    		// Close section title view
 					if (mDrawerLayout != null)
 						mDrawerLayout.closeDrawers();
