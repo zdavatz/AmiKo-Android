@@ -165,7 +165,6 @@ public class MainActivity extends Activity {
 	private Interactions mMedInteractionBasket = null;
 	
 	// Actionbar menu items
-	private Menu mOptionsMenu = null;
 	private MenuItem mSearchItem = null;
 	private EditText mSearch = null;
 	private Button mDelete = null;	
@@ -317,9 +316,9 @@ public class MainActivity extends Activity {
     	// It's important to perform sanity checks on views and viewgroup
     	if (mViewHolder!=null) {
     		// Set direction of transitation old view to new view
-    		int direction = 1;
+    		int direction = -1;
     		if (mCurrentView==mShowView || mCurrentView==mReportView) {
-    			direction = -1;
+    			direction = 1;
     		}
     		// Remove current view    		
     		if (mCurrentView!=null) {
@@ -346,7 +345,7 @@ public class MainActivity extends Activity {
         	// Update currently visible view
         	mCurrentView = newCurrentView;        	
         	// Hide keyboard
-        	hideSoftKeyboard(700);
+        	hideSoftKeyboard(1000);
     	}
     }
        
@@ -690,8 +689,10 @@ public class MainActivity extends Activity {
 					return false;
 				else {
 					try {
-						float diffX = event1.getX() - event2.getX();
-						// right to left swipe... return to mSuggestView
+						// right to left swipe... return to mSuggestView						
+						// float diffX = event1.getX()-event2.getX();
+						// left to right swipe... return to mSuggestView
+						float diffX = event2.getX()-event1.getX();
 						if (diffX>120 && Math.abs(velocityX)>300) {
 							setSuggestView();	
 							return true;
@@ -860,6 +861,7 @@ public class MainActivity extends Activity {
 			// Initialize progressbar
 			progressBar = new ProgressDialog(MainActivity.this);       
 	        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+	        progressBar.setMessage("Daten werden geladen...");
 	        progressBar.setIndeterminate(true);
 	        if (mSearch!=null && mSearch.getText().length()<1)
 	        	progressBar.show();
@@ -926,9 +928,7 @@ public class MainActivity extends Activity {
 		getMenuInflater().inflate(R.menu.actionbar, menu);
 
 		// menu.findItem(R.id.menu_pref1).setChecked(false);
-		
-		mOptionsMenu = menu;
-		
+
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.setVisible(true);				
 		
@@ -1136,7 +1136,7 @@ public class MainActivity extends Activity {
 		}
 		
 		if (Constants.DEBUG)
-			Log.d(TAG, "getResults() - "+medis.size()+" medis found in "+Long.toString(System.currentTimeMillis()-mTimer)+"ms");	   	
+			Log.d(TAG, "getResults() - " + medis.size() + " medis found in " + Long.toString(System.currentTimeMillis()-mTimer) + "ms");	   	
 		
 		return medis;
 		
