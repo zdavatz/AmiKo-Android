@@ -345,7 +345,9 @@ public class MainActivity extends Activity {
         	// Update currently visible view
         	mCurrentView = newCurrentView;        	
         	// Hide keyboard
-        	hideSoftKeyboard(1000);
+    		if (mCurrentView==mShowView || mCurrentView==mReportView) {
+    			hideSoftKeyboard(1000);
+    		}
     	}
     }
        
@@ -367,7 +369,9 @@ public class MainActivity extends Activity {
    		// Restore search results
     	showResults(mMedis);
     	// Restore hint
-		mSearch.setHint(getString(R.string.search) + " " + mActionName);   	
+		mSearch.setHint(getString(R.string.search) + " " + mActionName);   
+		// Show keyboard
+		showSoftKeyboard();
 		// Disable flag
 		mRestoringState = false;
     }
@@ -990,16 +994,21 @@ public class MainActivity extends Activity {
 
 			@Override
 			public void afterTextChanged(Editable s) {	
+				String text = mSearch.getText().toString();
 				if (!mRestoringState) {
-					performSearch(mSearch.getText().toString());
-				}
-				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
+					if (text.length()>0)
+						performSearch(text);
+					else
+						showSoftKeyboard();
+				} 
+				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );
 			}
 		});
 		
 		mDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				mSearch.setText("");				
 				if (mCurrentView==mShowView) {
 					mSearchHitsCntView.setVisibility(View.GONE);
 					mWebView.clearMatches();
@@ -1007,7 +1016,6 @@ public class MainActivity extends Activity {
 					mSearchHitsCntView.setVisibility(View.GONE);
 					mReportWebView.clearMatches();				
 				}
-				mSearch.setText("");
 			}
 		});
 
@@ -1150,6 +1158,7 @@ public class MainActivity extends Activity {
 	   		// Set adapter to listview		
 	   		mListView.setAdapter(custom_adapter);	
 	   		// Give some feedback about the search to the user (could be done better!)
+	   		/*
 	   		if (!mRestoringState) {
 	   			if (Constants.appLanguage().equals("de")) {
 			   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
@@ -1159,6 +1168,7 @@ public class MainActivity extends Activity {
 			   				Toast.LENGTH_SHORT);
 	   			}
 	   		}
+	   		*/
 	   	}
 	}	
 	
