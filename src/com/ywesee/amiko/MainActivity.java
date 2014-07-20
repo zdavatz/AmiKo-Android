@@ -212,19 +212,21 @@ public class MainActivity extends Activity {
 	/**
 	 * Show soft keyboard
 	 */
-	private void showSoftKeyboard() {
+	private void showSoftKeyboard(int duration) {
        	// This handler is used to schedule the runnable to be executed as some point in the future
         Handler handler = new Handler();
+        final int d = duration;
     	final Runnable r = new Runnable() {
             @Override
             public void run() {            	
             	// Display keyboard
             	InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            	imm.toggleSoftInputFromWindow(mCurrentView.getApplicationWindowToken(), InputMethodManager.SHOW_FORCED, 0);
+            	imm.toggleSoftInputFromWindow(mCurrentView.getApplicationWindowToken(), 
+            			InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
             }
         };
         // Runnable is executed in 300ms
-        handler.postDelayed(r, 300);
+        handler.postDelayed(r, d);
 	}
 	
 	/**
@@ -239,8 +241,8 @@ public class MainActivity extends Activity {
             public void run() {            	
             	// Remove keyboard
         		InputMethodManager imm = (InputMethodManager) getSystemService(Service.INPUT_METHOD_SERVICE);
-        		if (imm!=null)
-        			imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0); 
+        		if (imm!=null && getWindow().getDecorView().getWindowToken()!=null)
+        			imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0); 
             }
         };
         // Runnable is executed in 700ms
@@ -371,7 +373,7 @@ public class MainActivity extends Activity {
     	// Restore hint
 		mSearch.setHint(getString(R.string.search) + " " + mActionName);   
 		// Show keyboard
-		showSoftKeyboard();
+		// showSoftKeyboard(300);
 		// Disable flag
 		mRestoringState = false;
     }
@@ -559,6 +561,7 @@ public class MainActivity extends Activity {
 		// Define and load webview
 		ExpertInfoView mExpertInfoView = 
 				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
+		mExpertInfoView.adjustZoom();
 		mWebView = mExpertInfoView.getWebView();
 				
 		// Add find listeners
@@ -578,7 +581,16 @@ public class MainActivity extends Activity {
 			public void update(Observable o, Object arg) {
 				String s = (String)arg;
 				if (s.equals("notify_interaction")) {
-					// Send email to ywesee					
+					// Remove softkeyboard
+					hideSoftKeyboard(100);
+					// Take screenshot and start email activity after 500ms (wait for the keyboard to disappear)
+					final Handler handler = new Handler();
+				    handler.postDelayed(new Runnable() {
+				        @Override
+				        public void run() {					
+							sendFeedbackScreenshot(MainActivity.this, 2);
+				        }
+				    }, 500);
 				} else { 
 					if (s.equals("delete_all")) {
 						mMedInteractionBasket.clearBasket();
@@ -953,7 +965,7 @@ public class MainActivity extends Activity {
 		        if (actionId==EditorInfo.IME_ACTION_SEARCH || actionId==EditorInfo.IME_ACTION_DONE) {
 		        	if (mCurrentView==mSuggestView) {
 		        		// Hide keyboard
-		        		hideSoftKeyboard(700);
+		        		hideSoftKeyboard(600);
 		        	} else if (mCurrentView==mShowView) {
 		        		// Searches forward
 		        		mWebView.findNext(true);
@@ -998,10 +1010,8 @@ public class MainActivity extends Activity {
 				if (!mRestoringState) {
 					if (text.length()>0)
 						performSearch(text);
-					else
-						showSoftKeyboard();
 				} 
-				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );
+				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
 			}
 		});
 		
@@ -1015,6 +1025,8 @@ public class MainActivity extends Activity {
 				} else if (mCurrentView==mReportView) {
 					mSearchHitsCntView.setVisibility(View.GONE);
 					mReportWebView.clearMatches();				
+				} else if (mCurrentView==mSuggestView) {
+					showSoftKeyboard(600);
 				}
 			}
 		});
@@ -1205,7 +1217,7 @@ public class MainActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {		
 		switch (item.getItemId()) {
 		case (R.id.menu_search): {
-			showSoftKeyboard();
+			showSoftKeyboard(300);
 			return true;
 		}
 		case (R.id.aips_button): {
@@ -1247,7 +1259,7 @@ public class MainActivity extends Activity {
 				mSearch.setText("");
 				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
 			}			
-			// Update webview
+			// Update webview		
 			String html_str = mMedInteractionBasket.getInteractionsHtml();			
 			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
 			// Change view
@@ -1290,7 +1302,7 @@ public class MainActivity extends Activity {
 		        @Override
 		        public void run() {					
 					mToastObject.show(getString(R.string.menu_share), Toast.LENGTH_SHORT);
-					sendFeedbackScreenshot(MainActivity.this);
+					sendFeedbackScreenshot(MainActivity.this, 1);
 		        }
 		    }, 500);			
 			return true;
@@ -1345,8 +1357,7 @@ public class MainActivity extends Activity {
 			mMedInteractionBasket.addToBasket(m.getTitle(), m);
 		}
 		// Update it
-		mMedInteractionBasket.updateInteractionsHtml();
-		
+		mMedInteractionBasket.updateInteractionsHtml();		
 		// Get all section titles
 		mMedInteractionBasket.getInteractionsTitles();				
    		// Add section title view
@@ -1366,7 +1377,7 @@ public class MainActivity extends Activity {
 	 * Takes screenshot of the whole screen
 	 * @param activity
 	 */
-	public void sendFeedbackScreenshot(final Activity activity) {
+	public void sendFeedbackScreenshot(final Activity activity, int mode) {
 		try {			
 			// Get root windows
 			final View rootView = activity.getWindow().getDecorView().findViewById(android.R.id.content).getRootView();
@@ -1380,7 +1391,10 @@ public class MainActivity extends Activity {
 			rootView.setDrawingCacheEnabled(false);
 			fOutStream.close();
 			// Start email activity
-			startEmailActivity(activity, Uri.fromFile(outputFile));
+			if (mode==1)
+				startEmailActivity(activity, Uri.fromFile(outputFile), "", "AmiKo for Android");
+			else if (mode==2)
+				startEmailActivity(activity, Uri.fromFile(outputFile), "zdavatz@ywesee.com", "Interaction notification");			
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
@@ -1391,11 +1405,11 @@ public class MainActivity extends Activity {
 	 * @param context
 	 * @param attachment
 	 */
-	public void startEmailActivity(Context context, Uri attachment) {
+	public void startEmailActivity(Context context, Uri attachment, String emailAddr, String subject) {
 		Intent sendEmailIntent = new Intent(Intent.ACTION_SEND);
 		sendEmailIntent.setType("message/rfc822");
-		sendEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{""});
-		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, "AmiKo for Android");
+		sendEmailIntent.putExtra(Intent.EXTRA_EMAIL, new String[]{emailAddr});
+		sendEmailIntent.putExtra(Intent.EXTRA_SUBJECT, subject);
 		sendEmailIntent.putExtra(Intent.EXTRA_TEXT, "AmiKo for Android\r\n\nGet it now: https://play.google.com/store/apps/details?id=com.ywesee.amiko.de\r\n\nEnjoy!");
 		sendEmailIntent.putExtra(Intent.EXTRA_STREAM, attachment);
 		context.startActivity(Intent.createChooser(sendEmailIntent, "Send email"));

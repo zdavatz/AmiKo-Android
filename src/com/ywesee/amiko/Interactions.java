@@ -32,8 +32,13 @@ public class Interactions {
 				+ Constants.appInteractionsFile(); 
 		m_interactions_map = readFromCsvToMap(interactions_file);
 		// Load interactions css style sheet
-		m_css_interactions_str = "<style>" 
-				+ Utilities.loadFromAssetsFolder(context, "interactions_css.css", "UTF-8") + "</style>";
+		if (Utilities.isTablet(context)) {
+			m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(context, "interactions_css.css", "UTF-8") 
+					+ "</style>";
+		} else {
+			m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(context, "interactions_css_phone.css", "UTF-8") 
+					+ "</style>";			
+		}
 		// Load delete row javascript
 		m_js_deleterow_str = Utilities.loadFromAssetsFolder(context, "deleterow.js", "UTF-8");
 	}
@@ -104,7 +109,7 @@ public class Interactions {
 					name1 = m_code1[1];
 				}
 				// Source folder for the images is /res/drawable
-				String trash_icon = "<input type=\"image\" src=\"trash_icon.png\" onclick=\"deleterow('Interaktionen',this)\" />";
+				String trash_icon = "<input type=\"image\" src=\"trash_icon.png\" onclick=\"deleterow('InterTable',this)\" />";
 				basket_html_str += "<tr>"
 						+ "<td>" + med_counter + "</td>" 
 						+ "<td>" + entry1.getKey() + " </td> " 
@@ -121,9 +126,9 @@ public class Interactions {
 		} else {
 			// Medikamentenkorb ist leer
 			if (Constants.appLanguage().equals("de"))
-				basket_html_str = "<div>Ihr Medikamentenkorb ist leer.<br><br></div>";
+				basket_html_str = "<div><br>Ihr Medikamentenkorb ist leer.<br><br></div>";
 			else if (Constants.appLanguage().equals("fr"))
-				basket_html_str = "<div>Votre panier de médicaments est vide.<br><br></div>";
+				basket_html_str = "<div><br>Votre panier de médicaments est vide.<br><br></div>";
 		}
 		
 		return basket_html_str;
@@ -189,11 +194,15 @@ public class Interactions {
 			// Add note to indicate that there are no interactions
 			if (m_section_titles_list.size()<2) {
 				if (Constants.appLanguage().equals("de")) {
-					interactions_html_str = "<p class=\"paragraph0\">Zur Zeit sind keine Interaktionen zwischen diesen Medikamenten bekannt.</p>" +
-							"<div id=\"Delete_all\"><input type=\"button\" value=\"Interaktion melden\" onclick=\"deleteRow('Notify_interaction',this)\" /></div><br>";
+					interactions_html_str = "<p class=\"paragraph0\">Zur Zeit sind keine Interaktionen zwischen diesen Medikamenten in der EPha.ch-Datenbank vorhanden. " 
+							+ "Weitere Informationen finden Sie in der Fachinformation.</p>" 
+							+ "<div id=\"Delete_all\"><input type=\"button\" value=\"Interaktion melden\" onclick=\"deleterow('Notify_interaction',this)\" />"
+							+ "</div><br>";
 				} else if (Constants.appLanguage().equals("fr")) {
-					interactions_html_str = "<p class=\"paragraph0\">Jusqu’ici il n’y pas d’interaction connue entre les médicaments.</p>" +
-							"<div id=\"Delete_all\"><input type=\"button\" value=\"Signaler une interaction\" onclick=\"deleteRow('Notify_interaction',this)\" /></div><br>";
+					interactions_html_str = "<p class=\"paragraph0\">Il n’y a aucune information dans la banque de données EPha.ch à propos d’une interaction entre les "
+							+ "médicaments sélectionnés. Veuillez consulter les informations professionelles.</p>"
+							+ "<div id=\"Delete_all\"><input type=\"button\" value=\"Signaler une interaction\" onclick=\"deleterow('Notify_interaction',this)\" />"
+							+ "</div><br>";
 				} 
 			} else
 				interactions_html_str += "<br>";

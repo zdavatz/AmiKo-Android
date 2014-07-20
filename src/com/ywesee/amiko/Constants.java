@@ -39,7 +39,7 @@ public class Constants {
 	// public static final String APP_NAME = MEDDRUGS_NAME;
 	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
 	public static final String APP_VERSION = "1.2.6";
-	public static final String GEN_DATE = "29.06.2014";
+	public static final String GEN_DATE = "20.07.2014";
 	public static final int DB_VERSION = 128; 	
 	
 	/** Release history

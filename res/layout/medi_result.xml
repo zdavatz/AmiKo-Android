@@ -21,8 +21,9 @@
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/mfavorite"
         android:layout_toLeftOf="@+id/mlogo"
-    	android:layout_alignParentTop="true"   
-		style="@android:style/TextAppearance.Medium"/>
+    	android:layout_alignParentTop="true" 
+		style="@android:style/TextAppearance.Medium"/>    	
+    	<!--  android:textStyle="bold" -->
 	        
 	<TextView android:id="@+id/mauth" 
 		android:textIsSelectable="false"            

@@ -1,6 +1,7 @@
 package com.ywesee.amiko;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
@@ -12,9 +13,11 @@ public class ExpertInfoView {
 	
 	private WebView mWebView = null;
 	private JSInterface mJSInterface = null;
+	private Context mContext = null;
 	
 	public ExpertInfoView(Context context, WebView webView) {
 		mWebView = webView;
+		mContext = context;
 
 		// Override web client to open all links in same webview
 		// mWebView.setWebChromeClient(new WebChromeClient());
@@ -51,6 +54,15 @@ public class ExpertInfoView {
 	
 	public WebView getWebView() {
 		return mWebView;
+	}
+	
+	public void adjustZoom() {
+		int orientation = mContext.getResources().getConfiguration().orientation;
+		if (orientation==Configuration.ORIENTATION_PORTRAIT) {
+			mWebView.getSettings().setTextZoom(175);
+		} else if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
+			mWebView.getSettings().setTextZoom(125);						
+		}
 	}
 	
 	public JSInterface getJSInterface() {
