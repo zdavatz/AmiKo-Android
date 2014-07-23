@@ -263,25 +263,10 @@ public class MainActivity extends Activity {
     		mSplashDialog.setContentView(R.layout.splash_screen);
     		mSplashDialog.setCancelable(false);
     		mSplashDialog.show();
-    	}
-    	
-    	mMediDataSource = new DBAdapter(MainActivity.this);
-    	try {
-    		// Creates database
-    		mMediDataSource.create();
-    		// Opens SQLite database
-    		mMediDataSource.openSQLiteDB();	
-    	} catch( IOException e) {
-    		Log.d(TAG, "Unable to create SQLite database!");
-    		throw new Error("Unable to create SQLite database");
-    	}	 	
 
-   		// Open drug interactions csv file 
-   		mMediDataSource.openInteractionsFile();
-
-   		if (showIt) {
     	   	// Enable flag (disable toast message)
         	mRestoringState = true;       		
+
 	    	// Set Runnable to remove splash screen just in case
 	    	final Handler handler = new Handler();
 	    	handler.postDelayed(new Runnable() {
@@ -290,8 +275,6 @@ public class MainActivity extends Activity {
 	    			removeSplashScreen();
 	    	    	// Re-enable toaster once the splash screen has been removed...
 	    	    	mRestoringState = false;
-	    	    	// Hide keyboard
-	            	hideSoftKeyboard(100);
 	    		}
 	    	}, 3000);
     	}
@@ -464,7 +447,7 @@ public class MainActivity extends Activity {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
 			LayoutTransition lt = new LayoutTransition();		
 			lt.enableTransitionType(LayoutTransition.CHANGING);
-			lt.setDuration(LayoutTransition.APPEARING, 500);
+			lt.setDuration(LayoutTransition.APPEARING, 100 /*500*/);
 			lt.setDuration(LayoutTransition.DISAPPEARING, 100);
 			mViewHolder.setLayoutTransition(lt);
 		}
@@ -509,13 +492,6 @@ public class MainActivity extends Activity {
 			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
 		}			
 		
-		// Show splashscreen while database is being initialized...
-		if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
-				&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME))
-			showSplashScreen(true);
-		else 
-			showSplashScreen(false);
-
 		// Retrieve reference to the activity's action bar
 		ActionBar ab = getActionBar();	
 		// Disable activity title
@@ -630,22 +606,21 @@ public class MainActivity extends Activity {
 		
 		// Initialize download manager
 		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-		
-		/* 
-		 * Initialize database (including DownloadManager)
-		 * @maxl 17.01.2014: This is done while the splash screen is running! 
+				
 		try {
-			AsyncInitDBTask initDBTask = new AsyncInitDBTask(this);						
+			AsyncLoadDBTask initDBTask = new AsyncLoadDBTask(this);						
 			initDBTask.execute();		
 		} catch (Exception e) {
-			Log.e(TAG, "AsyncInitDBTask-init exception caught!");
+			Log.e(TAG, "AsyncLoadDBTask exception caught!");
 		}
-		*/
-		
+
 		// Setup initial view
 		setCurrentView(mSuggestView, false);
 		// Load database!
-		performSearch("");
+		// --> performSearch("");
+		
+    	// Show keyboard
+    	showSoftKeyboard(100);	
 		
 		// Get search intent
 		Intent intent = getIntent();
@@ -748,6 +723,51 @@ public class MainActivity extends Activity {
 		mReportWebView.getSettings().setJavaScriptEnabled(true);		
 	}
 
+	/**
+	 * Asynchronous thread launched to initialize the SQLite database
+	 * @author Max
+	 *
+	 */
+	private class AsyncLoadDBTask extends AsyncTask<Void, Integer, Void> {
+		
+		public AsyncLoadDBTask(Context context) {
+			// Do nothing
+		}		
+		
+		@Override
+		protected void onPreExecute() {
+			// Show splashscreen while database is being initialized...
+			if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
+					&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME))
+				showSplashScreen(true);
+			else 
+				showSplashScreen(false);
+		}
+				
+		@Override
+		protected Void doInBackground(Void... voids) {
+	    	mMediDataSource = new DBAdapter(MainActivity.this);
+	    	try {
+	    		// Creates database
+	    		mMediDataSource.create();
+	    		// Opens SQLite database
+	    		mMediDataSource.openSQLiteDB();	
+	    	} catch( IOException e) {
+	    		Log.d(TAG, "Unable to create SQLite database!");
+	    		throw new Error("Unable to create SQLite database");
+	    	}	 	
+
+	   		// Open drug interactions csv file 
+	   		mMediDataSource.openInteractionsFile();
+			return null;
+		}
+							
+		@Override
+		protected void onPostExecute(Void result) {			
+			// Do nothing
+		}
+	}
+	
 	/**
 	 * Asynchronous thread launched to initialize the SQLite database
 	 * @author Max
@@ -940,6 +960,8 @@ public class MainActivity extends Activity {
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		// super.onCreateOptionsMenu(menu);
+		
 		// Inflate the menu. Add items to the action bar if present.
 		getMenuInflater().inflate(R.menu.actionbar, menu);
 
@@ -987,11 +1009,6 @@ public class MainActivity extends Activity {
 			}
 		});
 		
-		mSearch.requestFocus();
-		
-		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
-		mDelete.setVisibility( mSearch.getText().length()>0 ? View.VISIBLE : View.GONE );
-		
 		// Action listener for search_box
 		mSearch.addTextChangedListener(new TextWatcher() {		
 			@Override
@@ -1014,6 +1031,11 @@ public class MainActivity extends Activity {
 				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
 			}
 		});
+		
+		mSearch.requestFocus();
+
+		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
+		mDelete.setVisibility( mSearch.getText().length()>0 ? View.VISIBLE : View.GONE );		
 		
 		mDelete.setOnClickListener(new OnClickListener() {
 			@Override
@@ -1222,14 +1244,20 @@ public class MainActivity extends Activity {
 		}
 		case (R.id.aips_button): {
 			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
-			// Switch to AIPS database
-			mDatabaseUsed = "aips";	
-			mSearchInteractions = false;
-			// Change view
-			setCurrentView(mSuggestView, true);
-			// Reset search
-			mSearch.setText("");
-			performSearch("");
+			if (mSearchInteractions==true || mDatabaseUsed.equals("favorites")) {
+				// Switch to AIPS database				
+				mDatabaseUsed = "aips";	
+				mSearchInteractions = false;
+				// Change view
+				setCurrentView(mSuggestView, true);
+			} else {
+				// Switch to AIPS database				
+				mDatabaseUsed = "aips";	
+				mSearchInteractions = false;				
+				// We are already in AIPS mode
+				mSearch.setText("");
+				performSearch("");
+			}
 			// Request menu update
 			invalidateOptionsMenu();
 			return true;
