@@ -18,6 +18,7 @@ import android.util.Log;
 
 public class Interactions {
 	private static final String TAG = "Interactions"; // Tag for LogCat window	
+	private Context mContext = null;
 	private Map<String, Medication> m_med_basket = new TreeMap<String, Medication>();
 	private Map<String, String> m_interactions_map = null;
 	private List<String> m_section_ids_list = null;
@@ -27,20 +28,26 @@ public class Interactions {
 	private String m_js_deleterow_str = null;
 	
 	public Interactions(Context context) {
-		// Load drug interaction map
-		String interactions_file =  context.getApplicationInfo().dataDir + "/databases/" 
-				+ Constants.appInteractionsFile(); 
-		m_interactions_map = readFromCsvToMap(interactions_file);
-		// Load interactions css style sheet
-		if (Utilities.isTablet(context)) {
-			m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(context, "interactions_css.css", "UTF-8") 
-					+ "</style>";
-		} else {
-			m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(context, "interactions_css_phone.css", "UTF-8") 
-					+ "</style>";			
+		mContext = context;
+		
+		if (mContext!=null) {
+			// Load interactions css style sheet
+			if (Utilities.isTablet(mContext))
+				m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(mContext, "interactions_css.css", "UTF-8") + "</style>";
+			else
+				m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(mContext, "interactions_css_phone.css", "UTF-8") + "</style>";
+			// Load delete row javascript
+			m_js_deleterow_str = Utilities.loadFromAssetsFolder(mContext, "deleterow.js", "UTF-8");
 		}
-		// Load delete row javascript
-		m_js_deleterow_str = Utilities.loadFromAssetsFolder(context, "deleterow.js", "UTF-8");
+	}
+	
+	public void loadCsv() {
+		if (mContext!=null) {
+			// Load drug interaction map
+			String interactions_file =  mContext.getApplicationInfo().dataDir + "/databases/" 
+					+ Constants.appInteractionsFile(); 
+			m_interactions_map = readFromCsvToMap(interactions_file);
+		}
 	}
 	
 	public void addToBasket(String title, Medication med) {

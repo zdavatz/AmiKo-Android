@@ -47,11 +47,12 @@ import android.app.DownloadManager.Request;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
-import android.app.SearchManager;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -91,7 +92,6 @@ import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -183,6 +183,8 @@ public class MainActivity extends Activity {
 	// This is the global toast object
 	private CustomToast mToastObject = null;
 
+	private BroadcastReceiver mBroadcastReceiver;
+	
 	// In-text-search hits counter
 	private TextView mSearchHitsCntView = null;
 	
@@ -213,40 +215,31 @@ public class MainActivity extends Activity {
 	 * Show soft keyboard
 	 */
 	private void showSoftKeyboard(int duration) {
-       	// This handler is used to schedule the runnable to be executed as some point in the future
-        Handler handler = new Handler();
-        final int d = duration;
-    	final Runnable r = new Runnable() {
+		mSearch.requestFocus();		
+		mSearch.postDelayed(new Runnable() {
             @Override
-            public void run() {            	
+            public void run() {        	
             	// Display keyboard
             	InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-            	imm.toggleSoftInputFromWindow(mCurrentView.getApplicationWindowToken(), 
-            			InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+            	imm.showSoftInput(mSearch, InputMethodManager.SHOW_IMPLICIT);
             }
-        };
-        // Runnable is executed in 300ms
-        handler.postDelayed(r, d);
+		}, duration);
 	}
 	
 	/**
 	 * Hide soft keyboard
 	 */
 	private void hideSoftKeyboard(int duration) {
-       	// This handler is used to schedule the runnable to be executed as some point in the future
-        Handler handler = new Handler();
-        final int d = duration;
-    	final Runnable r = new Runnable() {
+		mSearch.requestFocus();
+		mSearch.postDelayed(new Runnable() {
             @Override
-            public void run() {            	
+            public void run() {       	
             	// Remove keyboard
         		InputMethodManager imm = (InputMethodManager) getSystemService(Service.INPUT_METHOD_SERVICE);
-        		if (imm!=null && getWindow().getDecorView().getWindowToken()!=null)
-        			imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0); 
-            }
-        };
-        // Runnable is executed in 700ms
-        handler.postDelayed(r, d);
+        		if (imm!=null && mSearch.getWindowToken()!=null)
+        			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY); 
+            }			
+		}, duration);
 	}
 	
 	@Override
@@ -259,36 +252,40 @@ public class MainActivity extends Activity {
      */
     protected void showSplashScreen(boolean showIt) {
     	if (showIt) {
-    		mSplashDialog = new Dialog(this, android.R.style.Theme_Holo);// .Theme_Translucent_NoTitleBar_Fullscreen);
+    		mSplashDialog = new Dialog(this, android.R.style.Theme_Holo /*Translucent_NoTitleBar_Fullscreen*/);
     		mSplashDialog.setContentView(R.layout.splash_screen);
     		mSplashDialog.setCancelable(false);
     		mSplashDialog.show();
-
+    		
     	   	// Enable flag (disable toast message)
-        	mRestoringState = true;       		
+        	mRestoringState = true;         		
+    		
+    		mSplashDialog.setOnDismissListener(new OnDismissListener() {
+    			@Override
+    			public void onDismiss(DialogInterface dialog) {
+    				createMainLayout();
+	    	    	// Re-enable toaster once the splash screen has been removed...
+	    	    	mRestoringState = false;
+	    	    	// 
+	    	    	mSearch.requestFocus();	    	    	
+	    	    	// Show keyboard
+	    	    	showSoftKeyboard(100);	
+    			}
+    		}); 		
 
 	    	// Set Runnable to remove splash screen just in case
 	    	final Handler handler = new Handler();
 	    	handler.postDelayed(new Runnable() {
 	    		@Override
 	    		public void run() {
-	    			removeSplashScreen();
-	    	    	// Re-enable toaster once the splash screen has been removed...
-	    	    	mRestoringState = false;
+	    	        if (mSplashDialog!=null) {
+	    	            mSplashDialog.dismiss();
+	    	            mSplashDialog = null;
+	    	        }
 	    		}
-	    	}, 3000);
+	    	}, 3000);	    	
     	}
-    }
-    
-    /**
-     * Removes the dialog that displays the splash screen
-     */
-    protected void removeSplashScreen() {
-        if (mSplashDialog != null) {
-            mSplashDialog.dismiss();
-            mSplashDialog = null;
-        }
-    }    
+    } 
     
 	/**
 	 * Sets currently visible view
@@ -356,7 +353,7 @@ public class MainActivity extends Activity {
     	// Restore hint
 		mSearch.setHint(getString(R.string.search) + " " + mActionName);   
 		// Show keyboard
-		// showSoftKeyboard(300);
+		showSoftKeyboard(300);
 		// Disable flag
 		mRestoringState = false;
     }
@@ -364,7 +361,7 @@ public class MainActivity extends Activity {
     /**
      * Restore view state
      */
-    public void resetView() {
+    public void resetView(boolean doSearch) {
 		mRestoringState = true;
 		// Set database
 		mDatabaseUsed = "aips";	
@@ -377,7 +374,8 @@ public class MainActivity extends Activity {
 		mSearch.setHint(getString(R.string.search) + " " + mActionName); 		
 		// Reset search
 		mSearch.setText("");
-		performSearch("");
+		if (doSearch==true)
+			performSearch("");
 		// Request menu update
 		invalidateOptionsMenu();
 		mRestoringState = false;
@@ -386,7 +384,6 @@ public class MainActivity extends Activity {
 	/**
 	 * Implements listeners for action bar
 	 * @author MaxL
-	 *
 	 */
 	private class MyTabListener implements ActionBar.TabListener {
 		
@@ -473,45 +470,22 @@ public class MainActivity extends Activity {
 			});
 		}
 	}
-	
-	/**
-	 * Overrides onCreate method
-	 */
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
 		
-		// Flag for enabling the Action Bar on top
-		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
-		// Enable overlay mode for action bar (no good, search results disappear behind it...)
-		// getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
-
-		// Create action bar
-		int mode = ActionBar.NAVIGATION_MODE_TABS;		
-		if (savedInstanceState != null) {
-			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
-		}			
-		
-		// Retrieve reference to the activity's action bar
-		ActionBar ab = getActionBar();	
-		// Disable activity title
-		ab.setDisplayShowTitleEnabled(false);
-		// Hide caret symbol ("<") upper left corner
-		ab.setDisplayHomeAsUpEnabled(false);
-		ab.setHomeButtonEnabled(false);
-		// Sets color of action bar (including alpha-channel)
-		ab.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));
-
-		// Sets tab navigators
-		setTabNavigation(ab);
-						
-		// Sets current content view
-		setContentView(R.layout.activity_main);	
+	public void createMainLayout() {
+		// 
+		setContentView(R.layout.activity_main);
 		
 		// Initialize views
 		mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
 		mReportView = getLayoutInflater().inflate(R.layout.report_view, null);
+		
+		mCurrentView = mSuggestView;
+		
+		// Setup webviews
+		setupReportView();
+		setFindListener(mReportWebView);	
+		setupGestureDetector(mReportWebView);	
 		
 		// Add views to viewholder
 		mViewHolder = (ViewGroup) findViewById(R.id.main_layout);		
@@ -519,36 +493,15 @@ public class MainActivity extends Activity {
 		mViewHolder.addView(mShowView);	
 		mViewHolder.addView(mReportView);
 
-		setLayoutTransition();
+		setLayoutTransition();			
 		
-		// Set visibility of views
-		mSuggestView.setVisibility(View.VISIBLE);			
-		mShowView.setVisibility(View.GONE);			
-		mReportView.setVisibility(View.GONE);
-		
-		// Setup webviews
-		setupReportView();
-		
-		// Load CSS from asset folder
-		if (Utilities.isTablet(this))
-			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet.css", "UTF-8"); 
-		else
-			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet_phone.css", "UTF-8");
 		// Define and load webview
-		ExpertInfoView mExpertInfoView = 
-				new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
+		ExpertInfoView mExpertInfoView = new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
 		mExpertInfoView.adjustZoom();
-		mWebView = mExpertInfoView.getWebView();
-				
-		// Add find listeners
-		setFindListener(mWebView);
-		setFindListener(mReportWebView);		
-		// Setup gesture detectors
-		setupGestureDetector(mWebView);
-		setupGestureDetector(mReportWebView);
 		
-		// Sets up med interaction basket
-		mMedInteractionBasket = new Interactions(this);
+		mWebView = mExpertInfoView.getWebView();				
+		setFindListener(mWebView);
+		setupGestureDetector(mWebView);			
 		
 		// Set up observer to JS messages
 		JSInterface jsinterface = mExpertInfoView.getJSInterface();
@@ -588,13 +541,78 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
+
+		// Initialize suggestion listview
+		mListView = (ListView) findViewById(R.id.suggestView);
+		mListView.setClickable(true);	
+		
+		// Set visibility of views
+		mSuggestView.setVisibility(View.VISIBLE);			
+		mShowView.setVisibility(View.GONE);			
+		mReportView.setVisibility(View.GONE);	
+
+		// Setup initial view
+		setCurrentView(mSuggestView, false);			
+	}
+			
+	@Override
+	public void onPause() {
+		super.onPause();
+		unregisterReceiver(mBroadcastReceiver);
+	}
+	
+	@Override
+	public void onResume() {
+		super.onResume();
+        registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+	}	
+	
+	/**
+	 * Overrides onCreate method
+	 */
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		try {
+			AsyncLoadDBTask initDBTask = new AsyncLoadDBTask(this);						
+			initDBTask.execute();		
+		} catch (Exception e) {
+			Log.e(TAG, "AsyncLoadDBTask exception caught!");
+		}			
+		
+		// Load CSS from asset folder
+		if (Utilities.isTablet(this))
+			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet.css", "UTF-8"); 
+		else
+			mCSS_str = Utilities.loadFromAssetsFolder(this, "amiko_stylesheet_phone.css", "UTF-8");			
+		
+		// Flag for enabling the Action Bar on top
+		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
+		// Enable overlay mode for action bar (no good, search results disappear behind it...)
+		// getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);	
+
+		// Create action bar
+		int mode = ActionBar.NAVIGATION_MODE_TABS;		
+		if (savedInstanceState != null) {
+			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
+		}			
+		
+		// Retrieve reference to the activity's action bar
+		ActionBar ab = getActionBar();	
+		// Disable activity title
+		ab.setDisplayShowTitleEnabled(false);
+		// Hide caret symbol ("<") upper left corner
+		ab.setDisplayHomeAsUpEnabled(false);
+		ab.setHomeButtonEnabled(false);
+		// Sets color of action bar (including alpha-channel)
+		ab.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));
+
+		// Sets tab navigators
+		setTabNavigation(ab);		
 		
 		// Reset action name
 		mActionName = getString(R.string.tab_name_1);
-		
-		// Initialize suggestion listview
-		mListView = (ListView) findViewById(R.id.suggestView);
-		mListView.setClickable(true);
 		
 		// Load hashset containing registration numbers from persistent data store
 		mFavoriteData = new DataStore(this.getFilesDir().toString());
@@ -602,34 +620,12 @@ public class MainActivity extends Activity {
 		mFavoriteMedsSet = mFavoriteData.load();
 		
 		// Init toast object
-		mToastObject = new CustomToast(getApplicationContext());
+		mToastObject = new CustomToast(getApplicationContext());					
 		
 		// Initialize download manager
 		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-				
-		try {
-			AsyncLoadDBTask initDBTask = new AsyncLoadDBTask(this);						
-			initDBTask.execute();		
-		} catch (Exception e) {
-			Log.e(TAG, "AsyncLoadDBTask exception caught!");
-		}
 
-		// Setup initial view
-		setCurrentView(mSuggestView, false);
-		// Load database!
-		// --> performSearch("");
-		
-    	// Show keyboard
-    	showSoftKeyboard(100);	
-		
-		// Get search intent
-		Intent intent = getIntent();
-		if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-			String query = intent.getStringExtra(SearchManager.QUERY);
-			// showResults(query);
-		}
-
-		BroadcastReceiver receiver = new BroadcastReceiver() {
+		mBroadcastReceiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
@@ -663,9 +659,118 @@ public class MainActivity extends Activity {
 				}
 			}
 		};
-        registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 	}
-	
+		
+	/**
+	 * 
+	 */
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// super.onCreateOptionsMenu(menu);
+		
+		// Inflate the menu. Add items to the action bar if present.
+		getMenuInflater().inflate(R.menu.actionbar, menu);
+
+		// menu.findItem(R.id.menu_pref1).setChecked(false);
+
+		mSearchItem = menu.findItem(R.id.menu_search);
+		mSearchItem.expandActionView();
+		mSearchItem.setVisible(true);				
+		
+		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);		
+		mSearch.setFocusable(true);
+    	
+		if (mSearch!=null) { 
+			if (mSearchInteractions==false)
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
+			else
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+		}				
+		
+		mSearchHitsCntView = (TextView) mSearchItem.getActionView().findViewById(R.id.hits_counter);
+		mSearchHitsCntView.setVisibility(View.GONE);
+		
+		mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+		    @Override
+		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		        if (actionId==EditorInfo.IME_ACTION_SEARCH || actionId==EditorInfo.IME_ACTION_DONE) {
+		        	if (mCurrentView==mSuggestView) {
+		        		// Hide keyboard
+		        		hideSoftKeyboard(500);
+		        	} else if (mCurrentView==mShowView) {
+		        		// Searches forward
+		        		mWebView.findNext(true);
+		        	} else if (mCurrentView==mReportView) {
+		        		// Searches forward
+		        		mReportWebView.findNext(true);
+		        	}
+		            return true;
+		        }
+		        return false;
+		    }
+		});
+		
+		mSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+			public void onFocusChange(View v, boolean hasFocus) {
+				if (hasFocus) {
+					showSoftKeyboard(100);
+				}
+			}
+		});
+    	
+		mSearch.setOnClickListener(new View.OnClickListener() {						
+			@Override
+			public void onClick(View v) {
+				showSoftKeyboard(100);
+			}
+		});
+		
+		// Action listener for search_box
+		mSearch.addTextChangedListener(new TextWatcher() {		
+			@Override
+			public void beforeTextChanged( CharSequence s, int start, int count, int after ) {
+				// Do nothing
+			}					
+			
+			@Override
+			public void onTextChanged( CharSequence cs, int start, int before, int count ) {	
+				// Do nothing
+			}	
+
+			@Override
+			public void afterTextChanged(Editable s) {	
+				String text = mSearch.getText().toString();
+				if (!mRestoringState) {
+					if (text.length()>0)
+						performSearch(text);
+				} 
+				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
+			}
+		});
+
+		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
+		mDelete.setVisibility( mSearch.getText().length()>0 ? View.VISIBLE : View.GONE );		
+		
+		mDelete.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mSearch.setText("");				
+				if (mCurrentView==mShowView) {
+					mSearchHitsCntView.setVisibility(View.GONE);
+					mWebView.clearMatches();
+				} else if (mCurrentView==mReportView) {
+					mSearchHitsCntView.setVisibility(View.GONE);
+					mReportWebView.clearMatches();				
+				} else if (mCurrentView==mSuggestView) {
+					showSoftKeyboard(300);
+				}
+			}
+		});	
+		
+		return true;
+	}	
+
 	/**
 	 * Gesture detector for expert-info webview
 	 * @param webView
@@ -726,7 +831,6 @@ public class MainActivity extends Activity {
 	/**
 	 * Asynchronous thread launched to initialize the SQLite database
 	 * @author Max
-	 *
 	 */
 	private class AsyncLoadDBTask extends AsyncTask<Void, Integer, Void> {
 		
@@ -747,6 +851,8 @@ public class MainActivity extends Activity {
 		@Override
 		protected Void doInBackground(Void... voids) {
 	    	mMediDataSource = new DBAdapter(MainActivity.this);
+	    	mMedInteractionBasket = new Interactions(MainActivity.this);	    	
+
 	    	try {
 	    		// Creates database
 	    		mMediDataSource.create();
@@ -756,9 +862,9 @@ public class MainActivity extends Activity {
 	    		Log.d(TAG, "Unable to create SQLite database!");
 	    		throw new Error("Unable to create SQLite database");
 	    	}	 	
-
 	   		// Open drug interactions csv file 
-	   		mMediDataSource.openInteractionsFile();
+	    	mMedInteractionBasket.loadCsv();
+
 			return null;
 		}
 							
@@ -798,7 +904,7 @@ public class MainActivity extends Activity {
 	        progressBar.setCancelable(false);
 	        progressBar.show();
 		}
-				
+		
 		@Override
 		protected Void doInBackground(Void... voids) {
 			if (Constants.DEBUG)
@@ -842,7 +948,7 @@ public class MainActivity extends Activity {
 			// Opens SQLite database
 			mMediDataSource.openSQLiteDB();
 	   		// Open drug interactions csv file 
-	   		mMediDataSource.openInteractionsFile();
+	   		mMedInteractionBasket.loadCsv();
 			
 			return null;
 		}
@@ -869,7 +975,7 @@ public class MainActivity extends Activity {
 			if (progressBar.isShowing())
 				progressBar.dismiss();
 			// Reset view
-			resetView();
+			resetView(true);
 			// Friendly message
 			mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
 		}
@@ -956,104 +1062,6 @@ public class MainActivity extends Activity {
 				mWebView.getSettings().setTextZoom(175);
 			}
 		}
-	}
-	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// super.onCreateOptionsMenu(menu);
-		
-		// Inflate the menu. Add items to the action bar if present.
-		getMenuInflater().inflate(R.menu.actionbar, menu);
-
-		// menu.findItem(R.id.menu_pref1).setChecked(false);
-
-		mSearchItem = menu.findItem(R.id.menu_search);
-		mSearchItem.setVisible(true);				
-		
-		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
-		if (mSearch!=null) { 
-			if (mSearchInteractions==false)
-				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
-			else
-				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
-		}				
-		
-		mSearchHitsCntView = (TextView) mSearchItem.getActionView().findViewById(R.id.hits_counter);
-		mSearchHitsCntView.setVisibility(View.GONE);
-		
-		mSearch.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-		    @Override
-		    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		        if (actionId==EditorInfo.IME_ACTION_SEARCH || actionId==EditorInfo.IME_ACTION_DONE) {
-		        	if (mCurrentView==mSuggestView) {
-		        		// Hide keyboard
-		        		hideSoftKeyboard(600);
-		        	} else if (mCurrentView==mShowView) {
-		        		// Searches forward
-		        		mWebView.findNext(true);
-		        	} else if (mCurrentView==mReportView) {
-		        		// Searches forward
-		        		mReportWebView.findNext(true);
-		        	}
-		            return true;
-		        }
-		        return false;
-		    }
-		});
-		
-		mSearch.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-			public void onFocusChange(View v, boolean hasFocus) {
-				if (hasFocus) {
-					getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-				}
-			}
-		});
-		
-		// Action listener for search_box
-		mSearch.addTextChangedListener(new TextWatcher() {		
-			@Override
-			public void beforeTextChanged( CharSequence s, int start, int count, int after ) {
-				// Do nothing
-			}					
-			
-			@Override
-			public void onTextChanged( CharSequence cs, int start, int before, int count ) {	
-				// Do nothing
-			}	
-
-			@Override
-			public void afterTextChanged(Editable s) {	
-				String text = mSearch.getText().toString();
-				if (!mRestoringState) {
-					if (text.length()>0)
-						performSearch(text);
-				} 
-				mDelete.setVisibility( s.length()>0 ? View.VISIBLE : View.GONE );				
-			}
-		});
-		
-		mSearch.requestFocus();
-
-		mDelete = (Button) mSearchItem.getActionView().findViewById(R.id.delete);		
-		mDelete.setVisibility( mSearch.getText().length()>0 ? View.VISIBLE : View.GONE );		
-		
-		mDelete.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				mSearch.setText("");				
-				if (mCurrentView==mShowView) {
-					mSearchHitsCntView.setVisibility(View.GONE);
-					mWebView.clearMatches();
-				} else if (mCurrentView==mReportView) {
-					mSearchHitsCntView.setVisibility(View.GONE);
-					mReportWebView.clearMatches();				
-				} else if (mCurrentView==mSuggestView) {
-					showSoftKeyboard(600);
-				}
-			}
-		});
-
-		return true;
 	}
 	
 	@TargetApi(16)
@@ -1851,7 +1859,7 @@ public class MainActivity extends Activity {
 					
 					if (m!=null && mSearchInteractions==false) {
 						// Reset and change search hint
-						if (mSearch != null) {
+						if (mSearch!=null) {
 							mSearch.setText("");
 							mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
 						}							
