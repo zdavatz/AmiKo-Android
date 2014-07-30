@@ -20,20 +20,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 package com.ywesee.amiko;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Observer;
-import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -199,6 +195,10 @@ public class DBAdapter {
 	public int getNumInteractions() {
 		return mInteractions.size();
 	}	
+	
+	public boolean checkDatabasesExist() {
+		return mDbHelper.checkAllFilesExists();
+	}
 	
 	/**
 	 * Creates database

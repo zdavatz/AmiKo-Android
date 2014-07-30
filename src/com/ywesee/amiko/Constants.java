@@ -19,8 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
-import android.content.Context;
-import android.content.res.Configuration;
 
 public class Constants {
 	public static final boolean DEBUG = false;
@@ -38,9 +36,9 @@ public class Constants {
 	// public static final String APP_NAME = COMED_NAME;
 	// public static final String APP_NAME = MEDDRUGS_NAME;
 	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
-	public static final String APP_VERSION = "1.2.6";
-	public static final String GEN_DATE = "20.07.2014";
-	public static final int DB_VERSION = 128; 	
+	public static final String APP_VERSION = "1.2.7";
+	public static final String GEN_DATE = "30.07.2014";
+	public static final int DB_VERSION = 129; 	
 	
 	/** Release history
 	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
@@ -55,7 +53,8 @@ public class Constants {
      *  20/01/2014 - AmiKo/CoMed Release = 1.2.3, Database = 128
      *  14/02/2014 - AmiKo/CoMed Release = 1.2.4, Database = 128
      *  25/02/2014 - AmiKo/CoMed Release = 1.2.5, Database = 128 (med-drugs release)
-     *  29/06/2014 - AmiKo/CoMed Release = 1.2.6, Database = 130 (interactions)
+     *  29/07/2014 - AmiKo/CoMed Release = 1.2.6, Database = 129 (interactions)
+     *  30/07/2014 - AmiKo/CoMed Release = 1.2.7, Database = 129 (interactions)
 	*/
 	
 	/**

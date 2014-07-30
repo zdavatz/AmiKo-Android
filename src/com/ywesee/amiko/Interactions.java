@@ -7,14 +7,9 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Observable;
-import java.util.Observer;
 import java.util.TreeMap;
 
-import com.ywesee.amiko.de.R;
-
 import android.content.Context;
-import android.util.Log;
 
 public class Interactions {
 	private static final String TAG = "Interactions"; // Tag for LogCat window	

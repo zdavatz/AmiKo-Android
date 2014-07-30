@@ -106,6 +106,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		return dbFile.exists();
 	}
 		
+	public boolean checkAllFilesExists() {
+		return (checkFileExistsAtPath(mDBName, mDBPath) && 
+				checkFileExistsAtPath(mReportName, mDBPath) &&
+				checkFileExistsAtPath(mInteractionsName, mDBPath));
+	}
+	
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */	

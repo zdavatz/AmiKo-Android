@@ -250,7 +250,7 @@ public class MainActivity extends Activity {
     /**
      * Shows the splash screen over the full Activity
      */
-    protected void showSplashScreen(boolean showIt) {
+    protected void showSplashScreen(boolean showIt, boolean dismissAuto) {
     	if (showIt) {
     		mSplashDialog = new Dialog(this, android.R.style.Theme_Holo /*Translucent_NoTitleBar_Fullscreen*/);
     		mSplashDialog.setContentView(R.layout.splash_screen);
@@ -271,22 +271,96 @@ public class MainActivity extends Activity {
 	    	    	// Show keyboard
 	    	    	showSoftKeyboard(100);	
     			}
-    		}); 		
-
+    		}); 
+    		
 	    	// Set Runnable to remove splash screen just in case
-	    	final Handler handler = new Handler();
-	    	handler.postDelayed(new Runnable() {
-	    		@Override
-	    		public void run() {
-	    	        if (mSplashDialog!=null) {
-	    	            mSplashDialog.dismiss();
-	    	            mSplashDialog = null;
-	    	        }
-	    		}
-	    	}, 3000);	    	
+    		if (dismissAuto) {
+		    	final Handler handler = new Handler();
+		    	handler.postDelayed(new Runnable() {
+		    		@Override
+		    		public void run() {
+		    			if (mSplashDialog!=null) {
+		    				mSplashDialog.dismiss();
+		    				mSplashDialog = null;
+		    			}
+		    		}
+		    	}, 3000); 
+    		}
     	}
     } 
     
+    protected void dismissSplashScreen() {
+    	if (mSplashDialog!=null) {
+   			mSplashDialog.dismiss();
+   			mSplashDialog = null;
+    	}
+    }
+    
+    /**
+	 * Sets action bar tab click listeners
+	 * @param actionBar
+	 */
+	private void addTabNavigation() {
+		ActionBar actionBar = getActionBar();
+		
+		// Disable activity title
+		actionBar.setDisplayShowTitleEnabled(false);
+		// Hide caret symbol ("<") upper left corner
+		actionBar.setDisplayHomeAsUpEnabled(false);
+		actionBar.setHomeButtonEnabled(false);
+		// Sets color of action bar (including alpha-channel)
+		actionBar.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));		
+		
+		// 
+		actionBar.removeAllTabs();
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		actionBar.setTitle(R.string.app_name);
+
+		Tab tab = actionBar.newTab().setText(R.string.tab_name_1)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_1)));
+		actionBar.addTab(tab);
+
+		tab = actionBar.newTab().setText(R.string.tab_name_2)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_2)));
+		actionBar.addTab(tab);
+
+		tab = actionBar.newTab().setText(R.string.tab_name_3)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_3)));
+		actionBar.addTab(tab);
+		
+		tab = actionBar.newTab().setText(R.string.tab_name_4)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_4)));
+		actionBar.addTab(tab);
+		
+		tab = actionBar.newTab().setText(R.string.tab_name_5)
+				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
+		actionBar.addTab(tab);
+	}	    
+    
+	private void restoreTabNavigation() {
+		if (mActionName.equals(getString(R.string.tab_name_1)))
+			getActionBar().setSelectedNavigationItem(0);
+	 	else if (mActionName.equals(getString(R.string.tab_name_2)))
+	 		getActionBar().setSelectedNavigationItem(1);
+	 	else if (mActionName.equals(getString(R.string.tab_name_3)))
+	 		getActionBar().setSelectedNavigationItem(2);			
+		else if (mActionName.equals(getString(R.string.tab_name_4)))	 		
+			getActionBar().setSelectedNavigationItem(3);		
+		else if (mActionName.equals(getString(R.string.tab_name_5)))
+			getActionBar().setSelectedNavigationItem(4);
+	}
+	
+	private void removeTabNavigation() {
+		try {
+			ActionBar actionbar = (ActionBar) getActionBar();
+	        actionbar.selectTab(null);
+		} catch (Exception e) 
+		{
+			// Do nothing
+		}
+		// Alternative -> removeAllTabs();
+	}
+	
 	/**
 	 * Sets currently visible view
 	 * @param newCurrentView
@@ -307,7 +381,7 @@ public class MainActivity extends Activity {
 	    		if (withAnimation==true) {
 		    	    TranslateAnimation animate = 
 		    	    		new TranslateAnimation(0, direction*mCurrentView.getWidth(), 0, 0);
-		    	    animate.setDuration(500);
+		    	    animate.setDuration(200);
 		    	    animate.setFillAfter(false);
 		    	    mCurrentView.startAnimation(animate);
 	    		}
@@ -318,7 +392,7 @@ public class MainActivity extends Activity {
         		if (withAnimation==true) {
 	    		    TranslateAnimation animate = 
 	    		    		new TranslateAnimation(-direction*newCurrentView.getWidth(), 0, 0, 0);
-	    		    animate.setDuration(500);
+	    		    animate.setDuration(200);
 	    		    animate.setFillAfter(false);
 	    		    newCurrentView.startAnimation(animate);
         		}
@@ -328,7 +402,12 @@ public class MainActivity extends Activity {
         	mCurrentView = newCurrentView;        	
         	// Hide keyboard
     		if (mCurrentView==mShowView || mCurrentView==mReportView) {
-    			hideSoftKeyboard(1000);
+    			hideSoftKeyboard(300);
+    			removeTabNavigation();
+    			// getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);    			
+    		} else if (mCurrentView==mSuggestView) {
+    			restoreTabNavigation();
+    			// getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
     		}
     	}
     }
@@ -344,7 +423,10 @@ public class MainActivity extends Activity {
     	// Remove search hit counter
     	mSearchHitsCntView.setVisibility(View.GONE);
     	// Old search query
-    	mSearch.setText(mSearchQuery);
+    	if (!mSearchQuery.isEmpty())
+    		mSearch.setText(mSearchQuery);
+    	else
+    		mSearch.getText().clear();
     	Editable s = mSearch.getText();    	
     	// Set cursor at the end
     	Selection.setSelection(s, s.length());
@@ -373,7 +455,8 @@ public class MainActivity extends Activity {
 		mActionName = getString(R.string.tab_name_1); // Präparat
 		mSearch.setHint(getString(R.string.search) + " " + mActionName); 		
 		// Reset search
-		mSearch.setText("");
+		if (mSearch.length()>0)
+			mSearch.getText().clear();
 		if (doSearch==true)
 			performSearch("");
 		// Request menu update
@@ -396,7 +479,27 @@ public class MainActivity extends Activity {
 			mActivity = activity;
 			mFragName = fragName;
 			mTabName = tabName;		
-			mActionName = getString(R.string.tab_name_1); // Präparat
+			// mActionName = getString(R.string.tab_name_1); // Präparat
+		}
+
+		@Override
+		public void onTabSelected(Tab tab, FragmentTransaction ft) {
+			mFragment = Fragment.instantiate(mActivity, mFragName);
+			ft.add(android.R.id.content, mFragment);	
+			mActionName = mTabName;		
+			if (mMedis!=null) {
+				mTimer = System.currentTimeMillis();
+				showResults(mMedis);
+			}
+			// Set hint			
+			if (mSearch!=null) {
+				mSearch.setHint(getString(R.string.search) + " " + mTabName);
+			}
+			// Change content view
+			if (mCurrentView==mSuggestView)
+				setCurrentView(mSuggestView, true);
+			else if (mCurrentView==mShowView || mCurrentView==mReportView)
+				setSuggestView();
 		}
 
 		@Override
@@ -410,28 +513,8 @@ public class MainActivity extends Activity {
 				setCurrentView(mSuggestView, true);
 			else if (mCurrentView==mShowView || mCurrentView==mReportView)
 				setSuggestView();
-		}
-
-		@Override
-		public void onTabSelected(Tab tab, FragmentTransaction ft) {
-			mFragment = Fragment.instantiate(mActivity, mFragName);
-			ft.add(android.R.id.content, mFragment);		
-			mActionName = mTabName;
-			if (mMedis!=null) {
-				mTimer = System.currentTimeMillis();
-				showResults(mMedis);
-			}
-			if (mSearch!=null) {
-				// Set hint
-				mSearch.setHint(getString(R.string.search) + " " + mTabName);
-			}
-			// Change content view
-			if (mCurrentView==mSuggestView)
-				setCurrentView(mSuggestView, true);
-			else if (mCurrentView==mShowView || mCurrentView==mReportView)
-				setSuggestView();
-		}
-
+		}		
+		
 		@Override
 		public void onTabUnselected(Tab tab, FragmentTransaction ft) {			
 			ft.remove( mFragment );
@@ -552,7 +635,9 @@ public class MainActivity extends Activity {
 		mReportView.setVisibility(View.GONE);	
 
 		// Setup initial view
-		setCurrentView(mSuggestView, false);			
+		setCurrentView(mSuggestView, false);	
+		// Reset it
+		resetView(false);
 	}
 			
 	@Override
@@ -598,20 +683,11 @@ public class MainActivity extends Activity {
 			mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
 		}			
 		
-		// Retrieve reference to the activity's action bar
-		ActionBar ab = getActionBar();	
-		// Disable activity title
-		ab.setDisplayShowTitleEnabled(false);
-		// Hide caret symbol ("<") upper left corner
-		ab.setDisplayHomeAsUpEnabled(false);
-		ab.setHomeButtonEnabled(false);
-		// Sets color of action bar (including alpha-channel)
-		ab.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));
-
-		// Sets tab navigators
-		setTabNavigation(ab);		
+		// Sets tab bar items
+		addTabNavigation();		
 		
 		// Reset action name
+		Log.d(TAG, "OnCreate -> " + mActionName);
 		mActionName = getString(R.string.tab_name_1);
 		
 		// Load hashset containing registration numbers from persistent data store
@@ -667,23 +743,25 @@ public class MainActivity extends Activity {
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		// super.onCreateOptionsMenu(menu);
+		super.onCreateOptionsMenu(menu);
 		
 		// Inflate the menu. Add items to the action bar if present.
 		getMenuInflater().inflate(R.menu.actionbar, menu);
-
-		// menu.findItem(R.id.menu_pref1).setChecked(false);
 
 		mSearchItem = menu.findItem(R.id.menu_search);
 		mSearchItem.expandActionView();
 		mSearchItem.setVisible(true);				
 		
-		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);		
+		mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);	
+		if (!Utilities.isTablet(this)) {
+			float textSize = 16.0f;	// in [sp] = scaled pixels
+			mSearch.setTextSize(textSize);
+		}
 		mSearch.setFocusable(true);
     	
 		if (mSearch!=null) { 
 			if (mSearchInteractions==false)
-				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.tab_name_1));
+				mSearch.setHint(getString(R.string.search) + " " + mActionName);
 			else
 				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
 		}				
@@ -755,7 +833,8 @@ public class MainActivity extends Activity {
 		mDelete.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mSearch.setText("");				
+				if (mSearch.length()>0)
+					mSearch.getText().clear();			
 				if (mCurrentView==mShowView) {
 					mSearchHitsCntView.setVisibility(View.GONE);
 					mWebView.clearMatches();
@@ -834,25 +913,27 @@ public class MainActivity extends Activity {
 	 */
 	private class AsyncLoadDBTask extends AsyncTask<Void, Integer, Void> {
 		
+		boolean dismissSplashAuto = false;
+		
 		public AsyncLoadDBTask(Context context) {
 			// Do nothing
 		}		
 		
 		@Override
-		protected void onPreExecute() {
-			// Show splashscreen while database is being initialized...
+		protected void onPreExecute() {						
+	    	mMediDataSource = new DBAdapter(MainActivity.this);
+	    	mMedInteractionBasket = new Interactions(MainActivity.this);
+	    	
+	    	// Show splashscreen while database is being initialized...
 			if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
-					&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME))
-				showSplashScreen(true);
-			else 
-				showSplashScreen(false);
+					&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME)) {
+	    		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
+		    	showSplashScreen(true, dismissSplashAuto);
+			}
 		}
 				
 		@Override
-		protected Void doInBackground(Void... voids) {
-	    	mMediDataSource = new DBAdapter(MainActivity.this);
-	    	mMedInteractionBasket = new Interactions(MainActivity.this);	    	
-
+		protected Void doInBackground(Void... voids) {  		    	   	
 	    	try {
 	    		// Creates database
 	    		mMediDataSource.create();
@@ -870,7 +951,8 @@ public class MainActivity extends Activity {
 							
 		@Override
 		protected void onPostExecute(Void result) {			
-			// Do nothing
+	    	if (dismissSplashAuto==false)
+	    		dismissSplashScreen();
 		}
 	}
 	
@@ -1193,25 +1275,26 @@ public class MainActivity extends Activity {
 	}
 	
 	private void showResults(List<Medication> medis) {
-		if (medis!=null) {	
-	   		// Create simple cursor adapter
-	   		CustomListAdapter<Medication> custom_adapter = 
-	   			new CustomListAdapter<Medication>(this, R.layout.medi_result, medis);	
-	   		// Set adapter to listview		
-	   		mListView.setAdapter(custom_adapter);	
-	   		// Give some feedback about the search to the user (could be done better!)
-	   		/*
-	   		if (!mRestoringState) {
-	   			if (Constants.appLanguage().equals("de")) {
-			   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
-			   				Toast.LENGTH_SHORT);
-	   			} else if (Constants.appLanguage().equals("fr")) {
-	   				mToastObject.show(medis.size() + " résultats de la recherche en " + (System.currentTimeMillis()-mTimer) + "ms", 
-			   				Toast.LENGTH_SHORT);
-	   			}
+		// if (medis!=null) {	
+	   	
+		// Create simple cursor adapter
+	   	CustomListAdapter<Medication> custom_adapter = 
+	   		new CustomListAdapter<Medication>(this, R.layout.medi_result, medis);	
+	   	// Set adapter to listview		
+	   	mListView.setAdapter(custom_adapter);	
+	   	
+	   	// Give some feedback about the search to the user (could be done better!)
+	   	/*
+	   	if (!mRestoringState) {
+	   		if (Constants.appLanguage().equals("de")) {
+		   		mToastObject.show(medis.size() + " Suchresultate in " + (System.currentTimeMillis()-mTimer) + "ms", 
+		   				Toast.LENGTH_SHORT);
+	   		} else if (Constants.appLanguage().equals("fr")) {
+	   			mToastObject.show(medis.size() + " résultats de la recherche en " + (System.currentTimeMillis()-mTimer) + "ms", 
+		   				Toast.LENGTH_SHORT);
 	   		}
-	   		*/
 	   	}
+	   	*/
 	}	
 	
     protected boolean isAlwaysExpanded() {
@@ -1251,57 +1334,58 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.aips_button): {
-			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
 			if (mSearchInteractions==true || mDatabaseUsed.equals("favorites")) {
-				// Switch to AIPS database				
-				mDatabaseUsed = "aips";	
 				mSearchInteractions = false;
-				// Change view
-				setCurrentView(mSuggestView, true);
+				resetView(false);
+				// Show empty list
+				showResults(null);
+				showSoftKeyboard(300);
 			} else {
-				// Switch to AIPS database				
-				mDatabaseUsed = "aips";	
-				mSearchInteractions = false;				
 				// We are already in AIPS mode
-				mSearch.setText("");
+				if (mSearch.length()>0)
+					mSearch.getText().clear();
 				performSearch("");
 			}
-			// Request menu update
+			// NOTE: This request menu update calls "onCreateOptionsMenu"
 			invalidateOptionsMenu();
+			mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);			
 			return true;
 		}
 		case (R.id.favorites_button): {
-			mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);
 			// Switch to favorites database
 			mDatabaseUsed = "favorites";
 			mSearchInteractions = false;
 			// Change view
 			setCurrentView(mSuggestView, true);
-			// Reset search
-			mSearch.setText("");
 			performSearch("");
-			// Request menu update
-			invalidateOptionsMenu();
+			// NOTE: This request menu update calls "onCreateOptionsMenu"
+			invalidateOptionsMenu();			
+			// Reset search
+			if (mSearch.length()>0)
+				mSearch.getText().clear();
+			mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);				
 			return true;
 		}
 		case (R.id.interactions_button): {
-			mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);
-			// Keep used database
+			// Switch to AIPS database				
+			mDatabaseUsed = "aips";	
 			mSearchInteractions = true;
 			// Update interaction basket
-			updateInteractionBasket();
-			// Reset and change search hint
-			if (mSearch!=null) {
-				mSearch.setText("");
-				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
-			}			
+			updateInteractionBasket();	
 			// Update webview		
 			String html_str = mMedInteractionBasket.getInteractionsHtml();			
 			mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
 			// Change view
-			setCurrentView(mShowView, true);				
+			setCurrentView(mShowView, true);
 			// Request menu update
 			invalidateOptionsMenu();
+			// Reset and change search hint
+			if (mSearch!=null) {
+				if (mSearch.length()>0)
+					mSearch.getText().clear();
+				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+			}				
+			mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);			
 			return true;
 		}
 		case (R.id.menu_pref2): {
@@ -1310,7 +1394,8 @@ public class MainActivity extends Activity {
 			mRestoringState = true;
 			// Reset and change search hint
 			if (mSearch != null) {
-				mSearch.setText("");
+				if (mSearch.length()>0)
+					mSearch.getText().clear();
 				mSearch.setHint(getString(R.string.search) + " " + getString(R.string.report_search));
 			}
 			// Load report from file
@@ -1323,10 +1408,10 @@ public class MainActivity extends Activity {
 			return true;
 		}
 		case (R.id.menu_pref3): {
-			mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
 			// Download new database (blocking call)
 			if (!mUpdateInProgress)
 				downloadUpdates();
+			mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);			
 			return true;
 		}
 		case (R.id.menu_share): {
@@ -1545,36 +1630,6 @@ public class MainActivity extends Activity {
 			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
 		}
 		return false;
-	}	
-	
-	/**
-	 * Sets action bar tab click listeners
-	 * @param actionBar
-	 */
-	private void setTabNavigation( ActionBar actionBar ) {
-		actionBar.removeAllTabs();
-		actionBar.setNavigationMode( ActionBar.NAVIGATION_MODE_TABS );
-		actionBar.setTitle(R.string.app_name);
-
-		Tab tab = actionBar.newTab().setText(R.string.tab_name_1)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_1)));
-		actionBar.addTab(tab);
-
-		tab = actionBar.newTab().setText(R.string.tab_name_2)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_2)));
-		actionBar.addTab(tab);
-
-		tab = actionBar.newTab().setText(R.string.tab_name_3)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_3)));
-		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_4)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_4)));
-		actionBar.addTab(tab);
-		
-		tab = actionBar.newTab().setText(R.string.tab_name_5)
-				.setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
-		actionBar.addTab(tab);
 	}	
 	
 	/**
@@ -1860,7 +1915,8 @@ public class MainActivity extends Activity {
 					if (m!=null && mSearchInteractions==false) {
 						// Reset and change search hint
 						if (mSearch!=null) {
-							mSearch.setText("");
+							if (mSearch.length()>0)
+								mSearch.getText().clear();
 							mSearch.setHint(getString(R.string.search) + " " + getString(R.string.full_text_search));
 						}							
 						// mHtmlString = createHtml(m.getStyle(), m.getContent());						
@@ -1906,7 +1962,8 @@ public class MainActivity extends Activity {
 						updateInteractionBasket();
 						// Reset and change search hint
 						if (mSearch!=null) {
-							mSearch.setText("");
+							if (mSearch.length()>0)
+								mSearch.getText().clear();
 							mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
 						}			
 						// Update webview
