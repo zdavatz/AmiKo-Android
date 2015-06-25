@@ -18,7 +18,7 @@
     <string name="pref_global_settings">Einstellungen</string>
     <string name="pref_search">Minimalsuche 2 Buchstaben</string>
 
-    <string name="aips_button">AIPS</string>
+    <string name="aips_button">Compendium</string>
     <string name="favorites_button">Favorites</string>	
 	
     <string name="menu_options">Optionen</string>    
