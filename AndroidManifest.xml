@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.ywesee.amiko.de"
-    android:versionCode="127"
-    android:versionName="1.2.7" >
+    package="com.ywesee.amiko.fr"
+    android:installLocation="auto"
+    android:versionCode="130"
+    android:versionName="1.3.0" >
 
     <uses-sdk
         android:minSdkVersion="14"

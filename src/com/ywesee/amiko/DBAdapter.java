@@ -264,7 +264,7 @@ public class DBAdapter {
 			mDb = mDbHelper.getReadableDatabase();
 			mNumRecords = getNumRecords();
 		} catch (SQLException sqle) {
-			Log.e(TAG, "open >> " + sqle.toString() + " with " + mNumRecords + "entries");
+			Log.e(TAG, "openSQLiteDB >> " + sqle.toString() + " with " + mNumRecords + " entries");
 			throw sqle;
 		}
 		return;

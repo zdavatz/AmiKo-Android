@@ -26,10 +26,12 @@ if (ywesee)
 
 7a. if (AMiKo) rename "strings.xml" to ".strings_fr.xml" and ".strings_de.xml" to "strings.xml"
 7b. if (CoMed) rename "strings.xml" to ".strings_de.xml" and ".strings_fr.xml" to "strings.xml"
+7c. splash_screen -> splash_screen_meddrugs, splash_screen_disitin -> splash_screen
 
 else if (meddrugs)
 
 7a. if (med-drugs) rename "strings.xml" to ".strings_med_fr.xml" and ".strings_med_de.xml" to "strings.xml"
 7b. if (med-drugs fr) rename "strings.xml" to ".strings_med_de.xml" and ".strings_med_fr.xml" to "strings.xml"
+7c. splash_screen -> splash_screen_desitin, splash_screen_meddrugs -> splash_screen
 
 end

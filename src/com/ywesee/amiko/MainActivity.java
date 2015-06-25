@@ -106,7 +106,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.fr.R;
 
 public class MainActivity extends Activity {
 
@@ -925,11 +925,15 @@ public class MainActivity extends Activity {
 	    	mMedInteractionBasket = new Interactions(MainActivity.this);
 	    	
 	    	// Show splashscreen while database is being initialized...
+	    	/*
 			if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
 					&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME)) {
 	    		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
 		    	showSplashScreen(true, dismissSplashAuto);
 			}
+			*/
+    		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
+	    	showSplashScreen(true, dismissSplashAuto);	    	
 		}
 				
 		@Override

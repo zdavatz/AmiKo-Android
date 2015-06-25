@@ -356,6 +356,18 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			mDataBase.close();
 		super.close();
 	}
+
+	/**
+	 * Called if database version is decreased
+ 	   Note: override on downgrade, default will throw exception, which is bad. 
+	 */	
+	@Override
+	public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		if (newVersion < oldVersion) {
+			if (Constants.DEBUG)
+				Log.d(TAG, "onDowngrade(): downgrading database from version " + oldVersion + " to version " + newVersion);
+		}
+	}
 	
 	/**
 	 * Called if database version is increased

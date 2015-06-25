@@ -21,6 +21,7 @@ package com.ywesee.amiko;
 
 
 public class Constants {
+	
 	public static final boolean DEBUG = false;
 	
 	public static final int SQLITE_DB_SIZE = 160000000;
@@ -32,13 +33,13 @@ public class Constants {
 	public static final String MEDDRUGS_FR_NAME = "med-drugs fr";	
 	
 	// --> Note: uncomment name of app to compile!
-	public static final String APP_NAME = AMIKO_NAME;
-	// public static final String APP_NAME = COMED_NAME;
+	// public static final String APP_NAME = AMIKO_NAME;
+	public static final String APP_NAME = COMED_NAME;
 	// public static final String APP_NAME = MEDDRUGS_NAME;
 	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
-	public static final String APP_VERSION = "1.2.7";
-	public static final String GEN_DATE = "30.07.2014";
-	public static final int DB_VERSION = 129; 	
+	public static final String APP_VERSION = "1.3.0";
+	public static final String GEN_DATE = "20.06.2015";
+	public static final int DB_VERSION = 130; 	
 	
 	/** Release history
 	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
@@ -55,6 +56,7 @@ public class Constants {
      *  25/02/2014 - AmiKo/CoMed Release = 1.2.5, Database = 128 (med-drugs release)
      *  29/07/2014 - AmiKo/CoMed Release = 1.2.6, Database = 129 (interactions)
      *  30/07/2014 - AmiKo/CoMed Release = 1.2.7, Database = 129 (interactions)
+     *  06/10/2014 - AmiKo/CoMed Release = 1.2.8, Database = 130 (shopping)
 	*/
 	
 	/**

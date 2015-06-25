@@ -20,6 +20,7 @@
 
     <string name="aips_button">Compendium</string>
     <string name="favorites_button">Favorites</string>	
+	<string name="interactions_button">Interactions</string>
 	
     <string name="menu_options">Optionen</string>    
     <string name="menu_pref1">min. 2 paragraphes  </string>
@@ -34,12 +35,12 @@
     <string name="search">Recherche</string>
     <string name="tab_name_1">Spécialité</string>
     <string name="tab_name_2">Titulaire</string>
-    <string name="tab_name_4">Code ATC</string>
-    <string name="tab_name_3">N° Enreg</string>
-    <string name="tab_name_5">Pr. Active</string>
-    <string name="tab_name_6">Thérapie</string>
+    <string name="tab_name_3">Pr.Act./ATC</string>
+    <string name="tab_name_4">N° Enreg</string>
+    <string name="tab_name_5">Thérapie</string>
     <string name="full_text_search">la notice Infopro</string>
     <string name="report_search">A propos</string>
+    <string name="interactions_search">interactions</string>
     
     <string name="drawer_open">Drawer open</string>
     <string name="drawer_close">Drawer close</string>	

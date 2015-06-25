@@ -35,12 +35,12 @@
     <string name="search">Suche</string>
     <string name="tab_name_1">Präparat</string>
     <string name="tab_name_2">Inhaber</string>
-    <string name="tab_name_3">Reg.Nr.</string>
-    <string name="tab_name_4">ATC Code</string>
-    <string name="tab_name_5">Wirkstoff</string>
-    <string name="tab_name_6">Therapie</string>
+    <string name="tab_name_3">Wirk./ATC</string>
+    <string name="tab_name_4">Reg.Nr.</string>
+    <string name="tab_name_5">Therapie</string>
     <string name="full_text_search">in Fachinfo</string>
     <string name="report_search">in Error Report</string>
+    <string name="interactions_search">in Interaktionen</string>
     
     <string name="drawer_open">Drawer open</string>
     <string name="drawer_close">Drawer close</string>
