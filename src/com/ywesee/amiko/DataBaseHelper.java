@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,9 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -71,6 +72,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mInteractionsName = Constants.appInteractionsFile();
 		// Initialize persistant storage where databases will go
 		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
+		File db_path = new File(mDBPath);
+		if (!db_path.exists())
+			db_path.mkdir();
 	}
 	
 	/**
@@ -107,7 +111,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 		
 	public boolean checkAllFilesExists() {
-		return (checkFileExistsAtPath(mDBName, mDBPath) && 
+		return (/* checkFileExistsAtPath(mDBName, mDBPath) && */
 				checkFileExistsAtPath(mReportName, mDBPath) &&
 				checkFileExistsAtPath(mInteractionsName, mDBPath));
 	}
@@ -115,14 +119,16 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */	
-	public void copyFilesFromAssetFolder() throws IOException {
-		// If database does not exist, copy it from assets folder		
+	public void copyFilesFromNonPersistentFolder() throws IOException {
+		/** Might be used for a compact database which will be shipped with the app.
+		 *  Currently unused. Main DB needs to be downloaded when app started for the first time.
+		 *  
 		if (!checkFileExistsAtPath(mDBName, mDBPath)) {
-		// if (checkFileExistsAtPath(mDBName, mDBPath)) {  // Used only for debugging purposes!
 			this.getReadableDatabase();
 			this.close();
 			try {
-				// Copy SQLite database from assets
+				// Copy SQLite database from external storage
+				// copyFileFromExternalStorageToPath(mDBName, Utilities.expansionFileDir(mContext.getPackageName()), mDBPath);
 				copyFileFromAssetsToPath(mDBName, mDBPath);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
@@ -130,6 +136,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				throw new Error("Error copying database!");
 			}
 		}
+		*/
 		if (!checkFileExistsAtPath(mReportName, mDBPath)) {
 			try {
 				// Copy report file from assets
@@ -152,17 +159,46 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			
 		}
 	}
-		
+	
+	/**
+	 * Copy file from external storage to system folder (persistant storage), 
+	 * from where it can be accessed and handled. This is done by transferring a byte stream.
+	 */
+	private void copyFileFromExternalStorageToPath(String fileName, String srcPath, String dstPath) throws IOException {
+		if (mContext!=null && !mContext.getPackageName().isEmpty()) {
+			// Check if file exists
+			File srcFile = new File(srcPath + "/" + fileName);
+			if (srcFile.exists()) {
+				InputStream mInput = new FileInputStream(srcFile);
+				OutputStream mOutput = new FileOutputStream(dstPath + "/" + fileName);
+				
+				// Transfer bytes from input to output
+				byte[] mBuffer = new byte[1024];
+				int mLength;
+				while ((mLength = mInput.read(mBuffer))>0) {
+					mOutput.write(mBuffer, 0, mLength);				
+				}
+				
+				// Close streams
+				mOutput.flush();
+				mOutput.close();
+				mInput.close();
+			}
+		}
+	}
+	
 	/**
      * Copies file from local assets-folder to system folder (persistant storage), 
      * from where it can be accessed and handled. This is done by transferring bytestream.
 	 * @param srcFile
 	 * @param dstPath
 	 */
-	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {
+	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {		
+		// Log.d(TAG, "Copying file " + mReportName + " to " + mDBPath);
+		
 		// Open shipped database from assets folder
 		InputStream mInput = mContext.getAssets().open(srcFile);
-		OutputStream mOutput = new FileOutputStream(dstPath+srcFile);
+		OutputStream mOutput = new FileOutputStream(dstPath + srcFile);
 		
 		// Transfer bytes from input to output
 		byte[] mBuffer = new byte[1024];
@@ -199,9 +235,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			int bytesRead = -1;
 			
 			try {
-				// Chmod src file
-				chmod(srcFile, 755);
-				// 
+				Utilities.chmod(srcFile, 755);
 				InputStream is = new FileInputStream(srcFile);
 				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
 				ZipEntry ze;
@@ -228,21 +262,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 		}
 	}
-	
-	/**
-	 * Utility function: implements chmod using reflection pattern
-	 * @param path
-	 * @param mode
-	 * @return
-	 * @throws Exception
-	 */
-	private int chmod(String path, int mode) throws Exception {
-		Class<?> fileUtils = Class.forName("android.os.FileUtils");
-		Method setPermissions = 
-				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
-		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
-	}
-	
+		
 	/**
 	 * Utility function: reads csv file as formatted by EPha.ch
 	 * @param filename
@@ -276,6 +296,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 */
 	public boolean openDataBase() throws SQLException {
 		String mPath = mDBPath + mDBName;
+		File db_path = new File(mPath);
+		if (!db_path.exists())
+			return false;
 		try {
 			mDataBase = SQLiteDatabase.openDatabase(mPath,  null, SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLException sqle ) {

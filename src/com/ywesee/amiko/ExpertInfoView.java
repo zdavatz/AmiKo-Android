@@ -1,15 +1,16 @@
 package com.ywesee.amiko;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
+import android.util.Log;
 import android.webkit.WebSettings;
 import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class ExpertInfoView {
-
-	private static final String TAG = "ExpertInfoView";
 	
 	private WebView mWebView = null;
 	private JSInterface mJSInterface = null;
@@ -79,9 +80,15 @@ public class ExpertInfoView {
 				
 	    @Override
 	    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+	    	if (url.startsWith("https://github.com/")) {
+	    		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+	    		mContext.startActivity(intent);    		
+	    		return true;
+	    	}
+	    	// Otherwise
 	   	 	view.loadUrl(url);
 	   	 	view.requestFocus();
-	    	return true;
+	    	return false;
 	    }
 	    
 	    @Override

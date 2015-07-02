@@ -111,8 +111,7 @@ public class DBAdapter {
 	public int getSizeZippedFile(String zipFile) {
 		ZipEntry ze = null;
 		try {
-			// Chmod src file
-			chmod(zipFile, 755);
+			Utilities.chmod(zipFile, 755);
 			InputStream is = new FileInputStream(zipFile);
 			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));		
 			ze = zis.getNextEntry();
@@ -140,20 +139,6 @@ public class DBAdapter {
 		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 				+ "/" + Constants.appZippedInteractionsFile() );
 	}
-	
-	/**
-	 * Implements chmod using reflection pattern
-	 * @param path
-	 * @param mode
-	 * @return
-	 * @throws Exception
-	 */
-	private int chmod(String path, int mode) throws Exception {
-		Class<?> fileUtils = Class.forName("android.os.FileUtils");
-		Method setPermissions = 
-				fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
-		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
-	}	
 	
 	/**
 	 * 
@@ -207,7 +192,8 @@ public class DBAdapter {
 	public void create() throws IOException {
 		try {
 			if (!mDatabaseCreated) {
-				mDbHelper.copyFilesFromAssetFolder();
+				// Copies interactions db and report file
+				mDbHelper.copyFilesFromNonPersistentFolder();
 				mDatabaseCreated = true;
 			}
 			else {
@@ -257,17 +243,20 @@ public class DBAdapter {
 	 * Opens database and initializes number of stored records
 	 * @throws SQLException
 	 */
-	public void openSQLiteDB() throws SQLException {
+	public boolean openSQLiteDB() throws SQLException {
+		boolean success = false;
 		try {
-			mDbHelper.openDataBase();
-			mDbHelper.close();
-			mDb = mDbHelper.getReadableDatabase();
-			mNumRecords = getNumRecords();
+			success = mDbHelper.openDataBase();
+			if (success) {
+				mDbHelper.close();
+				mDb = mDbHelper.getReadableDatabase();
+				mNumRecords = getNumRecords();
+			}				
 		} catch (SQLException sqle) {
 			Log.e(TAG, "openSQLiteDB >> " + sqle.toString() + " with " + mNumRecords + " entries");
 			throw sqle;
 		}
-		return;
+		return success;
 	}
 	
 	/**

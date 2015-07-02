@@ -40,6 +40,7 @@ import android.annotation.TargetApi;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
@@ -106,7 +107,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.fr.R;
+import com.ywesee.amiko.de.R;
 
 public class MainActivity extends Activity {
 
@@ -194,6 +195,8 @@ public class MainActivity extends Activity {
 	private boolean mRestoringState = false;
 	// Global flag to signal that update is in progress
 	private boolean mUpdateInProgress = false;
+	// Global flag to signal if main db has been initialized
+	private boolean mSQLiteDBInitialized = false;
 	
 	// Splash screen dialog
 	private Dialog mSplashDialog = null; 
@@ -554,6 +557,9 @@ public class MainActivity extends Activity {
 		}
 	}
 		
+	/**
+	 * This function creates the main layout, called when splashscreen is over
+	 */
 	public void createMainLayout() {
 		// 
 		setContentView(R.layout.activity_main);
@@ -563,12 +569,13 @@ public class MainActivity extends Activity {
 		mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
 		mReportView = getLayoutInflater().inflate(R.layout.report_view, null);
 		
-		mCurrentView = mSuggestView;
+		// Sets current view
+		mCurrentView = mSuggestView;		
 		
 		// Setup webviews
 		setupReportView();
 		setFindListener(mReportWebView);	
-		setupGestureDetector(mReportWebView);	
+		setupGestureDetector(mReportWebView);			
 		
 		// Add views to viewholder
 		mViewHolder = (ViewGroup) findViewById(R.id.main_layout);		
@@ -690,13 +697,17 @@ public class MainActivity extends Activity {
 		Log.d(TAG, "OnCreate -> " + mActionName);
 		mActionName = getString(R.string.tab_name_1);
 		
-		// Load hashset containing registration numbers from persistent data store
+		/*
+		'getFilesDir' returns a java.io.File object representing the root directory
+		of the INTERNAL storage four the application from the current context.
+		*/
 		mFavoriteData = new DataStore(this.getFilesDir().toString());
+		// Load hashset containing registration numbers from persistent data store		
 		mFavoriteMedsSet = new HashSet<String>();
 		mFavoriteMedsSet = mFavoriteData.load();
 		
 		// Init toast object
-		mToastObject = new CustomToast(getApplicationContext());					
+		mToastObject = new CustomToast(this);					
 		
 		// Initialize download manager
 		mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
@@ -801,6 +812,25 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				showSoftKeyboard(100);
+				if (!mSQLiteDBInitialized) {
+					// Display message box asking people whether they want to download the DB from the ywesee server.
+					AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+					alert.setTitle("Datenbank");
+					alert.setMessage("AmiKo wurde installiert. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
+							"Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
+					alert.setPositiveButton("Ja", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {
+							// Starts download manager
+							downloadUpdates();
+						}
+					});
+					alert.setNegativeButton("Nein", new DialogInterface.OnClickListener() {
+						public void onClick(DialogInterface dialog, int whichButton) {					 
+							// Do nothing...
+						}
+					});
+					alert.show();
+				}
 			}
 		});
 		
@@ -919,40 +949,36 @@ public class MainActivity extends Activity {
 			// Do nothing
 		}		
 		
+		// Setup the task, invoked before task is executed
 		@Override
 		protected void onPreExecute() {						
+			// Initialize folders for databases
 	    	mMediDataSource = new DBAdapter(MainActivity.this);
 	    	mMedInteractionBasket = new Interactions(MainActivity.this);
-	    	
-	    	// Show splashscreen while database is being initialized...
-	    	/*
-			if (!Constants.APP_NAME.equals(Constants.MEDDRUGS_NAME) 
-					&& !Constants.APP_NAME.equals(Constants.MEDDRUGS_FR_NAME)) {
-	    		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
-		    	showSplashScreen(true, dismissSplashAuto);
-			}
-			*/
+	    	// Dismiss splashscreen once database is initialized
     		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
 	    	showSplashScreen(true, dismissSplashAuto);	    	
 		}
 				
+		// Used to perform background computation, invoked on the background UI thread
 		@Override
 		protected Void doInBackground(Void... voids) {  		    	   	
 	    	try {
-	    		// Creates database
-	    		mMediDataSource.create();
-	    		// Opens SQLite database
-	    		mMediDataSource.openSQLiteDB();	
+	    		// Creates all databases
+	    		mMediDataSource.create();   		
 	    	} catch( IOException e) {
-	    		Log.d(TAG, "Unable to create SQLite database!");
-	    		throw new Error("Unable to create SQLite database");
+	    		Log.d(TAG, "AsyncLoadDBTask: Unable to create database folders!");
+	    		throw new Error("AsyncLoadDBTask: Unable to create database folders");
 	    	}	 	
+    		// Opens SQLite database
+    		mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();	
 	   		// Open drug interactions csv file 
-	    	mMedInteractionBasket.loadCsv();
-
+	    	mMedInteractionBasket.loadCsv();	
+	    	
 			return null;
 		}
 							
+		// Used to clean up, invoked on UI thread after background computation ends
 		@Override
 		protected void onPostExecute(Void result) {			
 	    	if (dismissSplashAuto==false)
@@ -967,8 +993,7 @@ public class MainActivity extends Activity {
 	 */
 	private class AsyncInitDBTask extends AsyncTask<Void, Integer, Void> {
 		
-		// Progressbar
-		private ProgressDialog progressBar;
+		private ProgressDialog progressBar;	// Progressbar
 		private Context context;
 		private int fileType = -1;
 		
@@ -976,6 +1001,7 @@ public class MainActivity extends Activity {
 			this.context = context;
 		}
 		
+		// Setup the task, invoked before task is executed
 		@Override
 		protected void onPreExecute() {
 			if (Constants.DEBUG)
@@ -991,6 +1017,7 @@ public class MainActivity extends Activity {
 	        progressBar.show();
 		}
 		
+		// Used to perform background computation, invoked on the background UI thread		
 		@Override
 		protected Void doInBackground(Void... voids) {
 			if (Constants.DEBUG)
@@ -1032,13 +1059,14 @@ public class MainActivity extends Activity {
 			}	
 			
 			// Opens SQLite database
-			mMediDataSource.openSQLiteDB();
+			mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
 	   		// Open drug interactions csv file 
 	   		mMedInteractionBasket.loadCsv();
 			
 			return null;
 		}
 				
+		// Used to display any form of progress, invoked on UI thread after call of "publishProgress(Progress...)"
 		@Override
 		protected void onProgressUpdate(Integer... progress) {
 			super.onProgressUpdate(progress);
@@ -1054,6 +1082,7 @@ public class MainActivity extends Activity {
 			}
 		}
 				
+		// Used to clean up, invoked on UI thread after background computation ends		
 		@Override
 		protected void onPostExecute(Void result) {			
 			if (Constants.DEBUG) 
@@ -1084,6 +1113,7 @@ public class MainActivity extends Activity {
 			mSearchInProgress = false;
 		}
 
+		// Setup the task, invoked before task is executed
 		@Override
 		protected void onPreExecute() {
 			// Initialize progressbar
@@ -1095,6 +1125,7 @@ public class MainActivity extends Activity {
 	        	progressBar.show();
 		}
 		
+		// Used to perform background computation, invoked on the background UI thread	
 		@Override
 		protected Void doInBackground(String... search_key) {
 			// Do the expensive work in the background here
@@ -1113,6 +1144,13 @@ public class MainActivity extends Activity {
 			return null;
 		}	
 		
+		// Used to display any form of progress, invoked on UI thread after call of "publishProgress(Progress...)"
+		@Override
+		protected void onProgressUpdate(Void... progress_info) {
+			//
+		}
+		
+		// Used to clean up, invoked on UI thread after background computation ends		
 		@Override
 		protected void onPostExecute(Void r) {
 			if (medis!=null) {		
@@ -1121,11 +1159,6 @@ public class MainActivity extends Activity {
 			if (progressBar.isShowing())
 				progressBar.dismiss();			
 			mSearchInProgress = false;
-		}
-		
-		@Override
-		protected void onProgressUpdate(Void... progress_info) {
-			//
 		}
 	}	
 	
@@ -1579,8 +1612,7 @@ public class MainActivity extends Activity {
 			// File URIs
 			Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
 			Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
-			Uri interactionsUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedInteractionsFile());
-			
+			Uri interactionsUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedInteractionsFile());			
 			// NOTE: the default download destination is a shared volume where the system might delete your file if 
 			// it needs to reclaim space for system use
 			DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
@@ -1603,14 +1635,19 @@ public class MainActivity extends Activity {
 			requestReport.setDescription("Updating the AmiKo error report.");
 			requestInteractions.setDescription("Updating the AmiKo drug interactions.");
 			// Set local destination to standard directory (place where files downloaded by the user are placed)
-			requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
+			/*
+			String main_expansion_file_path = Utilities.expansionFileDir(getPackageName());
+			requestDatabase.setDestinationInExternalPublicDir(main_expansion_file_path, Constants.appZippedDatabase());
+			*/
+			requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());			
 			requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
 			requestInteractions.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedInteractionsFile());	        
-			// Check if file exist, if yes, delete it 
-			deleteDownloadedFile(Constants.appZippedDatabase());
-			deleteDownloadedFile(Constants.appReportFile());
-			deleteDownloadedFile(Constants.appZippedInteractionsFile());
-			
+			// Check if file exist on non persistent store. If yes, delete it.
+			if (Utilities.isExternalStorageReadable() && Utilities.isExternalStorageWritable()) {
+				Utilities.deleteFile(Constants.appZippedDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+				Utilities.deleteFile(Constants.appReportFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+				Utilities.deleteFile(Constants.appZippedInteractionsFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));		
+			}
 			// The downloadId is unique across the system. It is used to make future calls related to this download.
 			mDatabaseId = mDownloadManager.enqueue(requestDatabase);
 			mReportId = mDownloadManager.enqueue(requestReport);
@@ -1619,22 +1656,6 @@ public class MainActivity extends Activity {
 			// Display error report
 		}
 	}
-		
-	/**
-	 * Checks if file exists and deletes
-	 */
-	private boolean deleteDownloadedFile(String fileName) {
-		File filePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-		File file = new File(filePath, fileName);
-		if (file.exists()) {
-			boolean ret = file.delete();
-			Log.d(TAG, "Downloaded file found and deleted. Return code = " + ret);
-			return ret;
-		} else {
-			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
-		}
-		return false;
-	}	
 	
 	/**
 	 * Implements view holder design pattern
