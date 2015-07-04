@@ -300,7 +300,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		if (!db_path.exists())
 			return false;
 		try {
-			mDataBase = SQLiteDatabase.openDatabase(mPath,  null, SQLiteDatabase.OPEN_READONLY);
+			mDataBase = SQLiteDatabase.openDatabase(mPath, null, SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLException sqle ) {
 			Log.e(TAG, "open >> " + mPath + " / " + sqle.toString());
 			throw sqle;

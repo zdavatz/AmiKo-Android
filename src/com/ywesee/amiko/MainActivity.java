@@ -218,7 +218,7 @@ public class MainActivity extends Activity {
 	 * Show soft keyboard
 	 */
 	private void showSoftKeyboard(int duration) {
-		mSearch.requestFocus();		
+		mSearch.requestFocus();	
 		mSearch.postDelayed(new Runnable() {
             @Override
             public void run() {        	
@@ -243,6 +243,39 @@ public class MainActivity extends Activity {
         			imm.hideSoftInputFromWindow(mSearch.getWindowToken(), InputMethodManager.HIDE_IMPLICIT_ONLY); 
             }			
 		}, duration);
+	}
+	
+	private void showDownloadAlert() {
+		// Display message box asking people whether they want to download the DB from the ywesee server.
+		AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+		alert.setIcon(R.drawable.desitin_icon);
+		if (Constants.appLanguage().equals("de")) {
+			alert.setTitle("Medikamentendatenbank");
+			alert.setMessage("AmiKo wurde installiert. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
+					"Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
+		} else if (Constants.appLanguage().equals("fr")) {
+			alert.setTitle("Banque de données des médicaments");
+			alert.setMessage("L'installation de la nouvelle version de CoMed s'est déroulée. Vous avez tout intérêt de mettre à jour " +
+					"votre banque de données (env. 50 MB). D'ailleurs vous pouvez utiliser le download à tout moment si vous désirez.");
+		}
+		String yes = "Ja";
+		String no = "Nein";
+		if (Constants.appLanguage().equals("fr")) {
+			yes = "Oui";
+			no = "Non";
+		}					
+		alert.setPositiveButton(yes, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {
+				// Starts download manager
+				downloadUpdates();
+			}
+		});
+		alert.setNegativeButton(no, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int whichButton) {					 
+				// Do nothing...
+			}
+		});
+		alert.show();
 	}
 	
 	@Override
@@ -748,7 +781,7 @@ public class MainActivity extends Activity {
 		};
         registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 	}
-		
+	
 	/**
 	 * 
 	 */
@@ -813,23 +846,11 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				showSoftKeyboard(100);
 				if (!mSQLiteDBInitialized) {
-					// Display message box asking people whether they want to download the DB from the ywesee server.
-					AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-					alert.setTitle("Datenbank");
-					alert.setMessage("AmiKo wurde installiert. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
-							"Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
-					alert.setPositiveButton("Ja", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int whichButton) {
-							// Starts download manager
-							downloadUpdates();
+					runOnUiThread(new Runnable() {      
+						public void run() {
+							showDownloadAlert();
 						}
 					});
-					alert.setNegativeButton("Nein", new DialogInterface.OnClickListener() {
-						public void onClick(DialogInterface dialog, int whichButton) {					 
-							// Do nothing...
-						}
-					});
-					alert.show();
 				}
 			}
 		});
@@ -849,6 +870,16 @@ public class MainActivity extends Activity {
 			@Override
 			public void afterTextChanged(Editable s) {	
 				String text = mSearch.getText().toString();
+				if (text.length()>0) {
+					if (!mSQLiteDBInitialized) {
+						runOnUiThread(new Runnable() {      
+							public void run() {
+								showDownloadAlert();
+							}
+						});
+						return;
+					}	
+				}				
 				if (!mRestoringState) {
 					if (text.length()>0)
 						performSearch(text);
@@ -1092,7 +1123,8 @@ public class MainActivity extends Activity {
 			// Reset view
 			resetView(true);
 			// Friendly message
-			mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
+			if (mSQLiteDBInitialized)
+				mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
 		}
 	}
 	
@@ -2138,7 +2170,7 @@ public class MainActivity extends Activity {
 	 * back button to go back in history if there is page available for display
 	 */
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	public boolean onKeyDown(int keyCode, KeyEvent event) {		
 		if (mWebView!=null ) {
 			if ((keyCode == KeyEvent.KEYCODE_BACK) && mWebView.canGoBack()) {
 				mWebView.goBack();
