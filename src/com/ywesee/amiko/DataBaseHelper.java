@@ -51,7 +51,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	private static String mDBName = "";
 	private static String mReportName = "";
 	private static String mInteractionsName = "";
-	private static String mDBPath = "";
+	private static String mAppDataDir = "";
 
 	private SQLiteDatabase mDataBase;
 	private Observer mObserver;
@@ -71,8 +71,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mReportName = Constants.appReportFile();
 		mInteractionsName = Constants.appInteractionsFile();
 		// Initialize persistant storage where databases will go
-		mDBPath = context.getApplicationInfo().dataDir + "/databases/";
-		File db_path = new File(mDBPath);
+		Log.d(TAG, "android version = " + android.os.Build.VERSION.SDK_INT);
+		mAppDataDir = context.getApplicationInfo().dataDir + "/databases/";
+		File db_path = new File(mAppDataDir);
 		if (!db_path.exists())
 			db_path.mkdir();
 	}
@@ -112,8 +113,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	public boolean checkAllFilesExists() {
 		return (/* checkFileExistsAtPath(mDBName, mDBPath) && */
-				checkFileExistsAtPath(mReportName, mDBPath) &&
-				checkFileExistsAtPath(mInteractionsName, mDBPath));
+				checkFileExistsAtPath(mReportName, mAppDataDir) &&
+				checkFileExistsAtPath(mInteractionsName, mAppDataDir));
 	}
 	
 	/**
@@ -137,20 +138,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 		}
 		*/
-		if (!checkFileExistsAtPath(mReportName, mDBPath)) {
+		if (!checkFileExistsAtPath(mReportName, mAppDataDir)) {
 			try {
 				// Copy report file from assets
-				copyFileFromAssetsToPath(mReportName, mDBPath);
+				copyFileFromAssetsToPath(mReportName, mAppDataDir);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): report file copied");
 			} catch (IOException e) {
 				throw new Error("Error copying report file!");
 			}
 		}
-		if (!checkFileExistsAtPath(mInteractionsName, mDBPath)) {
+		if (!checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
 			try {
 				// Copy report file from assets
-				copyFileFromAssetsToPath(mInteractionsName, mDBPath);
+				copyFileFromAssetsToPath(mInteractionsName, mAppDataDir);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): drug interactions file copied");
 			} catch (IOException e) {
@@ -235,7 +236,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			int bytesRead = -1;
 			
 			try {
-				Utilities.chmod(srcFile, 755);
+				// Utilities.chmod(srcFile, 755);
 				InputStream is = new FileInputStream(srcFile);
 				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
 				ZipEntry ze;
@@ -295,7 +296,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @throws SQLException
 	 */
 	public boolean openDataBase() throws SQLException {
-		String mPath = mDBPath + mDBName;
+		String mPath = mAppDataDir + mDBName;
 		File db_path = new File(mPath);
 		if (!db_path.exists())
 			return false;
@@ -312,7 +313,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * Opens drug interactions csv
 	 */
 	public Map<String,String> openInteractionsFile() {
-		String mPath = mDBPath + mInteractionsName;
+		String mPath = mAppDataDir + mInteractionsName;
 		return readFromCsvToMap( mPath );
 	}
 	
@@ -327,7 +328,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         	if (fileSize<0)
         		fileSize = Constants.SQLITE_DB_SIZE;
 			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mDBPath + mDBName, fileSize, true);
+			copyFileFromSrcToPath(srcFile, mAppDataDir + mDBName, fileSize, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
@@ -343,7 +344,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         	if (fileSize<0)
         		fileSize = Constants.INTERACTIONS_FILE_SIZE;			
 			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mDBPath + mInteractionsName, fileSize, true);
+			copyFileFromSrcToPath(srcFile, mAppDataDir + mInteractionsName, fileSize, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old drug interactions file overwritten");
 		} catch (IOException e) {
@@ -355,16 +356,16 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * 
 	 */
 	public long getSizeSQLiteDatabaseFile() {
-		if (checkFileExistsAtPath(mDBName, mDBPath)) {
-			File file = new File(mDBPath + mDBName);
+		if (checkFileExistsAtPath(mDBName, mAppDataDir)) {
+			File file = new File(mAppDataDir + mDBName);
 			return file.length();
 		}
 		return 0;
 	}	
 
 	public long getSizeInteractionsFile() {
-		if (checkFileExistsAtPath(mInteractionsName, mDBPath)) {
-			File file = new File(mDBPath + mInteractionsName);
+		if (checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
+			File file = new File(mAppDataDir + mInteractionsName);
 			return file.length();
 		}
 		return 0;
@@ -380,6 +381,21 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		super.close();
 	}
 
+	/**
+	 * Called when database is created for the first time
+	 */
+	@Override
+	public void onCreate(SQLiteDatabase db)	{
+		/*
+		try {
+	        db.execSQL("DROP TABLE IF EXISTS amikodb;");
+	        db.execSQL("CREATE TABLE amikodb (title, auth, atc, substances, style, content);");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		*/
+	}
+	
 	/**
 	 * Called if database version is decreased
  	   Note: override on downgrade, default will throw exception, which is bad. 
@@ -400,26 +416,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		if (oldVersion < newVersion) {
 			if (Constants.DEBUG)
 				Log.d(TAG, "onUpgrade(): upgrading database from version " + oldVersion + " to version " + newVersion);
+			/*
 			try { 
 				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
 			} catch (IOException e) { 
-				throw new Error("Error upgrading database");
+				throw new Error("Error upgrading database from version " + oldVersion + " to version " + newVersion);
 		    } 
+		    */
 		} 
-	}		
-		
-	/**
-	 * Called when database is created for the first time
-	 */
-	@Override
-	public void onCreate(SQLiteDatabase db)	{
-		/*
-		try {
-	        db.execSQL("DROP TABLE IF EXISTS amikodb;");
-	        db.execSQL("CREATE TABLE amikodb (title, auth, atc, substances, style, content);");
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		*/
-	}	
+	}			
 }

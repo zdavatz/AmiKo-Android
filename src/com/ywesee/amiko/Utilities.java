@@ -59,7 +59,7 @@ public class Utilities {
 	 * @return
 	 * @throws Exception
 	 */
-	public static int chmod(String path, int mode) throws Exception {
+	public static int chmod2(String path, int mode) throws Exception {
 		Class<?> fileUtils = Class.forName("android.os.FileUtils");
 		Method setPermissions = fileUtils.getMethod("setPermissions", String.class, int.class, int.class, int.class);
 		return (Integer) setPermissions.invoke(null, path, mode, -1, -1);
@@ -84,10 +84,9 @@ public class Utilities {
 			boolean ret = file.delete();
 			Log.d(TAG, "File " + fileName + " found and deleted. Return code = " + ret);
 			return ret;
-		} else {
+		} else
 			Log.d(TAG, "File " + filePath + "/" + fileName + " does not exists. No need to delete.");
-		}
-		return false;
+		return true;
 	}	
 	
 	public static String loadFromAssetsFolder(Context context, String file_name, String encoding) {

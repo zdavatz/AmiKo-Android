@@ -107,7 +107,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.fr.R;
 
 public class MainActivity extends Activity {
 
@@ -266,8 +266,8 @@ public class MainActivity extends Activity {
 		}					
 		alert.setPositiveButton(yes, new DialogInterface.OnClickListener() {
 			public void onClick(DialogInterface dialog, int whichButton) {
-				// Starts download manager
-				downloadUpdates();
+				if (!mUpdateInProgress)
+					downloadUpdates();
 			}
 		});
 		alert.setNegativeButton(no, new DialogInterface.OnClickListener() {
@@ -390,8 +390,7 @@ public class MainActivity extends Activity {
 		try {
 			ActionBar actionbar = (ActionBar) getActionBar();
 	        actionbar.selectTab(null);
-		} catch (Exception e) 
-		{
+		} catch (Exception e) {
 			// Do nothing
 		}
 		// Alternative -> removeAllTabs();
@@ -762,8 +761,8 @@ public class MainActivity extends Activity {
 							int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
 							// Check if download was successful
 							if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
-								// Update database
-								try {
+								try { 
+									// Update database
 									AsyncInitDBTask updateDBTask = new AsyncInitDBTask(MainActivity.this);						
 									updateDBTask.execute();		
 								} catch (Exception e) {
@@ -772,6 +771,8 @@ public class MainActivity extends Activity {
 								// Toast
 								mToastObject.show("Databases downloaded successfully. Installing...", Toast.LENGTH_SHORT);
 								mUpdateInProgress = false;
+							} else {
+						        mToastObject.show("Error while downloading database...", Toast.LENGTH_SHORT);
 							}
 						}
 						c.close();
@@ -986,7 +987,7 @@ public class MainActivity extends Activity {
 			// Initialize folders for databases
 	    	mMediDataSource = new DBAdapter(MainActivity.this);
 	    	mMedInteractionBasket = new Interactions(MainActivity.this);
-	    	// Dismiss splashscreen once database is initialized
+	    	// Dismiss splashscreen once database is initialized (as of Aug 2015, only report file and interactions file)
     		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
 	    	showSplashScreen(true, dismissSplashAuto);	    	
 		}
@@ -1065,24 +1066,24 @@ public class MainActivity extends Activity {
 				try {
 					// First, move report file to appropriate folder
 					mMediDataSource.copyReportFile();	
-				}
-				catch (IOException e) {
+				} catch (IOException e) {
 					Log.d(TAG, "Error copying report file!");
 				}       	
 			}
 			
+			// Add observer to totally unzipped bytes (for the progress bar)
+			mMediDataSource.addObserver(new Observer() {
+				@Override
+				@SuppressWarnings({"unchecked"})
+				public void update(Observable o, Object arg) {
+					// Method will call onProgressUpdate(Progress...)
+					fileType = ((List<Integer>)arg).get(1);
+					publishProgress(((List<Integer>)arg).get(0));
+				}
+			});
+
+			// Creates or overwrites database (if it already exists)
 			try {
-				// Add observer to totally unzipped bytes (for the progress bar)
-				mMediDataSource.addObserver(new Observer() {
-					@Override
-					@SuppressWarnings({"unchecked"})
-					public void update(Observable o, Object arg) {
-						// Method will call onProgressUpdate(Progress...)
-						fileType = ((List<Integer>)arg).get(1);
-						publishProgress(((List<Integer>)arg).get(0));
-					}
-				});
-				// Creates or overwrites database (if it already exists)
 				mMediDataSource.create();
 			} catch( IOException e) {
 				Log.d(TAG, "Unable to create database!");
@@ -1503,8 +1504,11 @@ public class MainActivity extends Activity {
 		    intent.setData(Uri.parse("market://details?id=com.ywesee.amiko.de"));
 		    if (myStartActivity(intent)==false) {
 		        // Market (Google play) app seems not installed, let's try to open a webbrowser
-		        intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.de"));
-		        if (myStartActivity(intent)==false) {
+				if (Constants.appLanguage().equals("de"))
+					intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.de"));
+				else if (Constants.appLanguage().equals("fr"))
+					intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.fr&hl=fr"));				
+				if (myStartActivity(intent)==false) {
 		            // Well if this also fails, we have run out of options, inform the user.
 		            mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
 		        }

@@ -25,7 +25,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +110,7 @@ public class DBAdapter {
 	public int getSizeZippedFile(String zipFile) {
 		ZipEntry ze = null;
 		try {
-			Utilities.chmod(zipFile, 755);
+			// Utilities.chmod(zipFile, 755);
 			InputStream is = new FileInputStream(zipFile);
 			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));		
 			ze = zis.getNextEntry();
@@ -147,8 +146,6 @@ public class DBAdapter {
 		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 				+ "/" + Constants.appReportFile();
 		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + Constants.appReportFile();
-		
-		Log.d(TAG, "Dst report file = " + dstReportFile);
 		
 		InputStream mInput = new FileInputStream(srcReportFile);
 		OutputStream mOutput = new FileOutputStream(dstReportFile);
@@ -192,11 +189,10 @@ public class DBAdapter {
 	public void create() throws IOException {
 		try {
 			if (!mDatabaseCreated) {
-				// Copies interactions db and report file
+				// Copies interactions db and report file from asset folder
 				mDbHelper.copyFilesFromNonPersistentFolder();
 				mDatabaseCreated = true;
-			}
-			else {
+			} else {
 				overwriteSQLiteDB();
 				overwriteInteractionsFile();
 			}
