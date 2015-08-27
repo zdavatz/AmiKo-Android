@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -107,7 +109,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.fr.R;
+import com.ywesee.amiko.de.R;
 
 public class MainActivity extends Activity {
 
@@ -184,7 +186,9 @@ public class MainActivity extends Activity {
 	// This is the global toast object
 	private CustomToast mToastObject = null;
 
+	// Downloadmanager related
 	private BroadcastReceiver mBroadcastReceiver;
+	private ProgressDialog mProgressBar;	
 	
 	// In-text-search hits counter
 	private TextView mSearchHitsCntView = null;
@@ -682,13 +686,18 @@ public class MainActivity extends Activity {
 	@Override
 	public void onPause() {
 		super.onPause();
-		unregisterReceiver(mBroadcastReceiver);
+		if (mBroadcastReceiver!=null)
+			unregisterReceiver(mBroadcastReceiver);
+        if (mProgressBar!=null && mProgressBar.isShowing())
+        	mProgressBar.dismiss();
 	}
 	
 	@Override
 	public void onResume() {
 		super.onResume();
-        registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+        if (mProgressBar!=null && mProgressBar.isShowing())		
+        	mProgressBar.dismiss();
+		registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 	}	
 	
 	/**
@@ -770,6 +779,8 @@ public class MainActivity extends Activity {
 								}			
 								// Toast
 								mToastObject.show("Databases downloaded successfully. Installing...", Toast.LENGTH_SHORT);
+	                        	if (mProgressBar.isShowing())
+	                        		mProgressBar.dismiss();
 								mUpdateInProgress = false;
 							} else {
 						        mToastObject.show("Error while downloading database...", Toast.LENGTH_SHORT);
@@ -1501,13 +1512,16 @@ public class MainActivity extends Activity {
 		case (R.id.menu_rate): {
 			Intent intent = new Intent(Intent.ACTION_VIEW);			
 		    // Try Google play
-		    intent.setData(Uri.parse("market://details?id=com.ywesee.amiko.de"));
+			String uri_str = "market://details?id=com.ywesee.amiko.de";
+			if (Constants.appLanguage().equals("fr"))
+				uri_str = "market://details?id=com.ywesee.amiko.fr";			
+		    intent.setData(Uri.parse(uri_str));
 		    if (myStartActivity(intent)==false) {
 		        // Market (Google play) app seems not installed, let's try to open a webbrowser
-				if (Constants.appLanguage().equals("de"))
-					intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.de"));
-				else if (Constants.appLanguage().equals("fr"))
-					intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=com.ywesee.amiko.fr&hl=fr"));				
+		    	uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.de";
+				if (Constants.appLanguage().equals("fr"))
+					uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.fr&hl=fr";			
+				intent.setData(Uri.parse(uri_str));				
 				if (myStartActivity(intent)==false) {
 		            // Well if this also fails, we have run out of options, inform the user.
 		            mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
@@ -1688,6 +1702,42 @@ public class MainActivity extends Activity {
 			mDatabaseId = mDownloadManager.enqueue(requestDatabase);
 			mReportId = mDownloadManager.enqueue(requestReport);
 			mInteractionsId = mDownloadManager.enqueue(requestInteractions);
+			
+			mProgressBar = new ProgressDialog(MainActivity.this);
+			mProgressBar.setMessage("Downloading SQLite database...");	       
+			mProgressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			mProgressBar.setProgress(0);
+			mProgressBar.setMax(100);
+			mProgressBar.setCancelable(false);
+			mProgressBar.show();
+	        
+			new Thread(new Runnable() {
+                @Override
+                public void run() {
+                	boolean downloading = true;
+                    while (downloading) {
+                    	DownloadManager.Query q = new DownloadManager.Query();
+	                    q.setFilterById(mDatabaseId); 
+	                    Cursor cursor = mDownloadManager.query(q);
+	                    cursor.moveToFirst();
+	                    int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+	                    int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                        if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                        	downloading = false;
+                        	if (mProgressBar.isShowing())
+                        		mProgressBar.dismiss();
+                        }
+                        final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
+		                runOnUiThread(new Runnable() {
+		                    @Override
+		                    public void run() {
+		                        mProgressBar.setProgress((int) dl_progress);
+		                    }
+		                });
+		                cursor.close();
+	                }
+                }
+			}).start();
 		} else {
 			// Display error report
 		}

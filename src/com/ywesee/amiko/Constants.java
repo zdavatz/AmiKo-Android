@@ -33,12 +33,12 @@ public class Constants {
 	public static final String MEDDRUGS_FR_NAME = "med-drugs fr";	
 	
 	// --> Note: uncomment name of app to compile!
-	// public static final String APP_NAME = AMIKO_NAME;
-	public static final String APP_NAME = COMED_NAME;
+	public static final String APP_NAME = AMIKO_NAME;
+	// public static final String APP_NAME = COMED_NAME;
 	// public static final String APP_NAME = MEDDRUGS_NAME;
 	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
-	public static final String APP_VERSION = "1.3.5";
-	public static final String GEN_DATE = "08.08.2015";
+	public static final String APP_VERSION = "1.3.7";
+	public static final String GEN_DATE = "19.08.2015";
 	public static final int DB_VERSION = 140; 	
 	
 	/** Release history
@@ -61,6 +61,7 @@ public class Constants {
      *  04/07/2015 - AmiKo/CoMed Release = 1.3.2, Database = 140 (main database not shipped, must be downloaded)
      *  02/08/2015 - AmiKo/CoMed Release = 1.3.3, Database = 140 (main database not shipped, must be downloaded)
      *  08/08/2015 - AmiKo/CoMed Release = 1.3.4, Database = 140 (main database not shipped, must be downloaded)
+     *  19/08/2015 - AmiKo/CoMed Release = 1.3.7, Database = 140 (main database not shipped, must be downloaded) 
 	*/
 	
 	/**
