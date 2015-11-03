@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,8 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -58,6 +57,7 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -113,7 +113,10 @@ import com.ywesee.amiko.de.R;
 
 public class MainActivity extends Activity {
 
-	private static final String TAG = "MainActivity";
+	private static final String TAG = "MainActivity";	
+	private static final String AMIKO_PREFS_FILE = "AmikoPrefsFile";
+	private static final String PREF_DB_UPDATE_DATE_DE = "GermanDBUpdateDate";
+	private static final String PREF_DB_UPDATE_DATE_FR = "FrenchDBUpdateDate";
 	
 	// German section title abbreviations
 	private static final String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen", 
@@ -249,17 +252,23 @@ public class MainActivity extends Activity {
 		}, duration);
 	}
 	
-	private void showDownloadAlert() {
+	private void showDownloadAlert(int install_type) {
 		// Display message box asking people whether they want to download the DB from the ywesee server.
 		AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
 		alert.setIcon(R.drawable.desitin_icon);
 		if (Constants.appLanguage().equals("de")) {
 			alert.setTitle("Medikamentendatenbank");
-			alert.setMessage("AmiKo wurde installiert. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
+			String message = "AmiKo wurde installiert.";
+			if (install_type==1) 
+				message = "Ihre Datenbank ist älter als 30 Tage.";
+			alert.setMessage(message + " Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
 					"Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
 		} else if (Constants.appLanguage().equals("fr")) {
 			alert.setTitle("Banque de données des médicaments");
-			alert.setMessage("L'installation de la nouvelle version de CoMed s'est déroulée. Vous avez tout intérêt de mettre à jour " +
+			String message = "L'installation de la nouvelle version de CoMed s'est déroulée.";
+			if (install_type==1)
+				message = "Votre banque de données est agée plus de 30 jours.";
+			alert.setMessage(message + " Vous avez tout intérêt de mettre à jour " +
 					"votre banque de données (env. 50 MB). D'ailleurs vous pouvez utiliser le download à tout moment si vous désirez.");
 		}
 		String yes = "Ja";
@@ -418,8 +427,7 @@ public class MainActivity extends Activity {
     		// Remove current view    		
     		if (mCurrentView!=null) {
 	    		if (withAnimation==true) {
-		    	    TranslateAnimation animate = 
-		    	    		new TranslateAnimation(0, direction*mCurrentView.getWidth(), 0, 0);
+		    	    TranslateAnimation animate = new TranslateAnimation(0, direction*mCurrentView.getWidth(), 0, 0);
 		    	    animate.setDuration(200);
 		    	    animate.setFillAfter(false);
 		    	    mCurrentView.startAnimation(animate);
@@ -429,8 +437,7 @@ public class MainActivity extends Activity {
     		// Add new view
         	if (newCurrentView!=null) {
         		if (withAnimation==true) {
-	    		    TranslateAnimation animate = 
-	    		    		new TranslateAnimation(-direction*newCurrentView.getWidth(), 0, 0, 0);
+	    		    TranslateAnimation animate = new TranslateAnimation(-direction*newCurrentView.getWidth(), 0, 0, 0);
 	    		    animate.setDuration(200);
 	    		    animate.setFillAfter(false);
 	    		    newCurrentView.startAnimation(animate);
@@ -683,6 +690,17 @@ public class MainActivity extends Activity {
 		resetView(false);
 	}
 			
+	private void checkTimeSinceLastUpdate() {
+		SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
+	    long timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
+	    long timeDiff = (System.currentTimeMillis()-timeMillisSince1970)/1000;
+	    // That's 30 days in seconds ;)
+	    if (timeDiff>60*60*24*30)
+	    	showDownloadAlert(1);
+	    if (Constants.DEBUG)
+	    	Log.d(TAG, "Time since last update: " + timeDiff + " sec");
+	}
+	
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -698,6 +716,8 @@ public class MainActivity extends Activity {
         if (mProgressBar!=null && mProgressBar.isShowing())		
         	mProgressBar.dismiss();
 		registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+		// Check time since last update
+		checkTimeSinceLastUpdate();
 	}	
 	
 	/**
@@ -708,8 +728,8 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		
 		try {
-			AsyncLoadDBTask initDBTask = new AsyncLoadDBTask(this);						
-			initDBTask.execute();		
+			AsyncLoadDBTask loadDBTask = new AsyncLoadDBTask(this);						
+			loadDBTask.execute();		
 		} catch (Exception e) {
 			Log.e(TAG, "AsyncLoadDBTask exception caught!");
 		}			
@@ -747,6 +767,30 @@ public class MainActivity extends Activity {
 		mFavoriteMedsSet = new HashSet<String>();
 		mFavoriteMedsSet = mFavoriteData.load();
 		
+		// Initialize preferences
+		SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
+		
+		long timeMillisSince1970 = 0;
+		if (Constants.appLanguage().equals("de")) {
+			timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
+			if (timeMillisSince1970==0) {
+		        SharedPreferences.Editor editor = settings.edit();
+		        editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+		        // Commit the edits!
+		        editor.commit();
+		    }
+		} else if (Constants.appLanguage().equals("fr")) {
+			timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_FR, 0);
+			if (timeMillisSince1970==0) {
+		        SharedPreferences.Editor editor = settings.edit();
+		        editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+		        // Commit the edits!
+		        editor.commit();
+		    }
+		}
+		
+		checkTimeSinceLastUpdate();
+	    
 		// Init toast object
 		mToastObject = new CustomToast(this);					
 		
@@ -772,16 +816,22 @@ public class MainActivity extends Activity {
 							if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
 								try { 
 									// Update database
-									AsyncInitDBTask updateDBTask = new AsyncInitDBTask(MainActivity.this);						
+									AsyncUpdateDBTask updateDBTask = new AsyncUpdateDBTask(MainActivity.this);						
 									updateDBTask.execute();		
 								} catch (Exception e) {
-									Log.e(TAG, "AsyncInitDBTask-update: exception caught!");
+									Log.e(TAG, "AsyncUpdateDBTask: exception caught!");
 								}			
 								// Toast
 								mToastObject.show("Databases downloaded successfully. Installing...", Toast.LENGTH_SHORT);
 	                        	if (mProgressBar.isShowing())
 	                        		mProgressBar.dismiss();
 								mUpdateInProgress = false;
+						    	// Store time stamp
+								SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
+						        SharedPreferences.Editor editor = settings.edit();
+						        editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+						        // Commit the edits!
+						        editor.commit();
 							} else {
 						        mToastObject.show("Error while downloading database...", Toast.LENGTH_SHORT);
 							}
@@ -860,7 +910,7 @@ public class MainActivity extends Activity {
 				if (!mSQLiteDBInitialized) {
 					runOnUiThread(new Runnable() {      
 						public void run() {
-							showDownloadAlert();
+							showDownloadAlert(0);
 						}
 					});
 				}
@@ -886,7 +936,7 @@ public class MainActivity extends Activity {
 					if (!mSQLiteDBInitialized) {
 						runOnUiThread(new Runnable() {      
 							public void run() {
-								showDownloadAlert();
+								showDownloadAlert(0);
 							}
 						});
 						return;
@@ -998,7 +1048,7 @@ public class MainActivity extends Activity {
 			// Initialize folders for databases
 	    	mMediDataSource = new DBAdapter(MainActivity.this);
 	    	mMedInteractionBasket = new Interactions(MainActivity.this);
-	    	// Dismiss splashscreen once database is initialized (as of Aug 2015, only report file and interactions file)
+	    	// Dismiss splashscreen once database is initialized
     		dismissSplashAuto = mMediDataSource.checkDatabasesExist();
 	    	showSplashScreen(true, dismissSplashAuto);	    	
 		}
@@ -1009,12 +1059,12 @@ public class MainActivity extends Activity {
 	    	try {
 	    		// Creates all databases
 	    		mMediDataSource.create();   		
+	    		// Opens SQLite database
+	    		mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
 	    	} catch( IOException e) {
 	    		Log.d(TAG, "AsyncLoadDBTask: Unable to create database folders!");
 	    		throw new Error("AsyncLoadDBTask: Unable to create database folders");
 	    	}	 	
-    		// Opens SQLite database
-    		mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();	
 	   		// Open drug interactions csv file 
 	    	mMedInteractionBasket.loadCsv();	
 	    	
@@ -1034,14 +1084,13 @@ public class MainActivity extends Activity {
 	 * @author Max
 	 *
 	 */
-	private class AsyncInitDBTask extends AsyncTask<Void, Integer, Void> {
+	private class AsyncUpdateDBTask extends AsyncTask<Void, Integer, Void> {
 		
 		private ProgressDialog progressBar;	// Progressbar
-		private Context context;
 		private int fileType = -1;
 		
-		public AsyncInitDBTask(Context context) {
-			this.context = context;
+		public AsyncUpdateDBTask(Context context) {
+			// Do nothing
 		}
 		
 		// Setup the task, invoked before task is executed
@@ -1066,41 +1115,40 @@ public class MainActivity extends Activity {
 			if (Constants.DEBUG)
 				Log.d(TAG, "doInBackground: open/overwrite database");
 			
-			// Case 1: mMediDataSource is not initialized 
 			// Creates, opens or overwrites database (singleton)
-			// TODO: there is only one database, so implement proper singleton pattern (getInstance())
 			if (mMediDataSource==null) {
-				mMediDataSource = new DBAdapter(this.context);
+				mMediDataSource = new DBAdapter(MainActivity.this);
 			} else {
 				// Case 2: mMediDataSource is initialized
 				// Database adapter already exists, reuse it!
 				try {
 					// First, move report file to appropriate folder
 					mMediDataSource.copyReportFile();	
-				} catch (IOException e) {
+				}
+				catch (IOException e) {
 					Log.d(TAG, "Error copying report file!");
 				}       	
 			}
 			
-			// Add observer to totally unzipped bytes (for the progress bar)
-			mMediDataSource.addObserver(new Observer() {
-				@Override
-				@SuppressWarnings({"unchecked"})
-				public void update(Observable o, Object arg) {
-					// Method will call onProgressUpdate(Progress...)
-					fileType = ((List<Integer>)arg).get(1);
-					publishProgress(((List<Integer>)arg).get(0));
-				}
-			});
-
-			// Creates or overwrites database (if it already exists)
 			try {
-				mMediDataSource.create();
-			} catch( IOException e) {
+				// Attach observer to totally unzipped bytes (for the progress bar)
+				mMediDataSource.addObserver(new Observer() {
+					@Override
+					@SuppressWarnings({"unchecked"})
+					public void update(Observable o, Object arg) {
+						// Method will call onProgressUpdate(Progress...)
+						fileType = ((List<Integer>)arg).get(1);
+						publishProgress(((List<Integer>)arg).get(0));
+					}
+				});
+				// Creates database, interactions, and report file 
+				// or overwrites them if they already exists
+				mMediDataSource.create();			
+			} catch(IOException e) {
 				Log.d(TAG, "Unable to create database!");
 				throw new Error("Unable to create database");
-			}	
-			
+			}
+
 			// Opens SQLite database
 			mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
 	   		// Open drug interactions csv file 

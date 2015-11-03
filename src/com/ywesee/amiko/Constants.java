@@ -22,7 +22,7 @@ package com.ywesee.amiko;
 
 public class Constants {
 	
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	public static final int SQLITE_DB_SIZE = 160000000;
 	public static final int INTERACTIONS_FILE_SIZE = 10000000;
@@ -37,8 +37,8 @@ public class Constants {
 	// public static final String APP_NAME = COMED_NAME;
 	// public static final String APP_NAME = MEDDRUGS_NAME;
 	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
-	public static final String APP_VERSION = "1.3.7";
-	public static final String GEN_DATE = "19.08.2015";
+	public static final String APP_VERSION = "1.3.8";
+	public static final String GEN_DATE = "01.11.2015";
 	public static final int DB_VERSION = 140; 	
 	
 	/** Release history

@@ -42,13 +42,14 @@ import android.content.DialogInterface;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 		
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 
-	private static String mDBName = "";
+	private static String mMainDBName = "";
 	private static String mReportName = "";
 	private static String mInteractionsName = "";
 	private static String mAppDataDir = "";
@@ -67,11 +68,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
 		this.mContext = context;		
 		// Initialize all databases and related files
-		mDBName = Constants.appDatabase();
+		mMainDBName = Constants.appDatabase();
 		mReportName = Constants.appReportFile();
 		mInteractionsName = Constants.appInteractionsFile();
 		// Initialize persistant storage where databases will go
-		Log.d(TAG, "android version = " + android.os.Build.VERSION.SDK_INT);
+		Log.d(TAG, "Android version = " + android.os.Build.VERSION.SDK_INT);
 		mAppDataDir = context.getApplicationInfo().dataDir + "/databases/";
 		File db_path = new File(mAppDataDir);
 		if (!db_path.exists())
@@ -112,7 +113,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 		
 	public boolean checkAllFilesExists() {
-		return (/* checkFileExistsAtPath(mDBName, mDBPath) && */
+		return (checkFileExistsAtPath(mMainDBName, mAppDataDir) &&
 				checkFileExistsAtPath(mReportName, mAppDataDir) &&
 				checkFileExistsAtPath(mInteractionsName, mAppDataDir));
 	}
@@ -121,23 +122,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */	
 	public void copyFilesFromNonPersistentFolder() throws IOException {
-		/** Might be used for a compact database which will be shipped with the app.
-		 *  Currently unused. Main DB needs to be downloaded when app started for the first time.
-		 *  
-		if (!checkFileExistsAtPath(mDBName, mDBPath)) {
+		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
+			/*
 			this.getReadableDatabase();
 			this.close();
+			*/
+			// Copy SQLite database from external storage
 			try {
-				// Copy SQLite database from external storage
-				// copyFileFromExternalStorageToPath(mDBName, Utilities.expansionFileDir(mContext.getPackageName()), mDBPath);
-				copyFileFromAssetsToPath(mDBName, mDBPath);
+				copyFileFromAssetsToPath(mMainDBName, mAppDataDir);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
 				throw new Error("Error copying database!");
 			}
 		}
-		*/
 		if (!checkFileExistsAtPath(mReportName, mAppDataDir)) {
 			try {
 				// Copy report file from assets
@@ -195,7 +193,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @param dstPath
 	 */
 	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {		
-		// Log.d(TAG, "Copying file " + mReportName + " to " + mDBPath);
+		Log.d(TAG, "Copying file " + srcFile + " to " + dstPath);
 		
 		// Open shipped database from assets folder
 		InputStream mInput = mContext.getAssets().open(srcFile);
@@ -296,11 +294,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * @throws SQLException
 	 */
 	public boolean openDataBase() throws SQLException {
-		String mPath = mAppDataDir + mDBName;
+		String mPath = mAppDataDir + mMainDBName;
 		File db_path = new File(mPath);
 		if (!db_path.exists())
 			return false;
 		try {
+			Log.d(TAG, "opening database " + mPath + "...");
 			mDataBase = SQLiteDatabase.openDatabase(mPath, null, SQLiteDatabase.OPEN_READONLY);
 		} catch (SQLException sqle ) {
 			Log.e(TAG, "open >> " + mPath + " / " + sqle.toString());
@@ -321,14 +320,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * Overwrite database
 	 */
 	public void overwriteSQLiteDataBase(String srcFile, int fileSize) throws IOException {
-		getReadableDatabase();
-		// Close database
-		close();
+		/*
+		this.getReadableDatabase();
+		this.close();
+		*/
 		try {
         	if (fileSize<0)
         		fileSize = Constants.SQLITE_DB_SIZE;
 			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mAppDataDir + mDBName, fileSize, true);
+			copyFileFromSrcToPath(srcFile, mAppDataDir + mMainDBName, fileSize, true);
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
@@ -356,8 +356,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * 
 	 */
 	public long getSizeSQLiteDatabaseFile() {
-		if (checkFileExistsAtPath(mDBName, mAppDataDir)) {
-			File file = new File(mAppDataDir + mDBName);
+		if (checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
+			File file = new File(mAppDataDir + mMainDBName);
 			return file.length();
 		}
 		return 0;

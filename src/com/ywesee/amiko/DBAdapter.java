@@ -274,7 +274,7 @@ public class DBAdapter {
 			mCursor.moveToNext();
 			return mCursor.getInt(0);
 		} catch (Exception e) {
-			Log.e(TAG, "exception thrown while getting number of records in database.");
+			Log.e(TAG, "DBAdapter: exception thrown while getting number of records in database.");
 			return 0;
 		}
 	}
