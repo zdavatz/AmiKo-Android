@@ -17,8 +17,13 @@ in Constants.java select APP_NAME, set APP_VERSION, GEN_DATE and DB_VERSION
 in AndroidManifest.xml increase versionName (=APP_VERSION in Constants.java)
 
 #### 4b. Launch Icon Desitin
-change android:icon to @drawable/ic_launcher
+change android:icon to @drawable/ic_launcher  
 
+in these locations:
+```
+res/layout/splash_screen.xml  
+res/values/styles.xml
+```
 #### 4b. Launch Icon med-drugs 
 change android:icon to @drawable/ic_launcher_med
 
