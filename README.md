@@ -37,11 +37,11 @@ change android:icon to `@drawable/ic_launcher_med`
 6b. if (CoMed, med-drugs fr) rename "amiko_db_full_idx_de.db" to "`.amiko_db_full_idx_de.db`"
 
 #### 7. strings.xml Desitin
-7a. if (AMiKo) rename "strings.xml" to "`.strings_fr.xml`" and ".strings_de.xml" to "`strings.xml`"  
-7b. if (CoMed) rename "strings.xml" to "`.strings_de.xml`" and ".strings_fr.xml" to "`strings.xml`"  
+7a. if (AMiKo) rename "strings.xml" to "`.strings_de.xml`" and ".strings_de.xml" to "`strings.xml`"  
+7b. if (CoMed) rename "strings.xml" to "`.strings_fr.xml`" and ".strings_fr.xml" to "`strings.xml`"  
 7c. splash_screen -> `splash_screen_meddrugs`, splash_screen_desitin -> `splash_screen`
 
 #### 8. strings.xml med-drugs
-8a. if (med-drugs) rename "strings.xml" to "`.strings_med_fr.xml`" and ".strings_med_de.xml" to "`strings.xml`"  
-8b. if (med-drugs fr) rename "strings.xml" to "`.strings_med_de.xml`" and ".strings_med_fr.xml" to "`strings.xml`"  
+8a. if (med-drugs) rename "strings.xml" to "`.strings_med_de.xml`" and ".strings_med_de.xml" to "`strings.xml`"  
+8b. if (med-drugs fr) rename "strings.xml" to "`.strings_med_fr.xml`" and ".strings_med_fr.xml" to "`strings.xml`"  
 8c. splash_screen -> `splash_screen_desitin`, splash_screen_meddrugs -> `splash_screen`
