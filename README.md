@@ -1,11 +1,13 @@
 AmiKo-Android
 =============
 
-AmiKo for Android setup for Intellij
-
+### AmiKo for Android setup for Intellij
+```
 1. copy databases to AMiKo assets folder (overwrite old ones)
+Download DB from here: http://pillbox.oddb.org/amiko_db_full_idx_de.zip
 
 2. copy amiko_report.html from XmlParse folder to AMiKo (adapt version number first!)
+Download Report file from here: http://pillbox.oddb.org/amiko_report_de.html
 
 3. in Constants.java select APP_NAME, set APP_VERSION, GEN_DATE and DB_VERSION
 
@@ -40,4 +42,4 @@ else if (meddrugs)
 7c. splash_screen -> splash_screen_desitin, splash_screen_meddrugs -> splash_screen
 
 end
-
+```
