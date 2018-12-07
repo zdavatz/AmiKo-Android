@@ -4,11 +4,15 @@
 
 #### 1. Database
 copy databases to AMiKo `assets` folder (overwrite old ones)  
-Download: http://pillbox.oddb.org/amiko_db_full_idx_de.zip
+Download  
+DE: http://pillbox.oddb.org/amiko_db_full_idx_de.zip (AmiKo)
+FR: http://pillbox.oddb.org/amiko_db_full_idx_fr.zip (CoMed)
 
 #### 2. Report File
 copy amiko_report.html to AMiKo `assets` folder (adapt version number first!)  
-Download: http://pillbox.oddb.org/amiko_report_de.html
+Download: 
+DE: http://pillbox.oddb.org/amiko_report_de.html (AmiKo)
+FR: http://pillbox.oddb.org/amiko_report_fr.html (CoMed)
 
 #### 3. Constants.java
 in `Constants.java` select `APP_NAME`, set `APP_VERSION`, `GEN_DATE` and `DB_VERSION`  
