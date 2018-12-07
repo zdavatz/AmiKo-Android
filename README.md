@@ -3,18 +3,19 @@
 ### Setup for Intellij
 
 #### 1. Database
-copy databases to AMiKo assets folder (overwrite old ones)
-Download DB from here: http://pillbox.oddb.org/amiko_db_full_idx_de.zip
+copy databases to AMiKo `assets` folder (overwrite old ones)  
+Download: http://pillbox.oddb.org/amiko_db_full_idx_de.zip
 
 #### 2. Report File
-copy amiko_report.html from XmlParse folder to AMiKo (adapt version number first!)
-Download Report file from here: http://pillbox.oddb.org/amiko_report_de.html
+copy amiko_report.html to AMiKo `assets` folder (adapt version number first!)  
+Download: http://pillbox.oddb.org/amiko_report_de.html
 
 #### 3. Constants.java
-in Constants.java select APP_NAME, set APP_VERSION, GEN_DATE and DB_VERSION
+in `Constants.java` select `APP_NAME`, set `APP_VERSION`, `GEN_DATE` and `DB_VERSION`  
+to build with Intellij this does not have to change.
 
 #### 4a. AndroidManifest.xml
-in AndroidManifest.xml increase versionName (=APP_VERSION in Constants.java)
+in `AndroidManifest.xml` increase versionName (=APP_VERSION in `Constants.java`)
 
 #### 4b. Launch Icon Desitin
 change android:icon to @drawable/ic_launcher  
