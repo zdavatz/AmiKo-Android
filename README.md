@@ -1,7 +1,6 @@
-AmiKo-Android
-=============
+## AmiKo-Android
 
-### AmiKo for Android setup for Intellij
+### Setup for Intellij
 
 #### 1. Database
 copy databases to AMiKo assets folder (overwrite old ones)
