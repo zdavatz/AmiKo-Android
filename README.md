@@ -12,7 +12,7 @@ Download: http://pillbox.oddb.org/amiko_report_de.html
 
 #### 3. Constants.java
 in `Constants.java` select `APP_NAME`, set `APP_VERSION`, `GEN_DATE` and `DB_VERSION`  
-to build with Intellij this does not have to change.
+_to build with Intellij this does not have to change._
 
 #### 4a. AndroidManifest.xml
 in `AndroidManifest.xml` increase versionName (=`APP_VERSION` in `Constants.java`)
