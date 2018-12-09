@@ -31,7 +31,9 @@ apply plugin: 'com.android.application'
  */
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    // Add other library dependencies here (see the next step)
+
+    implementation 'com.android.support:support-v4:+'
+    implementation 'org.jsoup:jsoup:1.11.3'
 }
 
 /**
@@ -79,4 +81,5 @@ android {
 
 repositories {
     google()
+    jcenter()
 }
