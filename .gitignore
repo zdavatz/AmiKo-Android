@@ -4,3 +4,9 @@ gen/
 assets/amiko_report_de.html
 assets/amiko_report_fr.html
 *.apk
+
+.idea/
+.gradle/
+build/
+# Local configuration file (sdk path, etc)
+local.properties
