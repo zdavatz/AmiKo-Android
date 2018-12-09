@@ -255,7 +255,7 @@ public class MainActivity extends Activity {
   private void showDownloadAlert(int install_type) {
     // Display message box asking people whether they want to download the DB from the ywesee server.
     AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-    alert.setIcon(R.drawable.desitin_icon);
+    alert.setIcon(R.drawable.ic_launcher);
     if (Constants.appLanguage().equals("de")) {
       alert.setTitle("Medikamentendatenbank");
       String message = "AmiKo wurde installiert.";
