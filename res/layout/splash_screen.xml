@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:src="@drawable/splash_screen" />        
+        android:src="@drawable/logo_desitin" />
  
     <ProgressBar
         android:id="@+id/ProgressBar"
