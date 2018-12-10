@@ -36,6 +36,7 @@ import java.util.Observer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.Manifest;
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
 import android.app.ActionBar;
@@ -58,6 +59,7 @@ import android.content.DialogInterface.OnDismissListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -75,6 +77,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.text.Editable;
 import android.text.Selection;
@@ -280,7 +283,7 @@ public class MainActivity extends Activity {
     alert.setPositiveButton(yes, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int whichButton) {
         if (!mUpdateInProgress)
-          downloadUpdates();
+          requestPermissionAndDownloadUpdates();
       }
     });
     alert.setNegativeButton(no, new DialogInterface.OnClickListener() {
@@ -291,7 +294,28 @@ public class MainActivity extends Activity {
     alert.show();
   }
 
-  @Override
+  public void requestPermissionAndDownloadUpdates() {
+    if (Build.VERSION.SDK_INT < 23) {
+      //permission is automatically granted on sdk<23 upon installation
+      downloadUpdates();
+    } else if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+      downloadUpdates();
+    } else {
+      ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+    }
+  }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 0) {
+            if(grantResults[0]== PackageManager.PERMISSION_GRANTED) {
+                downloadUpdates();
+            }
+        }
+    }
+
+    @Override
   public Object onRetainNonConfigurationInstance() {
     return mMedis;
   }
@@ -1539,7 +1563,7 @@ public class MainActivity extends Activity {
     case (R.id.menu_pref3): {
       // Download new database (blocking call)
       if (!mUpdateInProgress)
-        downloadUpdates();
+        requestPermissionAndDownloadUpdates();
       mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
       return true;
     }
