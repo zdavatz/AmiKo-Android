@@ -255,7 +255,7 @@ public class MainActivity extends Activity {
   private void showDownloadAlert(int install_type) {
     // Display message box asking people whether they want to download the DB from the ywesee server.
     AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-    alert.setIcon(R.drawable.ic_launcher);
+    alert.setIcon(R.drawable.desitin_new);
     if (Constants.appLanguage().equals("de")) {
       alert.setTitle("Medikamentendatenbank");
       String message = "AmiKo wurde installiert.";
@@ -2253,10 +2253,8 @@ public class MainActivity extends Activity {
         mView.setOnClickListener(new OnClickListener() {
           @Override
           public void onClick(View v) {
-            // 16.07.2014: It's weird, but it works...
-            String url_str = "file:///android_res/drawable/#" + id;
-            // Log.d(TAG, url_str);
-            mWebView.loadUrl(url_str);
+            String scrollingJS = "window.scroll({top:document.querySelector('#" + id + "').getBoundingClientRect().top})";
+            mWebView.evaluateJavascript(scrollingJS, null);
             // Close section title view
           if (mDrawerLayout != null)
             mDrawerLayout.closeDrawers();
