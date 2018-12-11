@@ -2277,7 +2277,7 @@ public class MainActivity extends Activity {
         mView.setOnClickListener(new OnClickListener() {
           @Override
           public void onClick(View v) {
-            String scrollingJS = "window.scroll({top:document.querySelector('#" + id + "').getBoundingClientRect().top})";
+            String scrollingJS = "document.getElementById('"+ id + "').scrollIntoView(true);";
             mWebView.evaluateJavascript(scrollingJS, null);
             // Close section title view
           if (mDrawerLayout != null)
