@@ -16,7 +16,7 @@
     <style name="AppTheme" parent="AppBaseTheme">
         <!-- All customizations that are NOT specific to a particular API-level can go here. -->     
 	    <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
-	    <item name="android:windowBackground">@drawable/splash_screen</item>
+	    <item name="android:windowBackground">@drawable/logo_desitin</item>
     </style>
 
     <style name="ActionButtonStyle" parent="@android:style/Widget.Holo.Light.ActionButton">
@@ -33,7 +33,7 @@
     
     <style name="SplashScreenTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar">
         <item name="android:padding">0dp</item>
-        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <item name="android:windowBackground">@drawable/logo_desitin</item>
     </style>
      
 </resources>
