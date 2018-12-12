@@ -4,13 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#ffffff">
-    
+
     <ImageView
         android:id="@+id/LogoImage"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="345dp"
+        android:layout_height="220dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
+        android:layout_centerInParent="true"
         android:src="@drawable/logo_desitin" />
  
     <ProgressBar
