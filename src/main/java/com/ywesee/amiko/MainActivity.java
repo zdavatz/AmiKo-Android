@@ -112,7 +112,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.R;
 
 public class MainActivity extends Activity {
 
