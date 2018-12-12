@@ -1,8 +1,8 @@
 bin/
 *.db
 gen/
-assets/amiko_report_de.html
-assets/amiko_report_fr.html
+src/amiko/assets/amiko_report_de.html
+src/comed/assets/amiko_report_fr.html
 *.apk
 
 .idea/

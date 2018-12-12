@@ -53,6 +53,21 @@ android {
         minSdkVersion 23
         targetSdkVersion 26
     }
+    flavorDimensions "version"
+    productFlavors {
+        amiko {
+            // Assigns this product flavor to the "version" flavor dimension.
+            // This property is optional if you are using only one dimension.
+            dimension "version"
+            applicationIdSuffix ".de"
+            versionNameSuffix "-de"
+        }
+        comed {
+            dimension "version"
+            applicationIdSuffix ".fr"
+            versionNameSuffix "-fr"
+        }
+    }
 }
 
 repositories {
