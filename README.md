@@ -1,5 +1,12 @@
 ## AmiKo-Android
 
+### Setup for Android Studio
+#### 1. Install Android Studio
+https://developer.android.com/studio/
+
+#### 2. Open Project with Android Studio
+Then continue with Setup as below
+
 ### Setup for Intellij
 
 #### 1. Database
