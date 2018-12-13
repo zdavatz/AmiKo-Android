@@ -19,28 +19,19 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import com.ywesee.amiko.ProductFlavour;
 
 public class Constants {
-	
+
 	public static final boolean DEBUG = true;
-	
+
 	public static final int SQLITE_DB_SIZE = 160000000;
 	public static final int INTERACTIONS_FILE_SIZE = 10000000;
-	
-	public static final String AMIKO_NAME = "AmiKo";
-	public static final String COMED_NAME = "CoMed";
-	public static final String MEDDRUGS_NAME = "med-drugs";
-	public static final String MEDDRUGS_FR_NAME = "med-drugs fr";	
-	
-	// --> Note: uncomment name of app to compile!
-	public static final String APP_NAME = AMIKO_NAME;
-	// public static final String APP_NAME = COMED_NAME;
-	// public static final String APP_NAME = MEDDRUGS_NAME;
-	// public static final String APP_NAME = MEDDRUGS_FR_NAME;
+
 	public static final String APP_VERSION = "1.3.8";
 	public static final String GEN_DATE = "01.11.2015";
-	public static final int DB_VERSION = 140; 	
-	
+	public static final int DB_VERSION = 140;
+
 	/** Release history
 	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
 	 *  08/04/2013 - AmiKo/CoMed Release = 1.1.0, Database = 110
@@ -57,38 +48,34 @@ public class Constants {
      *  29/07/2014 - AmiKo/CoMed Release = 1.2.6, Database = 129 (interactions)
      *  30/07/2014 - AmiKo/CoMed Release = 1.2.7, Database = 129 (interactions)
      *  06/10/2014 - AmiKo/CoMed Release = 1.2.8, Database = 130 (shopping)
-     *  30/05/2015 - AmiKo/CoMed Release = 1.3.1, Database = 130 
+     *  30/05/2015 - AmiKo/CoMed Release = 1.3.1, Database = 130
      *  04/07/2015 - AmiKo/CoMed Release = 1.3.2, Database = 140 (main database not shipped, must be downloaded)
      *  02/08/2015 - AmiKo/CoMed Release = 1.3.3, Database = 140 (main database not shipped, must be downloaded)
      *  08/08/2015 - AmiKo/CoMed Release = 1.3.4, Database = 140 (main database not shipped, must be downloaded)
-     *  19/08/2015 - AmiKo/CoMed Release = 1.3.7, Database = 140 (main database not shipped, must be downloaded) 
+     *  19/08/2015 - AmiKo/CoMed Release = 1.3.7, Database = 140 (main database not shipped, must be downloaded)
 	*/
-	
+
 	/**
 	 * Returns the language of the app
 	 * @return
 	 */
 	public static String appLanguage() {
-		if (APP_NAME.equals(AMIKO_NAME) || APP_NAME.equals(MEDDRUGS_NAME)) {
+      if (ProductFlavour.APP_NAME.equals(ProductFlavour.AMIKO_NAME)) {
 			return "de";
-		} else if (APP_NAME.equals(COMED_NAME) || APP_NAME.equals(MEDDRUGS_FR_NAME)) {
+      } else if (ProductFlavour.APP_NAME.equals(ProductFlavour.COMED_NAME)) {
 			return "fr";
 		}
 		return "";
 	}
-	
+
 	/**
 	 * Returns app owner
-	 * 
+	 *
 	 */
 	public static String appOwner() {
-		if (APP_NAME.equals(AMIKO_NAME) || APP_NAME.equals(COMED_NAME))
 			return "ywesee";
-		else if (APP_NAME.equals(MEDDRUGS_NAME) || APP_NAME.equals(MEDDRUGS_FR_NAME))
-			return "meddrugs";
-		return "";
 	}
-	
+
 	/**
 	 * Returns the name SQLite database
 	 * @return
@@ -101,7 +88,7 @@ public class Constants {
 		else
 			return "amiko_db_full_idx_de.db";
 	}
-	
+
 	/**
 	 * Returns the name of the zipped SQLite database
 	 * @return
@@ -114,7 +101,7 @@ public class Constants {
 		else
 			return "amiko_db_full_idx_de.zip";
 	}
-	
+
 	/**
 	 * Returns the name of the report file
 	 * @return
@@ -127,7 +114,7 @@ public class Constants {
 		else
 			return "amiko_report_de.html";
 	}
-	
+
 	/**
 	 * Returns the name of the zipped drug interactions file
 	 */
@@ -139,10 +126,10 @@ public class Constants {
 		else
 			return "drug_interactions_csv_de.csv";
 	}
-	
+
 	/**
 	 * Returns the name of the zipped drug interactions file
-	 */ 
+	 */
 	public static String appZippedInteractionsFile() {
 		if (appLanguage().equals("de"))
 			return "drug_interactions_csv_de.zip";
@@ -150,5 +137,5 @@ public class Constants {
 			return "drug_interactions_csv_fr.zip";
 		else
 			return "drug_interactions_csv_de.zip";
-	}		
+	}
 }
