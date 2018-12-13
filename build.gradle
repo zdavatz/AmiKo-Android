@@ -15,6 +15,7 @@ buildscript {
     */
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'de.undercouch:gradle-download-task:3.4.3'
     }
 }
 
@@ -24,6 +25,7 @@ buildscript {
  * well will result in a build error.
  */
 apply plugin: 'com.android.application'
+apply plugin: 'de.undercouch.download'
 
 /**
  * This dependencies block includes any dependencies for the project itself. The
@@ -66,6 +68,46 @@ android {
             dimension "version"
             applicationIdSuffix ".fr"
             versionNameSuffix "-fr"
+        }
+    }
+
+    def amikoAssetDir = new File(projectDir, 'src/amiko/assets')
+    task downloadAmikoDB(type: Download) {
+        src "http://pillbox.oddb.org/amiko_db_full_idx_de.zip"
+        dest new File(buildDir, 'amiko_db_full_idx_de.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipAmikoDB(dependsOn: downloadAmikoDB, type: Copy) {
+        from zipTree(downloadAmikoDB.dest)
+        into amikoAssetDir
+    }
+    task downloadAmikoReport(type: Download) {
+        src "http://pillbox.oddb.org/amiko_report_de.html"
+        dest amikoAssetDir
+    }
+    def comedAssetDir = new File(projectDir, 'src/comed/assets')
+    task downloadComedDB(type: Download) {
+        src "http://pillbox.oddb.org/amiko_db_full_idx_fr.zip"
+        dest new File(buildDir, 'amiko_db_full_idx_fr.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipComedDB(dependsOn: downloadComedDB, type: Copy) {
+        from zipTree(downloadComedDB.dest)
+        into comedAssetDir
+    }
+    task downloadComedReport(type: Download) {
+        src "http://pillbox.oddb.org/amiko_report_fr.html"
+        dest comedAssetDir
+    }
+    tasks.whenTaskAdded { task ->
+        if (task.name == "generateAmikoDebugResources" || task.name == "generateAmikoReleaseResources") {
+            task.dependsOn unzipAmikoDB
+            task.dependsOn downloadAmikoReport
+        } else if (task.name == "generateComedDebugResources" || task.name == "generateComedReleaseResources") {
+            task.dependsOn unzipComedDB
+            task.dependsOn downloadComedReport
         }
     }
 }
