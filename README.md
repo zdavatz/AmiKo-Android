@@ -1,6 +1,8 @@
 ## AmiKo-Android
 
 ### Setup for Android Studio
+This setup is [gradle](https://docs.gradle.org/current/userguide/gradle_wrapper.html) based.
+
 #### 1. Install Android Studio
 https://developer.android.com/studio/
 
