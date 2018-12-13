@@ -112,7 +112,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.R;
 
 public class MainActivity extends Activity {
 
@@ -1606,17 +1606,6 @@ public class MainActivity extends Activity {
       if (Constants.appOwner().equals("ywesee")) {
         Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ywesee.com/AmiKo/Index"));
         startActivity(browserIntent);
-      } else if (Constants.appOwner().equals("meddrugs")) {
-        /*
-         * MEDDRUGS
-         */
-        if (Constants.appLanguage().equals("de")) {
-          Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.just-medical.com/shop/index.cfm?fuseaction=openShopOverview&catID=4&language=1&lang=1"));
-          startActivity(browserIntent);
-        } else if (Constants.appLanguage().equals("fr")) {
-          Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.just-medical.com/shop/index.cfm?fuseaction=openShopOverview&catID=4&language=2&lang=2"));
-          startActivity(browserIntent);
-        }
       }
       return true;
     }

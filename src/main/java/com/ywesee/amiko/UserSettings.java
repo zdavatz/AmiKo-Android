@@ -23,7 +23,7 @@ import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.R;
 
 public class UserSettings extends PreferenceActivity {
 	

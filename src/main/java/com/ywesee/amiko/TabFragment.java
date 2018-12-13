@@ -25,7 +25,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.ywesee.amiko.de.R;
+import com.ywesee.amiko.R;
 
 public class TabFragment extends Fragment
 {

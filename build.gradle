@@ -15,6 +15,7 @@ buildscript {
     */
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'de.undercouch:gradle-download-task:3.4.3'
     }
 }
 
@@ -24,6 +25,7 @@ buildscript {
  * well will result in a build error.
  */
 apply plugin: 'com.android.application'
+apply plugin: 'de.undercouch.download'
 
 /**
  * This dependencies block includes any dependencies for the project itself. The
@@ -48,34 +50,65 @@ android {
     * existing folders in the project, instead of using the default new
     * organization.
     */
-    sourceSets {
-        main {
-            manifest.srcFile 'AndroidManifest.xml'
-            java.srcDirs = ['src']
-            resources.srcDirs = ['src']
-            aidl.srcDirs = ['src']
-            renderscript.srcDirs = ['src']
-            res.srcDirs = ['res']
-            assets.srcDirs = ['assets']
-        }
 
-        // Move the tests to tests/java, tests/res, etc...
-        androidTest.setRoot('tests')
-
-       /**
-        * Move the build types to build-types/<type>
-        * For instance, build-types/debug/java, build-types/debug/AndroidManifest.xml, ...
-        * This moves them out of them default location under src/<type>/... which would
-        * conflict with src/ being used by the main source set.
-        * Adding new build types or product flavors should be accompanied
-        * by a similar customization.
-        */
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
-     }
     defaultConfig {
         minSdkVersion 23
         targetSdkVersion 26
+    }
+    flavorDimensions "version"
+    productFlavors {
+        amiko {
+            // Assigns this product flavor to the "version" flavor dimension.
+            // This property is optional if you are using only one dimension.
+            dimension "version"
+            applicationIdSuffix ".de"
+            versionNameSuffix "-de"
+        }
+        comed {
+            dimension "version"
+            applicationIdSuffix ".fr"
+            versionNameSuffix "-fr"
+        }
+    }
+
+    def amikoAssetDir = new File(projectDir, 'src/amiko/assets')
+    task downloadAmikoDB(type: Download) {
+        src "http://pillbox.oddb.org/amiko_db_full_idx_de.zip"
+        dest new File(buildDir, 'amiko_db_full_idx_de.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipAmikoDB(dependsOn: downloadAmikoDB, type: Copy) {
+        from zipTree(downloadAmikoDB.dest)
+        into amikoAssetDir
+    }
+    task downloadAmikoReport(type: Download) {
+        src "http://pillbox.oddb.org/amiko_report_de.html"
+        dest amikoAssetDir
+    }
+    def comedAssetDir = new File(projectDir, 'src/comed/assets')
+    task downloadComedDB(type: Download) {
+        src "http://pillbox.oddb.org/amiko_db_full_idx_fr.zip"
+        dest new File(buildDir, 'amiko_db_full_idx_fr.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipComedDB(dependsOn: downloadComedDB, type: Copy) {
+        from zipTree(downloadComedDB.dest)
+        into comedAssetDir
+    }
+    task downloadComedReport(type: Download) {
+        src "http://pillbox.oddb.org/amiko_report_fr.html"
+        dest comedAssetDir
+    }
+    tasks.whenTaskAdded { task ->
+        if (task.name == "generateAmikoDebugResources" || task.name == "generateAmikoReleaseResources") {
+            task.dependsOn unzipAmikoDB
+            task.dependsOn downloadAmikoReport
+        } else if (task.name == "generateComedDebugResources" || task.name == "generateComedReleaseResources") {
+            task.dependsOn unzipComedDB
+            task.dependsOn downloadComedReport
+        }
     }
 }
 
