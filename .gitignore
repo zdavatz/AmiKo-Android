@@ -12,6 +12,12 @@ src/comed/assets/drug_interactions_csv_fr.csv
 build/
 # Local configuration file (sdk path, etc)
 local.properties
+signing.properties
+amiko.json
+
+AmiKo.publish.jks
+amiko/
+comed/
 
 # IntelliJ
 *.iml
