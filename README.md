@@ -43,3 +43,5 @@ in these locations:
 res/layout/splash_screen.xml
 res/values/styles.xml
 ```
+## License
+[GPLv3.0](https://github.com/zdavatz/AmiKo-Android/blob/master/LICENSE.txt)
