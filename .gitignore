@@ -3,6 +3,8 @@ bin/
 gen/
 src/amiko/assets/amiko_report_de.html
 src/comed/assets/amiko_report_fr.html
+src/amiko/assets/drug_interactions_csv_de.csv
+src/comed/assets/drug_interactions_csv_fr.csv
 *.apk
 
 .idea/
