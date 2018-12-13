@@ -7,3 +7,7 @@ amiko:
 comed:
 	./gradlew assembleComed $(ARGS)
 .PHONEY: comed
+
+clean:
+	./gradlew clean
+.PHONEY: clean

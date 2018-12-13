@@ -82,6 +82,16 @@ android {
         from zipTree(downloadAmikoDB.dest)
         into amikoAssetDir
     }
+    task downloadAmikoInteractions(type: Download) {
+        src "http://pillbox.oddb.org/drug_interactions_csv_de.zip"
+        dest new File(buildDir, 'drug_interactions_csv_de.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipAmikoInteractions(dependsOn: downloadAmikoInteractions, type: Copy) {
+        from zipTree(downloadAmikoInteractions.dest)
+        into amikoAssetDir
+    }
     task downloadAmikoReport(type: Download) {
         src "http://pillbox.oddb.org/amiko_report_de.html"
         dest amikoAssetDir
@@ -97,17 +107,30 @@ android {
         from zipTree(downloadComedDB.dest)
         into comedAssetDir
     }
+    task downloadComedInteractions(type: Download) {
+        src "http://pillbox.oddb.org/drug_interactions_csv_fr.zip"
+        dest new File(buildDir, 'drug_interactions_csv_fr.zip')
+        overwrite false
+        onlyIfModified true
+    }
+    task unzipComedInteractions(dependsOn: downloadComedInteractions, type: Copy) {
+        from zipTree(downloadComedInteractions.dest)
+        into comedAssetDir
+    }
     task downloadComedReport(type: Download) {
         src "http://pillbox.oddb.org/amiko_report_fr.html"
         dest comedAssetDir
     }
+
     tasks.whenTaskAdded { task ->
         if (task.name == "generateAmikoDebugResources" || task.name == "generateAmikoReleaseResources") {
             task.dependsOn unzipAmikoDB
             task.dependsOn downloadAmikoReport
+            task.dependsOn unzipAmikoInteractions
         } else if (task.name == "generateComedDebugResources" || task.name == "generateComedReleaseResources") {
             task.dependsOn unzipComedDB
             task.dependsOn downloadComedReport
+            task.dependsOn unzipComedInteractions
         }
     }
 }
