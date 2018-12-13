@@ -28,7 +28,7 @@ public class Constants {
 	public static final int SQLITE_DB_SIZE = 160000000;
 	public static final int INTERACTIONS_FILE_SIZE = 10000000;
 
-	public static final String APP_VERSION = "1.3.8";
+	public static final String APP_VERSION = "1.3.9";
 	public static final String GEN_DATE = "01.11.2015";
 	public static final int DB_VERSION = 140;
 
