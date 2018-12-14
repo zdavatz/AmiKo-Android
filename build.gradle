@@ -140,6 +140,19 @@ repositories {
     jcenter()
 }
 
+android {
+
+    signingConfigs {
+        release
+    }
+
+    buildTypes {
+            release {
+                signingConfig signingConfigs.release
+            }
+    }
+}
+
 if (!project.hasProperty('isTest')) {
   def Properties props = new Properties()
   def propFile = new File('signing.properties')
