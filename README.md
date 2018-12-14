@@ -2,14 +2,9 @@
 
 ### Build
 
-```
-make amiko
-```
+`make amiko` or `make comed`
 
-```
-make comed
-```
-this will also download the all the files.
+this will also download the all the files (DB, Report and Interactions).
 
 run `make -B amiko` to rebuild.
 
@@ -20,34 +15,27 @@ This setup is [gradle](https://docs.gradle.org/current/userguide/gradle_wrapper.
 https://developer.android.com/studio/
 
 #### 2. Open Project with Android Studio
-Then continue with Setup as below
 
 #### 3. Database
-databases are
+databases are in
 
-`src/amiko/assets/`  
-DE: http://pillbox.oddb.org/amiko_db_full_idx_de.zip (AmiKo)
-
-to `src/comed/assets/`  
-FR: http://pillbox.oddb.org/amiko_db_full_idx_fr.zip (CoMed)
+`src/amiko/assets/` form here: http://pillbox.oddb.org/amiko_db_full_idx_de.zip (AmiKo, DE)  
+`src/comed/assets/` from here: http://pillbox.oddb.org/amiko_db_full_idx_fr.zip (CoMed, FR)
 
 #### 4. Report File
 report files are in
 
-`src/amiko/assets/`  
-DE: http://pillbox.oddb.org/amiko_report_de.html (AmiKo)
+`src/amiko/assets/` from here: http://pillbox.oddb.org/amiko_report_de.html (AmiKo, DE)  
+`src/comed/assets/` from here: http://pillbox.oddb.org/amiko_report_fr.html (CoMed, FR)
 
-to `src/comed/assets/`  
-FR: http://pillbox.oddb.org/amiko_report_fr.html (CoMed)
-
-#### Constants.java
+#### 5. Constants.java
 in `Constants.java` set `APP_VERSION`, `GEN_DATE` and `DB_VERSION`
 _to build with Intellij this does not have to change._
 
-#### AndroidManifest.xml
+#### 6. AndroidManifest.xml
 in `AndroidManifest.xml` increase versionName (=`APP_VERSION` in `Constants.java`)
 
-#### Launch Icon Desitin
+#### 7. Launch Icon Desitin
 change android:icon to `@drawable/ic_launcher`
 
 in these locations:
@@ -55,3 +43,5 @@ in these locations:
 res/layout/splash_screen.xml
 res/values/styles.xml
 ```
+## License
+[GPLv3.0](https://github.com/zdavatz/AmiKo-Android/blob/master/LICENSE.txt)
