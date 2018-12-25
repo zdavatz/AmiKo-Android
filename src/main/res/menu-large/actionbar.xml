@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     
     <!-- android:showAsAction="ifRoom|collapsActionView" -->
     
@@ -7,53 +7,53 @@
         android:title="@string/search"            
         android:icon="@drawable/ic_action_search"           
         android:orderInCategory="1"
-        android:showAsAction="always|collapseActionView"
-		android:actionLayout="@layout/search_layout" />
+        app:showAsAction="always|collapseActionView"
+		app:actionLayout="@layout/search_layout" />
 	
 	<item android:id="@+id/aips_button"
 	    android:title="@string/aips_button"
 	    android:icon="@drawable/aips_icon_wh"
 	    android:orderInCategory="2"
-	    android:showAsAction="always" />
+	    app:showAsAction="always" />
 	
 	<item android:id="@+id/favorites_button"
 	    android:title="@string/favorites_button"
 	    android:icon="@drawable/favorites_icon_wh"
 	    android:orderInCategory="3"
-	    android:showAsAction="always" />
+	    app:showAsAction="always" />
 
 	<item android:id="@+id/interactions_button"
 	    android:title="@string/interactions_button"
 	    android:icon="@drawable/interactions_icon_wh"
 	    android:orderInCategory="4"
-	    android:showAsAction="always" />
+	    app:showAsAction="always" />
 	
 	<item android:id="@+id/menu_pref2"
 	    android:title="@string/menu_pref2"
 	    android:icon="@drawable/ic_action_about"
 	    android:orderInCategory="5"
-		android:showAsAction="collapseActionView" />			
+		app:showAsAction="collapseActionView" />
 	
 	<item android:id="@+id/menu_pref3"
 	    android:title="@string/menu_pref3"
 	    android:icon="@drawable/ic_action_refresh"			    
 		android:orderInCategory="6"	    
-	    android:showAsAction="collapseActionView" />
+	    app:showAsAction="collapseActionView" />
 		
 	<item android:id="@+id/menu_share"
 	    android:title="@string/menu_share"
 	    android:orderInCategory="7"
-	    android:showAsAction="collapseActionView" />
+	    app:showAsAction="collapseActionView" />
 
 	<item android:id="@+id/menu_rate"
 	    android:title="@string/menu_rate"
 	    android:orderInCategory="8"
-	    android:showAsAction="collapseActionView" />	
+	    app:showAsAction="collapseActionView" />
 	
 	<item android:id="@+id/menu_help"
 	    android:title="@string/menu_help"
 	    android:icon="@drawable/ic_action_help"	
 	    android:orderInCategory="9"		    
-	    android:showAsAction="collapseActionView" />	    
+	    app:showAsAction="collapseActionView" />
 
 </menu>

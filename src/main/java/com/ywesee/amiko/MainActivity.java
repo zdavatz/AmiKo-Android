@@ -39,16 +39,12 @@ import java.util.regex.Pattern;
 import android.Manifest;
 import android.animation.LayoutTransition;
 import android.annotation.TargetApi;
-import android.app.ActionBar;
-import android.app.ActionBar.Tab;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.DownloadManager.Query;
 import android.app.DownloadManager.Request;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
@@ -77,8 +73,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBar.Tab;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
@@ -114,7 +117,7 @@ import android.widget.Toast;
 
 import com.ywesee.amiko.R;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = "MainActivity";
   private static final String AMIKO_PREFS_FILE = "AmikoPrefsFile";
@@ -316,7 +319,7 @@ public class MainActivity extends Activity {
     }
 
     @Override
-  public Object onRetainNonConfigurationInstance() {
+  public Object onRetainCustomNonConfigurationInstance() {
     return mMedis;
   }
 
@@ -371,10 +374,9 @@ public class MainActivity extends Activity {
 
     /**
    * Sets action bar tab click listeners
-   * @param actionBar
    */
   private void addTabNavigation() {
-    ActionBar actionBar = getActionBar();
+    ActionBar actionBar = getSupportActionBar();
 
     // Disable activity title
     actionBar.setDisplayShowTitleEnabled(false);
@@ -412,20 +414,20 @@ public class MainActivity extends Activity {
 
   private void restoreTabNavigation() {
     if (mActionName.equals(getString(R.string.tab_name_1)))
-      getActionBar().setSelectedNavigationItem(0);
+      getSupportActionBar().setSelectedNavigationItem(0);
     else if (mActionName.equals(getString(R.string.tab_name_2)))
-      getActionBar().setSelectedNavigationItem(1);
+      getSupportActionBar().setSelectedNavigationItem(1);
     else if (mActionName.equals(getString(R.string.tab_name_3)))
-      getActionBar().setSelectedNavigationItem(2);
+      getSupportActionBar().setSelectedNavigationItem(2);
     else if (mActionName.equals(getString(R.string.tab_name_4)))
-      getActionBar().setSelectedNavigationItem(3);
+      getSupportActionBar().setSelectedNavigationItem(3);
     else if (mActionName.equals(getString(R.string.tab_name_5)))
-      getActionBar().setSelectedNavigationItem(4);
+      getSupportActionBar().setSelectedNavigationItem(4);
   }
 
   private void removeTabNavigation() {
     try {
-      ActionBar actionbar = (ActionBar) getActionBar();
+      ActionBar actionbar = (ActionBar) getSupportActionBar();
           actionbar.selectTab(null);
     } catch (Exception e) {
       // Do nothing
@@ -474,10 +476,10 @@ public class MainActivity extends Activity {
         if (mCurrentView==mShowView || mCurrentView==mReportView) {
           hideSoftKeyboard(300);
           removeTabNavigation();
-          // getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+          // getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         } else if (mCurrentView==mSuggestView) {
           restoreTabNavigation();
-          // getActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+          // getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         }
       }
     }
@@ -520,7 +522,7 @@ public class MainActivity extends Activity {
     // Change view
     setCurrentView(mSuggestView, true);
     // Set tab
-    getActionBar().setSelectedNavigationItem(0);
+    getSupportActionBar().setSelectedNavigationItem(0);
       // Restore hint
     mActionName = getString(R.string.tab_name_1); // Präparat
     mSearch.setHint(getString(R.string.search) + " " + mActionName);
@@ -881,7 +883,6 @@ public class MainActivity extends Activity {
     mSearchItem = menu.findItem(R.id.menu_search);
     mSearchItem.expandActionView();
     mSearchItem.setVisible(true);
-
     mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
     if (!Utilities.isTablet(this)) {
       float textSize = 16.0f; // in [sp] = scaled pixels
@@ -1283,7 +1284,7 @@ public class MainActivity extends Activity {
     super.onSaveInstanceState(savedInstanceState);
     // Save UI state changes to the savedInstanceState.
     // This bundle will be passed to onCreate if the process is killed and restarted.
-    savedInstanceState.putInt("mode", getActionBar().getNavigationMode());
+    savedInstanceState.putInt("mode", getSupportActionBar().getNavigationMode());
   }
 
   @Override

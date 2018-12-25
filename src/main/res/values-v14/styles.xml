@@ -5,25 +5,25 @@
         AppBaseTheme from BOTH res/values/styles.xml and
         res/values-v11/styles.xml on API 14+ devices.
     -->
-    <style name="AppBaseTheme" parent="android:Theme.Holo.Light.DarkActionBar">
-        <!-- API 14 theme customizations can go here. -->
-    </style>
+    <!--<style name="AppBaseTheme" parent="Theme.AppCompat.Light.NoActionBar">-->
+        <!--&lt;!&ndash; API 14 theme customizations can go here. &ndash;&gt;-->
+    <!--</style>-->
 
-    <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->     
-	    <item name="android:dropDownListViewStyle">@style/DropDownListView</item>
-    </style>
+    <!--<style name="AppTheme" parent="AppBaseTheme">-->
+        <!--&lt;!&ndash; All customizations that are NOT specific to a particular API-level can go here. &ndash;&gt;     -->
+	    <!--<item name="android:dropDownListViewStyle">@style/DropDownListView</item>-->
+    <!--</style>-->
 
-    <style name="ActionButtonStyle" parent="@android:style/Widget.Holo.Light.ActionButton">
-   		<item name="android:minWidth">56dip</item>
-   		<item name="android:paddingLeft">0dip</item>
-   		<item name="android:paddingRight">0dip</item>                  
-	</style>  
+    <!--<style name="ActionButtonStyle" parent="@android:style/Widget.Holo.Light.ActionButton">-->
+   		<!--<item name="android:minWidth">56dip</item>-->
+   		<!--<item name="android:paddingLeft">0dip</item>-->
+   		<!--<item name="android:paddingRight">0dip</item>                  -->
+	<!--</style>  -->
 
-     <style name="DropDownListView" parent="@android:style/Widget.Holo.Light.ListView.DropDown">
-   		<item name="android:minWidth">56dip</item>
-   		<item name="android:paddingLeft">0dip</item>
-   		<item name="android:paddingRight">0dip</item>                  
-	</style>      
+     <!--<style name="DropDownListView" parent="@android:style/Widget.Holo.Light.ListView.DropDown">-->
+   		<!--<item name="android:minWidth">56dip</item>-->
+   		<!--<item name="android:paddingLeft">0dip</item>-->
+   		<!--<item name="android:paddingRight">0dip</item>                  -->
+	<!--</style>      -->
     
 </resources>
