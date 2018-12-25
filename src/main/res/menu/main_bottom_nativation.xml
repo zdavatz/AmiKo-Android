@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_search"
+        android:title="@string/aips_button"
+
+        />
+    <!--TODO: Add button image android:icon="@drawable/"-->
+    <item android:id="@+id/action_settings"
+        android:title="@string/favorites_button"
+        />
+    <item android:id="@+id/action_navigation"
+        android:title="@string/interactions_button"
+        />
+
+</menu>
