@@ -16,8 +16,8 @@ signing.properties
 amiko.json
 
 AmiKo.publish.jks
-amiko/
-comed/
+/amiko/
+/comed/
 
 # IntelliJ
 *.iml

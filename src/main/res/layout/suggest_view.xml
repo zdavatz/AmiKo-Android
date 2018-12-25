@@ -18,6 +18,7 @@
        	android:clickable="true"
        	android:choiceMode="singleChoice"
        	android:listSelector="@drawable/list_item_bkg"
+		android:background="@color/white"
       	class="com.ywesee.amiko.SectionFragment" >
 	</ListView>  
 

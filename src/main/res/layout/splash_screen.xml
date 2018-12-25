@@ -12,7 +12,9 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_centerInParent="true"
-        android:src="@drawable/logo_desitin" />
+        android:src="@drawable/logo_desitin"
+        android:background="#ffffff"
+        />
  
     <ProgressBar
         android:id="@+id/ProgressBar"
