@@ -78,7 +78,6 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBar.Tab;
@@ -385,8 +384,11 @@ public class MainActivity extends AppCompatActivity {
     // Hide caret symbol ("<") upper left corner
     actionBar.setDisplayHomeAsUpEnabled(false);
     actionBar.setHomeButtonEnabled(false);
+    actionBar.setDisplayUseLogoEnabled(true);
+    actionBar.setDisplayShowHomeEnabled(true);
+    actionBar.setIcon(R.drawable.ic_launcher);
     // Sets color of action bar (including alpha-channel)
-    actionBar.setBackgroundDrawable(new ColorDrawable(Color.argb(216,0,0,0)));
+    actionBar.setBackgroundDrawable(new ColorDrawable(Color.argb(255,180,180,180)));
 
     //
     actionBar.removeAllTabs();
