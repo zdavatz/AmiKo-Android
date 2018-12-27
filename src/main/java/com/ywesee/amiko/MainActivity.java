@@ -73,6 +73,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -1516,91 +1517,11 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    /**
-     * Called through onOptionsItemSelected's invalidateMenuOptions function
-     */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-      MenuItem aipsButton = menu.findItem(R.id.aips_button);
-      MenuItem favoritesButton = menu.findItem(R.id.favorites_button);
-      MenuItem interactionsButton = menu.findItem(R.id.interactions_button);
-      if (mSearchInteractions==false) {
-          interactionsButton.setIcon(R.drawable.interactions_icon_gy);
-        if (mDatabaseUsed.equals("aips")) {
-          aipsButton.setIcon(R.drawable.aips_icon_wh);
-          favoritesButton.setIcon(R.drawable.favorites_icon_gy);
-        } else if (mDatabaseUsed.equals("favorites")) {
-          aipsButton.setIcon(R.drawable.aips_icon_gy);
-          favoritesButton.setIcon(R.drawable.favorites_icon_wh);
-        }
-      } else {
-        aipsButton.setIcon(R.drawable.aips_icon_gy);
-        favoritesButton.setIcon(R.drawable.favorites_icon_gy);
-        interactionsButton.setIcon(R.drawable.interactions_icon_wh);
-      }
-      return super.onPrepareOptionsMenu(menu);
-    }
-
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case (R.id.menu_search): {
       showSoftKeyboard(300);
-      return true;
-    }
-    case (R.id.aips_button): {
-      if (mSearchInteractions==true || mDatabaseUsed.equals("favorites")) {
-        mSearchInteractions = false;
-        resetView(false);
-        // Show empty list
-        showResults(null);
-        showSoftKeyboard(300);
-      } else {
-        // We are already in AIPS mode
-        if (mSearch.length()>0)
-          mSearch.getText().clear();
-        performSearch("");
-      }
-      // NOTE: This request menu update calls "onCreateOptionsMenu"
-      invalidateOptionsMenu();
-      mToastObject.show(getString(R.string.aips_button), Toast.LENGTH_SHORT);
-      return true;
-    }
-    case (R.id.favorites_button): {
-      // Switch to favorites database
-      mDatabaseUsed = "favorites";
-      mSearchInteractions = false;
-      // Change view
-      setCurrentView(mSuggestView, true);
-      performSearch("");
-      // NOTE: This request menu update calls "onCreateOptionsMenu"
-      invalidateOptionsMenu();
-      // Reset search
-      if (mSearch.length()>0)
-        mSearch.getText().clear();
-      mToastObject.show(getString(R.string.favorites_button), Toast.LENGTH_SHORT);
-      return true;
-    }
-    case (R.id.interactions_button): {
-      // Switch to AIPS database
-      mDatabaseUsed = "aips";
-      mSearchInteractions = true;
-      // Update interaction basket
-      updateInteractionBasket();
-      // Update webview
-      String html_str = mMedInteractionBasket.getInteractionsHtml();
-      mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
-      // Change view
-      setCurrentView(mShowView, true);
-      // Request menu update
-      invalidateOptionsMenu();
-      // Reset and change search hint
-      if (mSearch!=null) {
-        if (mSearch.length()>0)
-          mSearch.getText().clear();
-        mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
-      }
-      mToastObject.show(getString(R.string.interactions_button), Toast.LENGTH_SHORT);
       return true;
     }
     case (R.id.menu_pref2): {
