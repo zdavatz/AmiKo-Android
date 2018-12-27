@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
   private View mReportView = null;
   // This is the currently visible view
   private View mCurrentView = null;
+  private BottomNavigationView mBottomNavigationView;
 
   // This is the drawerlayout for the section titles in expert view
   private DrawerLayout mDrawerLayout = null;
@@ -654,6 +655,9 @@ public class MainActivity extends AppCompatActivity {
 
     setLayoutTransition();
 
+    mBottomNavigationView = findViewById(R.id.bottom_navigation);
+    setupBottomNavigationViewListener();
+
     // Define and load webview
     ExpertInfoView mExpertInfoView = new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
     mExpertInfoView.adjustZoom();
@@ -1037,6 +1041,63 @@ public class MainActivity extends AppCompatActivity {
           return true;
         hideSoftKeyboard(50);
         return false;
+      }
+    });
+  }
+
+  private void setupBottomNavigationViewListener() {
+    mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+      @Override
+      public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+          case (R.id.bottom_nav_aips): {
+            if (mSearchInteractions == true || mDatabaseUsed.equals("favorites")) {
+              mSearchInteractions = false;
+              resetView(false);
+              // Show empty list
+              showResults(null);
+              showSoftKeyboard(300);
+            } else {
+              // We are already in AIPS mode
+              if (mSearch.length() > 0)
+                mSearch.getText().clear();
+              performSearch("");
+            }
+            return true;
+          }
+          case (R.id.bottom_nav_favorites): {
+            // Switch to favorites database
+            mDatabaseUsed = "favorites";
+            mSearchInteractions = false;
+            // Change view
+            setCurrentView(mSuggestView, true);
+            performSearch("");
+            // Reset search
+            if (mSearch.length() > 0)
+              mSearch.getText().clear();
+            return true;
+          }
+          case (R.id.bottom_nav_interactions): {
+            // Switch to AIPS database
+            mDatabaseUsed = "aips";
+            mSearchInteractions = true;
+            // Update interaction basket
+            updateInteractionBasket();
+            // Update webview
+            String html_str = mMedInteractionBasket.getInteractionsHtml();
+            mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
+            // Change view
+            setCurrentView(mShowView, true);
+            // Reset and change search hint
+            if (mSearch != null) {
+              if (mSearch.length() > 0)
+                mSearch.getText().clear();
+              mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
+            }
+            return true;
+          }
+        }
+        return true;
       }
     });
   }
