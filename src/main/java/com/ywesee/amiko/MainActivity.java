@@ -160,8 +160,6 @@ public class MainActivity extends AppCompatActivity {
   private ListView mSectionView = null;
   // Webview used to display "Fachinformation" and the "med interaction basket"
   private WebView mWebView;
-  // Webview used to display the report (About-File)
-  private WebView mReportWebView;
   // Cascading style sheet
   private String mCSS_str = null;
 
@@ -185,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
   private ViewGroup mViewHolder = null;
   private View mSuggestView = null;
   private View mShowView = null;
-  private View mReportView = null;
   // This is the currently visible view
   private View mCurrentView = null;
   private BottomNavigationView mBottomNavigationView;
@@ -451,7 +448,7 @@ public class MainActivity extends AppCompatActivity {
       if (mViewHolder!=null) {
         // Set direction of transitation old view to new view
         int direction = -1;
-        if (mCurrentView==mShowView || mCurrentView==mReportView) {
+        if (mCurrentView==mShowView) {
           direction = 1;
         }
         // Remove current view
@@ -477,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
           // Update currently visible view
           mCurrentView = newCurrentView;
           // Hide keyboard
-        if (mCurrentView==mShowView || mCurrentView==mReportView) {
+        if (mCurrentView==mShowView) {
           hideSoftKeyboard(300);
           removeTabNavigation();
           // getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
@@ -574,7 +571,7 @@ public class MainActivity extends AppCompatActivity {
       // Change content view
       if (mCurrentView==mSuggestView)
         setCurrentView(mSuggestView, true);
-      else if (mCurrentView==mShowView || mCurrentView==mReportView)
+      else if (mCurrentView==mShowView)
         setSuggestView();
     }
 
@@ -587,7 +584,7 @@ public class MainActivity extends AppCompatActivity {
       // Change content view
       if (mCurrentView==mSuggestView)
         setCurrentView(mSuggestView, true);
-      else if (mCurrentView==mShowView || mCurrentView==mReportView)
+      else if (mCurrentView==mShowView)
         setSuggestView();
     }
 
@@ -640,21 +637,15 @@ public class MainActivity extends AppCompatActivity {
     // Initialize views
     mSuggestView = getLayoutInflater().inflate(R.layout.suggest_view, null);
     mShowView = getLayoutInflater().inflate(R.layout.show_view, null);
-    mReportView = getLayoutInflater().inflate(R.layout.report_view, null);
 
     // Sets current view
     mCurrentView = mSuggestView;
 
     // Setup webviews
-    setupReportView();
-    setFindListener(mReportWebView);
-    setupGestureDetector(mReportWebView);
-
     // Add views to viewholder
     mViewHolder = (ViewGroup) findViewById(R.id.main_layout);
     mViewHolder.addView(mSuggestView);
     mViewHolder.addView(mShowView);
-    mViewHolder.addView(mReportView);
 
     setLayoutTransition();
 
@@ -715,7 +706,6 @@ public class MainActivity extends AppCompatActivity {
     // Set visibility of views
     mSuggestView.setVisibility(View.VISIBLE);
     mShowView.setVisibility(View.GONE);
-    mReportView.setVisibility(View.GONE);
 
     // Setup initial view
     setCurrentView(mSuggestView, false);
@@ -917,9 +907,6 @@ public class MainActivity extends AppCompatActivity {
               } else if (mCurrentView==mShowView) {
                 // Searches forward
                 mWebView.findNext(true);
-              } else if (mCurrentView==mReportView) {
-                // Searches forward
-                mReportWebView.findNext(true);
               }
                 return true;
             }
@@ -993,9 +980,6 @@ public class MainActivity extends AppCompatActivity {
         if (mCurrentView==mShowView) {
           mSearchHitsCntView.setVisibility(View.GONE);
           mWebView.clearMatches();
-        } else if (mCurrentView==mReportView) {
-          mSearchHitsCntView.setVisibility(View.GONE);
-          mReportWebView.clearMatches();
         } else if (mCurrentView==mSuggestView) {
           showSoftKeyboard(300);
         }
@@ -1103,20 +1087,6 @@ public class MainActivity extends AppCompatActivity {
         return true;
       }
     });
-  }
-
-  private void setupReportView() {
-    mReportWebView = (WebView) mReportView.findViewById(R.id.report_view);
-    // Setup reportwebview
-    mReportWebView.setPadding(5, 5, 5, 5);
-    mReportWebView.setScrollBarStyle(WebView.SCROLLBARS_INSIDE_OVERLAY);
-    mReportWebView.setScrollbarFadingEnabled(true);
-    mReportWebView.setHorizontalScrollBarEnabled(false);
-    mReportWebView.requestFocus(WebView.FOCUS_DOWN);
-    // Activate JavaScriptInterface
-    mReportWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");
-    // Enable javascript
-    mReportWebView.getSettings().setJavaScriptEnabled(true);
   }
 
   /**
@@ -1399,16 +1369,6 @@ public class MainActivity extends AppCompatActivity {
             mWebView.clearMatches();
           }
         }
-      } else if (mCurrentView==mReportView) {
-        if (mReportWebView!=null) {
-          // Native solution
-          if (search_key.length()>2) {
-            findAll(search_key, mReportWebView);
-          } else {
-            mSearchHitsCntView.setVisibility(View.GONE);
-            mReportWebView.clearMatches();
-          }
-        }
       }
     } else {
       if (mCurrentView==mSuggestView) {
@@ -1527,22 +1487,8 @@ public class MainActivity extends AppCompatActivity {
       return true;
     }
     case (R.id.menu_pref2): {
-      mToastObject.show(getString(R.string.menu_pref2), Toast.LENGTH_SHORT);
-      // Enable restoring state flag
-      mRestoringState = true;
-      // Reset and change search hint
-      if (mSearch != null) {
-        if (mSearch.length()>0)
-          mSearch.getText().clear();
-        mSearch.setHint(getString(R.string.search) + " " + getString(R.string.report_search));
-      }
-      // Load report from file
-      String parse_report = loadReport(Constants.appReportFile());
-      mReportWebView.loadDataWithBaseURL("file:///android_res/drawable/", parse_report, "text/html", "utf-8", null);
-      // Display report
-      setCurrentView(mReportView, true);
-      // Disable restoring state
-      mRestoringState = false;
+      Intent intent = new Intent(this, ReportActivity.class);
+      startActivity(intent);
       return true;
     }
     case (R.id.menu_pref3): {
@@ -2152,21 +2098,6 @@ public class MainActivity extends AppCompatActivity {
 
       return mView;
     }
-  }
-
-  private String loadReport(String file_name) {
-    // Old Javascript-based solution... superseeded -> maybe useful for older version of android!
-    /*
-    String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
-        file_content = "<html><head>"
-            + "<script type=\"text/javascript\">" + js_str + "</script></head>"
-            + "<body>" + file_content + "</body></html>";
-        */
-    // New solution without Javascript...
-    String file_content = Utilities.loadFromApplicationFolder(MainActivity.this, file_name, "UTF-8");
-        file_content = "<html><body>" + file_content + "</body></html>";
-
-        return file_content;
   }
 
   private String createHtml( String style_str, String content_str ) {
