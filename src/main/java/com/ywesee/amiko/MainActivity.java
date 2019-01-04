@@ -1083,6 +1083,9 @@ public class MainActivity extends AppCompatActivity {
             }
             return true;
           }
+          case (R.id.bottom_nav_prescription): {
+            return true;
+          }
         }
         return true;
       }

@@ -6,14 +6,14 @@
 	<string name="title_main_activity">AmiKo</string>
     <string name="section_frag">Abschnitt</string>
 	<string name="info_frag">Information</string>
-    
+
 	<string name="overflow_more">More</string>
-	
+
     <string name="search_hint">Search</string>
-    
+
     <string name="action_settings">Action Settings</string>
     <string name="title_activity_search">Title Activity Search</string>
-    
+
     <string name="settings">Settings</string>
     <string name="pref_global_settings">Einstellungen</string>
     <string name="pref_search">Minimalsuche 2 Buchstaben</string>
@@ -21,17 +21,18 @@
     <string name="aips_button">Kompendium</string>
     <string name="favorites_button">Favorites</string>
     <string name="interactions_button">Interactions</string>
-    
-    <string name="menu_options">Optionen</string>    
+    <string name="prescription_button">Rezept</string>
+
+    <string name="menu_options">Optionen</string>
     <string name="menu_pref1">Min. 2 Buchstaben  </string>
     <string name="menu_send_pdf">Send Pdf</string>
-    
+
     <string name="menu_pref2">Report</string>
     <string name="menu_pref3">Update</string>
     <string name="menu_share">Share</string>
     <string name="menu_rate">Rate</string>
     <string name="menu_help">About</string>
-    
+
     <string name="search">Suche</string>
     <string name="tab_name_1">Präparat</string>
     <string name="tab_name_2">Inhaber</string>
@@ -41,8 +42,8 @@
     <string name="full_text_search">in Fachinfo</string>
     <string name="report_search">in Error Report</string>
     <string name="interactions_search">in Interaktionen</string>
-    
+
     <string name="drawer_open">Drawer open</string>
     <string name="drawer_close">Drawer close</string>
-    
+
 </resources>
