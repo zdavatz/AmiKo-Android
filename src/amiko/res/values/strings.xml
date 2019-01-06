@@ -29,6 +29,8 @@
 
     <string name="menu_pref2">Report</string>
     <string name="menu_pref3">Update</string>
+    <string name="menu_doctor">Arzt</string>
+    <string name="menu_patients">Patient</string>
     <string name="menu_share">Share</string>
     <string name="menu_rate">Rate</string>
     <string name="menu_help">About</string>
@@ -45,5 +47,18 @@
 
     <string name="drawer_open">Drawer open</string>
     <string name="drawer_close">Drawer close</string>
+
+    <string name="title">Titel</string>
+    <string name="name">Vorname*</string>
+    <string name="surname">Name*</string>
+    <string name="street">Strasse*</string>
+    <string name="city">Stadt*</string>
+    <string name="zip">PLZ*</string>
+    <string name="phone">Telefon*</string>
+    <string name="email">Email*</string>
+
+    <string name="save">Speichern</string>
+    <string name="button_selfie">Sign. mit Selfie</string>
+    <string name="button_photo_library">Sign. mit Photo</string>
 
 </resources>
