@@ -183,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
   private ViewGroup mViewHolder = null;
   private View mSuggestView = null;
   private View mShowView = null;
+  private View mPrescriptView = null;
   // This is the currently visible view
   private View mCurrentView = null;
   private BottomNavigationView mBottomNavigationView;
@@ -1499,6 +1500,14 @@ public class MainActivity extends AppCompatActivity {
       if (!mUpdateInProgress)
         requestPermissionAndDownloadUpdates();
       mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
+      return true;
+    }
+    case (R.id.menu_doctor): {
+      Intent intent = new Intent(this, DoctorActivity.class);
+      startActivity(intent);
+      return true;
+    }
+    case (R.id.menu_patients): {
       return true;
     }
     case (R.id.menu_share): {
