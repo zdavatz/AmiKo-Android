@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -115,8 +114,6 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.R;
-
 public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = "MainActivity";
@@ -166,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
   // Hashset containing registration numbers of favorite medications
   private HashSet<String> mFavoriteMedsSet = null;
   // Reference to favorites' datastore
-  private DataStore mFavoriteData = null;
+  private FavoriteStore mFavoriteData = null;
   // This is the currently used database
   private String mDatabaseUsed = "aips";
   // Searching for interactions?
@@ -786,7 +783,7 @@ public class MainActivity extends AppCompatActivity {
     'getFilesDir' returns a java.io.File object representing the root directory
     of the INTERNAL storage four the application from the current context.
     */
-    mFavoriteData = new DataStore(this.getFilesDir().toString());
+    mFavoriteData = new FavoriteStore(this.getFilesDir().toString());
     // Load hashset containing registration numbers from persistent data store
     mFavoriteMedsSet = new HashSet<String>();
     mFavoriteMedsSet = mFavoriteData.load();

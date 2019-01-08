@@ -61,5 +61,6 @@
     <string name="button_selfie">Sign. avec Selfie</string>
     <string name="button_photo_library">Sign. avec Photo</string>
     <string name="select_picture">Select Picture</string>
+    <string name="required">Required</string>
 
 </resources>
