@@ -56,6 +56,10 @@
     <string name="zip">PLZ*</string>
     <string name="phone">Telefon*</string>
     <string name="email">Email*</string>
+    <string name="country">Land</string>
+    <string name="birthday">Geburtstag*</string>
+    <string name="sex">Geschlecht*</string>
+    <string name="height_cm">Grösse (cm)</string>
 
     <string name="save">Speichern</string>
     <string name="button_selfie">Sign. mit Selfie</string>
