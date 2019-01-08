@@ -24,6 +24,9 @@ public class DoctorActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_LIBRARY = 2;
 
+    static final int MIN_SIGNATURE_HEIGHT = 45;
+    static final int MIN_SIGNATURE_WIDTH = 90;
+
     private EditText editTitle;
     private EditText editName;
     private EditText editSurname;
@@ -138,9 +141,7 @@ public class DoctorActivity extends AppCompatActivity {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
 
-            imageView.setImageBitmap(imageBitmap);
-            store.saveSignature(imageBitmap);
-
+            saveSignatureImage(imageBitmap);
         } else if (requestCode == REQUEST_IMAGE_LIBRARY && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
             String[] filePathColumn = { MediaStore.Images.Media.DATA };
@@ -151,8 +152,23 @@ public class DoctorActivity extends AppCompatActivity {
             cursor.close();
 
             Bitmap imageBitmap = BitmapFactory.decodeFile(picturePath);
-            store.saveSignature(imageBitmap);
-            imageView.setImageBitmap(imageBitmap);
+            saveSignatureImage(imageBitmap);
         }
+    }
+
+    private void saveSignatureImage(Bitmap imageBitmap) {
+        double targetWidth = imageBitmap.getWidth() * 0.3;
+        double targetHeight = imageBitmap.getHeight() * 0.3;
+        if (targetWidth < MIN_SIGNATURE_WIDTH) {
+            targetHeight *= MIN_SIGNATURE_WIDTH / targetWidth;
+            targetWidth = MIN_SIGNATURE_WIDTH;
+        }
+        if (targetHeight < MIN_SIGNATURE_HEIGHT) {
+            targetWidth *= MIN_SIGNATURE_HEIGHT / targetHeight;
+            targetHeight = MIN_SIGNATURE_HEIGHT;
+        }
+        Bitmap scaled = Bitmap.createScaledBitmap(imageBitmap, (int)targetWidth, (int)targetHeight, false);
+        imageView.setImageBitmap(scaled);
+        store.saveSignature(scaled);
     }
 }
