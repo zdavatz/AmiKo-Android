@@ -1,5 +1,6 @@
 package com.ywesee.amiko;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -12,6 +13,10 @@ import android.widget.RadioGroup;
 import java.util.Arrays;
 
 public class PatientActivity extends AppCompatActivity {
+
+    static final int REQUEST_PATIENT = 1;
+
+    private Patient mPatient;
 
     private EditText editName;
     private EditText editSurname;
@@ -45,6 +50,50 @@ public class PatientActivity extends AppCompatActivity {
         editEmail = findViewById(R.id.patient_email);
     }
 
+    public void updateUIForPatient() {
+        if (mPatient != null) {
+            editName.setText(mPatient.givenname);
+            editSurname.setText(mPatient.familyname);
+            editStreet.setText(mPatient.address);
+            editCity.setText(mPatient.city);
+            editZip.setText(mPatient.zipcode);
+            editCountry.setText(mPatient.country);
+            editBirthday.setText(mPatient.birthdate);
+            if (mPatient.gender.equals("man")) {
+                editSex.check(R.id.patient_sex_male);
+            } else if (mPatient.gender.equals("women")) {
+                editSex.check(R.id.patient_sex_female);
+            } else {
+                editSex.clearCheck();
+            }
+            if (mPatient.weight_kg == 0) {
+                editWeight.setText("");
+            } else {
+                editWeight.setText(String.format("%d", mPatient.weight_kg));
+            }
+            if (mPatient.height_cm == 0) {
+                editHeight.setText("");
+            } else {
+                editHeight.setText(String.format("%d", mPatient.height_cm));
+            }
+            editPhone.setText(mPatient.phone);
+            editEmail.setText(mPatient.email);
+        } else {
+            editName.setText("");
+            editSurname.setText("");
+            editStreet.setText("");
+            editCity.setText("");
+            editZip.setText("");
+            editCountry.setText("");
+            editBirthday.setText("");
+            editSex.clearCheck();
+            editWeight.setText("");
+            editHeight.setText("");
+            editPhone.setText("");
+            editEmail.setText("");
+        }
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -56,7 +105,12 @@ public class PatientActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.save: {
-                Patient patient = new Patient();
+                Patient patient;
+                if (mPatient == null) {
+                    patient = new Patient();
+                } else {
+                    patient = mPatient;
+                }
                 patient.familyname = editSurname.getText().toString();
                 patient.givenname = editName.getText().toString();
                 patient.birthdate = editBirthday.getText().toString();
@@ -102,9 +156,15 @@ public class PatientActivity extends AppCompatActivity {
 
                 if (!errored) {
                     PatientDBAdapter db = new PatientDBAdapter(this);
-                    db.insertRecord(patient);
+                    if (mPatient != null) {
+                        db.updateRecord(patient);
+                        showPatientUpdatedAlert();
+                    } else {
+                        db.insertRecord(patient);
+                        showPatientAddedAlert();
+                    }
                     db.close();
-                    finish();
+                    mPatient = patient;
                 }
                 return true;
             }
@@ -113,14 +173,43 @@ public class PatientActivity extends AppCompatActivity {
                 startActivityForResult(intent, REQUEST_PATIENT);
                 return true;
             }
+            case R.id.new_patient: {
+                mPatient = null;
+                updateUIForPatient();
+                return true;
+            }
         }
         return false;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PATIENT && resultCode == 0) {
+            Patient p = (Patient)data.getSerializableExtra("patient");
+            mPatient = p;
+            updateUIForPatient();
+        }
     }
 
     void showEmptySexAlert() {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.sex_not_selected))
                 .setMessage(getString(R.string.please_select_sex))
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    void showPatientUpdatedAlert() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.patient_updated))
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    void showPatientAddedAlert() {
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.patient_added))
                 .setPositiveButton("OK", null)
                 .show();
     }

@@ -7,4 +7,7 @@
     <item android:id="@+id/patient_list"
         android:title="@string/patient_list"
         app:showAsAction="collapseActionView"/>
+    <item android:id="@+id/new_patient"
+        android:title="@string/new_patient"
+        app:showAsAction="collapseActionView"/>
 </menu>
