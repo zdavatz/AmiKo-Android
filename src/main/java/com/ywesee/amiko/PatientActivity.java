@@ -108,6 +108,11 @@ public class PatientActivity extends AppCompatActivity {
                 }
                 return true;
             }
+            case R.id.patient_list: {
+                Intent intent = new Intent(this, PatientListActivity.class);
+                startActivityForResult(intent, REQUEST_PATIENT);
+                return true;
+            }
         }
         return false;
     }

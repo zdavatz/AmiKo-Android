@@ -79,10 +79,17 @@
                 android:value="com.ywesee.amiko.MainActivity" />
         </activity>
 
-        <activity android:name=".PatientActivity">
+        <activity android:name=".PatientActivity"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.MainActivity" />
+        </activity>
+
+        <activity android:name=".PatientListActivity" android:alwaysRetainTaskState="true">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.ywesee.amiko.PatientActivity" />
         </activity>
 
     </application>
