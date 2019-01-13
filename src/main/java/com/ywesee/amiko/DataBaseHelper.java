@@ -46,7 +46,7 @@ import android.os.Environment;
 import android.util.Log;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
-		
+
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 
 	private static String mMainDBName = "";
@@ -56,17 +56,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 	private SQLiteDatabase mDataBase;
 	private Observer mObserver;
-	
+
 	private final Context mContext;
-	
+
     /**
      * Constructor
      * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
      * @param context
      */
-	public DataBaseHelper(Context context) {	
+	public DataBaseHelper(Context context) {
 		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
-		this.mContext = context;		
+		this.mContext = context;
 		// Initialize all databases and related files
 		mMainDBName = Constants.appDatabase();
 		mReportName = Constants.appReportFile();
@@ -78,7 +78,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		if (!db_path.exists())
 			db_path.mkdir();
 	}
-	
+
 	/**
 	 * Adds observer
 	 * @param observer
@@ -86,7 +86,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	public void addObserver(Observer observer) {
 		mObserver = observer;
 	}
-	
+
 	/**
 	 * Notifies observer
 	 * @param totBytes: total downloaded bytes
@@ -102,25 +102,25 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 		mObserver.update(null, args);
 	}
-	
+
     /**
      * Check if file already exist to avoid re-copying it each time when application starts.
      * @return true if it exists, false if it doesn't
-     */		
+     */
 	private boolean checkFileExistsAtPath(String fileName, String path) {
 		File dbFile = new File(path + fileName);
 		return dbFile.exists();
 	}
-		
+
 	public boolean checkAllFilesExists() {
 		return (checkFileExistsAtPath(mMainDBName, mAppDataDir) &&
 				checkFileExistsAtPath(mReportName, mAppDataDir) &&
 				checkFileExistsAtPath(mInteractionsName, mAppDataDir));
 	}
-	
+
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
-     */	
+     */
 	public void copyFilesFromNonPersistentFolder() throws IOException {
 		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
 			/*
@@ -155,12 +155,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Error("Error copying drug interactions file!");
 			}
-			
 		}
 	}
-	
+
 	/**
-	 * Copy file from external storage to system folder (persistant storage), 
+	 * Copy file from external storage to system folder (persistant storage),
 	 * from where it can be accessed and handled. This is done by transferring a byte stream.
 	 */
 	private void copyFileFromExternalStorageToPath(String fileName, String srcPath, String dstPath) throws IOException {
@@ -170,14 +169,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			if (srcFile.exists()) {
 				InputStream mInput = new FileInputStream(srcFile);
 				OutputStream mOutput = new FileOutputStream(dstPath + "/" + fileName);
-				
+
 				// Transfer bytes from input to output
 				byte[] mBuffer = new byte[1024];
 				int mLength;
 				while ((mLength = mInput.read(mBuffer))>0) {
-					mOutput.write(mBuffer, 0, mLength);				
+					mOutput.write(mBuffer, 0, mLength);
 				}
-				
+
 				// Close streams
 				mOutput.flush();
 				mOutput.close();
@@ -185,46 +184,46 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 		}
 	}
-	
+
 	/**
-     * Copies file from local assets-folder to system folder (persistant storage), 
+     * Copies file from local assets-folder to system folder (persistant storage),
      * from where it can be accessed and handled. This is done by transferring bytestream.
 	 * @param srcFile
 	 * @param dstPath
 	 */
-	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {		
+	private void copyFileFromAssetsToPath(String srcFile, String dstPath) throws IOException {
 		Log.d(TAG, "Copying file " + srcFile + " to " + dstPath);
-		
+
 		// Open shipped database from assets folder
 		InputStream mInput = mContext.getAssets().open(srcFile);
 		OutputStream mOutput = new FileOutputStream(dstPath + srcFile);
-		
+
 		// Transfer bytes from input to output
 		byte[] mBuffer = new byte[1024];
 		int mLength;
 		while ((mLength = mInput.read(mBuffer))>0) {
-			mOutput.write(mBuffer, 0, mLength);				
+			mOutput.write(mBuffer, 0, mLength);
 		}
-		
+
 		// Close streams
 		mOutput.flush();
 		mOutput.close();
 		mInput.close();
 	}
-		
+
 	private void copyFileFromSrcToPath(String srcFile, String dstFile, int totBytes, boolean zipped) throws IOException {
 		if (!zipped) {
 			// Open database
 			InputStream mInput = new FileInputStream(srcFile);
 			OutputStream mOutput = new FileOutputStream(dstFile);
-			
+
 			// Transfer bytes from input to output
 			byte[] mBuffer = new byte[1024];
 			int mLength;
 			while ((mLength = mInput.read(mBuffer))>0) {
-				mOutput.write(mBuffer, 0, mLength);				
+				mOutput.write(mBuffer, 0, mLength);
 			}
-			
+
 			// Close streams
 			mOutput.flush();
 			mOutput.close();
@@ -232,13 +231,13 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		} else {
 			byte buffer[] = new byte[2048];
 			int bytesRead = -1;
-			
+
 			try {
 				// Utilities.chmod(srcFile, 755);
 				InputStream is = new FileInputStream(srcFile);
 				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
 				ZipEntry ze;
-			
+
 				while ((ze = zis.getNextEntry()) != null) {
 					FileOutputStream fout = new FileOutputStream(dstFile);
 					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
@@ -248,9 +247,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 						totBytesRead += bytesRead;
 						notifyObserver(ze.getName(), (int)(100*(float)totBytesRead/(float)totBytes));
 					}
-					
+
 					Log.d(TAG, "Unzipped file " + ze.getName() + " (" + totBytesRead/1000 + "kB)");
-					
+
 					fout.close();
 					zis.closeEntry();
 				}
@@ -261,7 +260,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 		}
 	}
-		
+
 	/**
 	 * Utility function: reads csv file as formatted by EPha.ch
 	 * @param filename
@@ -271,7 +270,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		Map<String, String> map = new TreeMap<String, String>();
 		try {
 			File file = new File(filename);
-			if (!file.exists()) 
+			if (!file.exists())
 				return null;
 			FileInputStream fis = new FileInputStream(filename);
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis, "UTF-8"));
@@ -284,10 +283,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		} catch (Exception e) {
 			System.err.println(">> Error in reading csv file");
 		}
-		
+
 		return map;
 	}
-	
+
 	/**
 	 * Opens SQLite database in read-only mode
 	 * @return true if operation is successful, false otherwise
@@ -307,7 +306,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		}
 		return mDataBase != null;
 	}
-	
+
 	/**
 	 * Opens drug interactions csv
 	 */
@@ -315,7 +314,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		String mPath = mAppDataDir + mInteractionsName;
 		return readFromCsvToMap( mPath );
 	}
-	
+
 	/**
 	 * Overwrite database
 	 */
@@ -334,15 +333,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		} catch (IOException e) {
 			throw new Error("Error overwriting database!");
 		}
-	}	
-	
+	}
+
 	/**
 	 * Overwrite drug interactions file
 	 */
 	public void overwriteInteractionsFile(String srcFile, int fileSize) throws IOException {
 		try {
         	if (fileSize<0)
-        		fileSize = Constants.INTERACTIONS_FILE_SIZE;			
+        		fileSize = Constants.INTERACTIONS_FILE_SIZE;
 			// Copy database from src to dst and unzip it!
 			copyFileFromSrcToPath(srcFile, mAppDataDir + mInteractionsName, fileSize, true);
 			if (Constants.DEBUG)
@@ -351,9 +350,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			throw new Error("Error overwriting drug interactions file!");
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 */
 	public long getSizeSQLiteDatabaseFile() {
 		if (checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
@@ -361,7 +360,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			return file.length();
 		}
 		return 0;
-	}	
+	}
 
 	public long getSizeInteractionsFile() {
 		if (checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
@@ -369,8 +368,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			return file.length();
 		}
 		return 0;
-	}		
-	
+	}
+
 	/**
 	 * Closes SQLite database
 	 */
@@ -395,11 +394,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		}
 		*/
 	}
-	
+
 	/**
 	 * Called if database version is decreased
- 	   Note: override on downgrade, default will throw exception, which is bad. 
-	 */	
+ 	   Note: override on downgrade, default will throw exception, which is bad.
+	 */
 	@Override
 	public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (newVersion < oldVersion) {
@@ -407,7 +406,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				Log.d(TAG, "onDowngrade(): downgrading database from version " + oldVersion + " to version " + newVersion);
 		}
 	}
-	
+
 	/**
 	 * Called if database version is increased
 	 */
@@ -417,12 +416,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			if (Constants.DEBUG)
 				Log.d(TAG, "onUpgrade(): upgrading database from version " + oldVersion + " to version " + newVersion);
 			/*
-			try { 
+			try {
 				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
-			} catch (IOException e) { 
+			} catch (IOException e) {
 				throw new Error("Error upgrading database from version " + oldVersion + " to version " + newVersion);
-		    } 
+		    }
 		    */
-		} 
-	}			
+		}
+	}
 }
