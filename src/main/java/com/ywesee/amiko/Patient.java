@@ -3,6 +3,8 @@ package com.ywesee.amiko;
 import android.content.ContentValues;
 import android.database.Cursor;
 
+import java.io.Serializable;
+
 import static com.ywesee.amiko.PatientDBAdapter.KEY_ADDRESS;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_BIRTHDATE;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_CITY;
@@ -19,7 +21,7 @@ import static com.ywesee.amiko.PatientDBAdapter.KEY_UID;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_WEIGHT_KG;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_ZIPCODE;
 
-public class Patient {
+public class Patient implements Serializable {
     public long rowId;
     public String timestamp = null;
     public String uid = null;
