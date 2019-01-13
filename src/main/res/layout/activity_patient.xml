@@ -114,12 +114,28 @@
                     android:layout_height="wrap_content"
                     android:text="@string/sex" />
 
-            <EditText
+
+            <RadioGroup
                 android:id="@+id/patient_sex"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:text="" />
+                android:layout_height="match_parent" >
+
+                <RadioButton
+                    android:id="@+id/patient_sex_male"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/male" />
+
+                <RadioButton
+                    android:id="@+id/patient_sex_female"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/female" />
+
+            </RadioGroup>
+
             <TextView
                     android:id="@+id/patient_weight_title"
                     android:layout_width="match_parent"
