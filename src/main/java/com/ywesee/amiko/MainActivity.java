@@ -1505,6 +1505,8 @@ public class MainActivity extends AppCompatActivity {
       return true;
     }
     case (R.id.menu_patients): {
+      Intent intent = new Intent(this, PatientActivity.class);
+      startActivity(intent);
       return true;
     }
     case (R.id.menu_share): {
