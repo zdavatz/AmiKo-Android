@@ -36,7 +36,8 @@
             android:label="@string/app_name"  
 			android:hardwareAccelerated="true"            
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:windowSoftInputMode="stateVisible|adjustResize" >
+            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:launchMode="singleTop" >
 			
             <!--<intent-filter>-->
                 <!--<action android:name="android.intent.action.MAIN" />-->
@@ -63,6 +64,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.MainActivity" />
         </activity>
+
+        <activity android:name=".ReportActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.ywesee.amiko.MainActivity" />
+        </activity>
+
     </application>
 
 </manifest>
