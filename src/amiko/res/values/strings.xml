@@ -7,9 +7,9 @@
     <string name="section_frag">Abschnitt</string>
 	<string name="info_frag">Information</string>
 
-	<string name="overflow_more">More</string>
+	<string name="overflow_more">Mehr</string>
 
-    <string name="search_hint">Search</string>
+    <string name="search_hint">Suchen</string>
 
     <string name="action_settings">Action Settings</string>
     <string name="title_activity_search">Title Activity Search</string>
