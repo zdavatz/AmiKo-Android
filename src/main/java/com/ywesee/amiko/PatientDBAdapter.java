@@ -74,11 +74,11 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
 
     /**
      * Deletes specific record from database
-     * @param rowId
+     * @param patient
      * @return
      */
-    public boolean deleteRecord(long rowId) {
-        return this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
+    public boolean deleteRecord(Patient p) {
+        return this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + p.rowId, null) > 0;
     }
 
     /**

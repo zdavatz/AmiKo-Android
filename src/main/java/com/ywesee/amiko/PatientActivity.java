@@ -35,6 +35,7 @@ public class PatientActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient);
+        setTitle(R.string.menu_patients);
 
         editName = findViewById(R.id.patient_name);
         editSurname = findViewById(R.id.patient_surname);
