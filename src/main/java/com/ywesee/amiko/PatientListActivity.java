@@ -1,8 +1,12 @@
 package com.ywesee.amiko;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -24,12 +28,17 @@ public class PatientListActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient_list);
+        setTitle(R.string.patient_list);
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         mRecyclerView.setHasFixedSize(true);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
+
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
 
         mDBAdapter = new PatientDBAdapter(this);
         mAllPatients = mDBAdapter.getAllRecords();
@@ -47,9 +56,24 @@ public class PatientListActivity extends AppCompatActivity {
                 finish();
             }
         };
+        final Context context = this;
         ((PatientListAdapter) mAdapter).onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
+                int itemPosition = mRecyclerView.getChildLayoutPosition(v);
+                final Patient patient = mAllPatients.get(itemPosition);
+                new AlertDialog.Builder(context)
+                        .setTitle(getString(R.string.confirm_delete_patient))
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                mDBAdapter.deleteRecord(patient);
+                                mAllPatients = ((PatientListAdapter) mAdapter).mDataset = mDBAdapter.getAllRecords();
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.no), null)
+                        .show();
                 return false;
             }
         };
@@ -64,7 +88,7 @@ public class PatientListActivity extends AppCompatActivity {
 }
 
 class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.ViewHolder> {
-    private List<Patient> mDataset;
+    public List<Patient> mDataset;
     public View.OnClickListener onClickListener;
     public View.OnLongClickListener onLongClickListener;
 
@@ -95,6 +119,7 @@ class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.ViewHol
         v.setOnClickListener(onClickListener);
         v.setOnLongClickListener(onLongClickListener);
         v.setWidth(parent.getWidth());
+        v.setPadding(50, 30, 0, 30);
         ViewHolder vh = new ViewHolder(v);
         return vh;
     }
