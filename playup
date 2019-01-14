@@ -1,4 +1,4 @@
 make -B amiko
 make -B comed
 playup -a amiko.json ~/.software/AmiKo-Android/build/outputs/apk/amiko/release/AmiKo-Android-amiko-release.apk
-playup -a amiko.json ~/.software/AmiKo-Android/build/outputs/apk/amiko/release/AmiKo-Android-comed-release.apk
+playup -a amiko.json ~/.software/AmiKo-Android/build/outputs/apk/comed/release/AmiKo-Android-comed-release.apk

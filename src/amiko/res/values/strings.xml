@@ -62,7 +62,6 @@
     <string name="height_cm">Grösse (cm)</string>
 
     <string name="save">Speichern</string>
-<<<<<<< HEAD
     <string name="patient_list">Patienten</string>
     <string name="new_patient">Neuer Patient/in</string>
     <string name="patient_updated">Daten wurde aktualisiert.</string>
@@ -75,24 +74,6 @@
     <string name="female">f</string>
     <string name="sex_not_selected">Geschlecht wurde nicht gewählt.</string>
     <string name="please_select_sex">Bitte Geschlecht wählen.</string>
-
-    <string name="confirm_delete_patient">Möchten Sie den Patienten wirklich löschen?</string>
-=======
-    <string name="patient_list">Patient List</string>
-    <string name="new_patient">New Patient</string>
-    <string name="patient_updated">Patient data is updated</string>
-    <string name="patient_added">The new patient is saved</string>
-    <string name="button_selfie">Sign. mit Selfie</string>
-    <string name="button_photo_library">Sign. mit Photo</string>
-    <string name="select_picture">Select Picture</string>
-    <string name="required">Required</string>
-    <string name="male">Male</string>
-    <string name="female">Female</string>
-    <string name="sex_not_selected">Sex not selected</string>
-    <string name="please_select_sex">Please select sex for patient</string>
-
-    <string name="confirm_delete_patient">Are you sure to delete the patient?</string>
->>>>>>> d6ae970ee6c4ca5ae99fc185595eb54dbc8266a3
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
 
