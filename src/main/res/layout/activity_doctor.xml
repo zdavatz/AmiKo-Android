@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/doctor_title_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/title" />
+            <EditText
+                android:id="@+id/doctor_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:text=""
+                android:maxLines="1"
+                android:autofillHints=""
+                />
+
+            <TextView
+                android:id="@+id/doctor_name_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/name" />
+            <EditText
+                android:id="@+id/doctor_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text=""
+                android:autofillHints="name"/>
+
+            <TextView
+                android:id="@+id/doctor_surname_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/surname" />
+            <EditText
+                android:id="@+id/doctor_surname"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPersonName"
+                android:text=""
+                android:autofillHints="surname"/>
+
+            <TextView
+                android:id="@+id/doctor_street_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/street" />
+            <EditText
+                android:id="@+id/doctor_street"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPostalAddress"
+                android:text=""
+                android:autofillHints=""/>
+
+            <TextView
+                android:id="@+id/doctor_city_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/city" />
+            <EditText
+                android:id="@+id/doctor_city"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPostalAddress"
+                android:text=""
+                android:autofillHints="postal_address" />
+
+            <TextView
+                android:id="@+id/doctor_zip_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/zip" />
+            <EditText
+                android:id="@+id/doctor_zip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textPostalAddress"
+                android:text=""
+                android:autofillHints="postal_code" />
+
+            <TextView
+                android:id="@+id/doctor_phone_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/phone" />
+            <EditText
+                android:id="@+id/doctor_phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="phone"
+                android:text=""
+                android:autofillHints="phone" />
+
+            <TextView
+                android:id="@+id/doctor_email_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/email" />
+            <EditText
+                android:id="@+id/doctor_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="textEmailAddress"
+                android:text=""
+                android:autofillHints="email_address" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="200dp"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <Button
+                        android:id="@+id/button_selfie"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/button_selfie" />
+
+                    <Button
+                        android:id="@+id/button_photo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/button_photo_library" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/imageView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

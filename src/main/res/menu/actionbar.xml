@@ -19,6 +19,18 @@
 	    android:icon="@drawable/ic_action_refresh"			    
 		android:orderInCategory="6"	    
 	    app:showAsAction="collapseActionView" />
+
+	<item android:id="@+id/menu_doctor"
+		android:title="@string/menu_doctor"
+		android:icon="@drawable/ic_action_refresh"
+		android:orderInCategory="6"
+		app:showAsAction="collapseActionView" />
+
+	<item android:id="@+id/menu_patients"
+		android:title="@string/menu_patients"
+		android:icon="@drawable/ic_action_refresh"
+		android:orderInCategory="6"
+		app:showAsAction="collapseActionView" />
 		
 	<item android:id="@+id/menu_share"
 	    android:title="@string/menu_share"

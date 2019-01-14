@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -115,8 +114,6 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
-import com.ywesee.amiko.R;
-
 public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = "MainActivity";
@@ -166,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
   // Hashset containing registration numbers of favorite medications
   private HashSet<String> mFavoriteMedsSet = null;
   // Reference to favorites' datastore
-  private DataStore mFavoriteData = null;
+  private FavoriteStore mFavoriteData = null;
   // This is the currently used database
   private String mDatabaseUsed = "aips";
   // Searching for interactions?
@@ -183,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
   private ViewGroup mViewHolder = null;
   private View mSuggestView = null;
   private View mShowView = null;
+  private View mPrescriptView = null;
   // This is the currently visible view
   private View mCurrentView = null;
   private BottomNavigationView mBottomNavigationView;
@@ -785,7 +783,7 @@ public class MainActivity extends AppCompatActivity {
     'getFilesDir' returns a java.io.File object representing the root directory
     of the INTERNAL storage four the application from the current context.
     */
-    mFavoriteData = new DataStore(this.getFilesDir().toString());
+    mFavoriteData = new FavoriteStore(this.getFilesDir().toString());
     // Load hashset containing registration numbers from persistent data store
     mFavoriteMedsSet = new HashSet<String>();
     mFavoriteMedsSet = mFavoriteData.load();
@@ -1081,6 +1079,9 @@ public class MainActivity extends AppCompatActivity {
                 mSearch.getText().clear();
               mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
             }
+            return true;
+          }
+          case (R.id.bottom_nav_prescription): {
             return true;
           }
         }
@@ -1496,6 +1497,16 @@ public class MainActivity extends AppCompatActivity {
       if (!mUpdateInProgress)
         requestPermissionAndDownloadUpdates();
       mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
+      return true;
+    }
+    case (R.id.menu_doctor): {
+      Intent intent = new Intent(this, DoctorActivity.class);
+      startActivity(intent);
+      return true;
+    }
+    case (R.id.menu_patients): {
+      Intent intent = new Intent(this, PatientActivity.class);
+      startActivity(intent);
       return true;
     }
     case (R.id.menu_share): {

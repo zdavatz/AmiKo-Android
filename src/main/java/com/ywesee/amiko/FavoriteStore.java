@@ -27,11 +27,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashSet;
 
-public class DataStore {
+public class FavoriteStore {
 	
 	private String m_dir = "";
 	
-	public DataStore(String dir) {
+	public FavoriteStore(String dir) {
 		m_dir = dir;
        	File app_data_folder = new File(dir);
        	if (!app_data_folder.exists()) {

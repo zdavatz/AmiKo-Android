@@ -12,5 +12,9 @@
         android:title="@string/interactions_button"
         android:icon="@drawable/interactions_icon_gy"
         />
+    <item android:id="@+id/bottom_nav_prescription"
+        android:title="@string/prescription_button"
+        android:icon="@drawable/prescription"
+        />
 
 </menu>

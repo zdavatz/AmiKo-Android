@@ -138,4 +138,8 @@ public class Constants {
 		else
 			return "drug_interactions_csv_de.zip";
 	}
+
+	public static String appPatientDatabase() {
+		return "patients.db";
+	}
 }

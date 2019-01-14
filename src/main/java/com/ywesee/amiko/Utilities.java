@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import android.content.Context;
 import android.content.res.Configuration;
@@ -145,5 +147,10 @@ public class Utilities {
         }
         
 		return file_str;	
+	}
+
+	public static String currentTimeString() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
+		return sdf.format(new Date());
 	}
 }
