@@ -11,7 +11,7 @@
 
     <string name="search_hint">Recherche</string>
 
-    <string name="action_settings">Paramètres d'action</string>
+    <string name="action_settings">Paramètres d\'action</string>
     <string name="title_activity_search">Title Activity Recherche</string>
 
     <string name="settings">Paramètres</string>
@@ -68,7 +68,7 @@
     <string name="patient_added">Le patient a été sauvé</string>
     <string name="button_selfie">Sign. avec Selfie</string>
     <string name="button_photo_library">Sign. avec Photo</string>
-    <string name="select_picture">Sélectionner l'image</string>
+    <string name="select_picture">Sélectionner l\'image</string>
     <string name="required">Exigé</string>
     <string name="male">m</string>
     <string name="female">f</string>
