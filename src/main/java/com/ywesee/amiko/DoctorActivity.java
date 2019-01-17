@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -90,6 +91,10 @@ public class DoctorActivity extends AppCompatActivity {
                     new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_CODE_ASK_PERMISSIONS);
         } else {
+//            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+//            intent.addCategory(Intent.CATEGORY_OPENABLE);
+//            intent.setType("image/*");
+//            startActivityForResult(intent, REQUEST_IMAGE_LIBRARY);
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
@@ -160,15 +165,13 @@ public class DoctorActivity extends AppCompatActivity {
             saveSignatureImage(imageBitmap);
         } else if (requestCode == REQUEST_IMAGE_LIBRARY && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-            String[] filePathColumn = { MediaStore.Images.Media.DATA };
-            Cursor cursor = getContentResolver().query(selectedImage,filePathColumn, null, null, null);
-            cursor.moveToFirst();
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String picturePath = cursor.getString(columnIndex);
-            cursor.close();
+            try {
+                InputStream is = getContentResolver().openInputStream(selectedImage);
+                Bitmap imageBitmap = BitmapFactory.decodeStream(is);
+                saveSignatureImage(imageBitmap);
+            } catch (Exception e) {
 
-            Bitmap imageBitmap = BitmapFactory.decodeFile(picturePath);
-            saveSignatureImage(imageBitmap);
+            }
         }
     }
 
