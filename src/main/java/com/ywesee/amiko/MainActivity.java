@@ -308,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 0) {
-            if(grantResults[0]== PackageManager.PERMISSION_GRANTED) {
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 downloadUpdates();
             }
         }

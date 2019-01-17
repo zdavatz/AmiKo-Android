@@ -11,41 +11,39 @@
 	<item android:id="@+id/menu_pref2"
 	    android:title="@string/menu_pref2"
 	    android:icon="@drawable/ic_action_about"
-	    android:orderInCategory="5"
+	    android:orderInCategory="2"
 		app:showAsAction="collapseActionView" />
 	
 	<item android:id="@+id/menu_pref3"
 	    android:title="@string/menu_pref3"
 	    android:icon="@drawable/ic_action_refresh"			    
-		android:orderInCategory="6"	    
+		android:orderInCategory="3"
 	    app:showAsAction="collapseActionView" />
-
-	<item android:id="@+id/menu_doctor"
-		android:title="@string/menu_doctor"
-		android:icon="@drawable/ic_action_refresh"
-		android:orderInCategory="6"
-		app:showAsAction="collapseActionView" />
-
-	<item android:id="@+id/menu_patients"
-		android:title="@string/menu_patients"
-		android:icon="@drawable/ic_action_refresh"
-		android:orderInCategory="6"
-		app:showAsAction="collapseActionView" />
 		
 	<item android:id="@+id/menu_share"
 	    android:title="@string/menu_share"
-	    android:orderInCategory="7"
+	    android:orderInCategory="4"
 	    app:showAsAction="collapseActionView" />
 
 	<item android:id="@+id/menu_rate"
 	    android:title="@string/menu_rate"
-	    android:orderInCategory="8"
+	    android:orderInCategory="5"
 	    app:showAsAction="collapseActionView" />
 	
 	<item android:id="@+id/menu_help"
 	    android:title="@string/menu_help"
 	    android:icon="@drawable/ic_action_help"	
-	    android:orderInCategory="9"		    
+	    android:orderInCategory="6"
 	    app:showAsAction="collapseActionView" />
+	<item android:id="@+id/menu_patients"
+		android:title="@string/menu_patients"
+		android:icon="@drawable/ic_action_refresh"
+		android:orderInCategory="7"
+		app:showAsAction="collapseActionView" />
+	<item android:id="@+id/menu_doctor"
+		android:title="@string/menu_doctor"
+		android:icon="@drawable/ic_action_refresh"
+		android:orderInCategory="8"
+		app:showAsAction="collapseActionView" />
 
 </menu>

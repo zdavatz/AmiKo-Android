@@ -15,6 +15,8 @@
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<!-- Required to access Google Play Licensing -->  
 	<uses-permission android:name="com.android.vending.CHECK_LICENSE" />
+    <!-- For reading photo from user library, for doctor's signature -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
