@@ -1,16 +1,34 @@
 package com.ywesee.amiko;
 
+import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 import static android.Manifest.permission.READ_CONTACTS;
 
 public class PatientActivity extends AppCompatActivity {
@@ -33,6 +51,10 @@ public class PatientActivity extends AppCompatActivity {
     private EditText editPhone;
     private EditText editEmail;
 
+    private DrawerLayout mDrawerLayout;
+    private RecyclerView mContactsRecyclerView;
+    private ContactListAdapter mContactAdapter;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +73,27 @@ public class PatientActivity extends AppCompatActivity {
         editHeight = findViewById(R.id.patient_height);
         editPhone = findViewById(R.id.patient_phone);
         editEmail = findViewById(R.id.patient_email);
+
+        mContactsRecyclerView = findViewById(R.id.contacts_recycler_view);
+        mContactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mContactsRecyclerView.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
+        mContactAdapter = new ContactListAdapter(new ArrayList<ContactListAdapter.Contact>());
+        mContactsRecyclerView.setAdapter(mContactAdapter);
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerOpened(@NonNull View view) {
+                queryContacts();
+            }
+            @Override
+            public void onDrawerSlide(@NonNull View view, float v) {}
+            @Override
+            public void onDrawerClosed(@NonNull View view) {}
+            @Override
+            public void onDrawerStateChanged(int i) {}
+        });
     }
 
     public void updateUIForPatient() {
@@ -214,6 +257,7 @@ public class PatientActivity extends AppCompatActivity {
             }
         }
     }
+
     void showEmptySexAlert() {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.sex_not_selected))
@@ -234,5 +278,60 @@ public class PatientActivity extends AppCompatActivity {
                 .setTitle(getString(R.string.patient_added))
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+
+
+    static class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.ViewHolder> {
+        public List<ContactListAdapter.Contact> mDataset;
+        public View.OnClickListener onClickListener;
+        public View.OnLongClickListener onLongClickListener;
+
+        public static class ViewHolder extends RecyclerView.ViewHolder {
+            public TextView mTextView;
+            public ViewHolder(TextView v) {
+                super(v);
+                mTextView = v;
+            }
+        }
+
+        static class Contact {
+            public String contactId;
+            public String displayName;
+            public String givenName;
+            public String familyName;
+        }
+
+        // Provide a suitable constructor (depends on the kind of dataset)
+        public ContactListAdapter(List<ContactListAdapter.Contact> myDataset) {
+            mDataset = myDataset;
+        }
+
+        // Create new views (invoked by the layout manager)
+        @Override
+        public ContactListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                                int viewType) {
+            // create a new view
+            TextView v = new TextView(parent.getContext());
+            v.setTextSize(20);
+            v.setOnClickListener(onClickListener);
+            v.setOnLongClickListener(onLongClickListener);
+            v.setWidth(parent.getWidth());
+            v.setPadding(50, 30, 0, 30);
+            ViewHolder vh = new ViewHolder(v);
+            return vh;
+        }
+
+        // Replace the contents of a view (invoked by the layout manager)
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.mTextView.setText(mDataset.get(position).displayName);
+        }
+
+        // Return the size of your dataset (invoked by the layout manager)
+        @Override
+        public int getItemCount() {
+            return mDataset.size();
+        }
     }
 }
