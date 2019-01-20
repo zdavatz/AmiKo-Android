@@ -246,6 +246,47 @@ public class PatientActivity extends AppCompatActivity {
                     REQUEST_CONTACTS_PERMISSON);
             return;
         }
+        ContentResolver cr = getContentResolver();
+        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                        new String[] {
+                                ContactsContract.Contacts._ID,
+                                ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+//                                ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER,
+//                                ContactsContract.CommonDataKinds.Phone.NUMBER,
+//                                ContactsContract.CommonDataKinds.Email.ADDRESS,
+                        },
+                        null,
+                        null,
+                        null
+                );
+        if (cursor == null) {
+            return;
+        }
+        ArrayList<ContactListAdapter.Contact> contacts = new ArrayList<ContactListAdapter.Contact>();
+        while(cursor.moveToNext()) {
+            String id = cursor.getString(0);
+            Cursor pCur = cr.query(
+                    ContactsContract.Data.CONTENT_URI,
+                    new String[] {
+                            ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                            ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME
+                    },
+                    ContactsContract.CommonDataKinds.StructuredName.RAW_CONTACT_ID + "= ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                    new String[]{ id, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE },
+                    null);
+            ContactListAdapter.Contact c = new ContactListAdapter.Contact();
+            while (pCur.moveToNext()) {
+                c.contactId = id;
+                c.givenName = pCur.getString(0);
+                c.familyName = pCur.getString(1);
+                c.displayName = cursor.getString(1);
+                contacts.add(c);
+            }
+            pCur.close();
+        }
+        cursor.close();
+        mContactAdapter.mDataset = contacts;
+        mContactAdapter.notifyDataSetChanged();
     }
 
     @Override
