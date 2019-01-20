@@ -11,10 +11,12 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 
 import java.util.Arrays;
+import static android.Manifest.permission.READ_CONTACTS;
 
 public class PatientActivity extends AppCompatActivity {
 
     static final int REQUEST_PATIENT = 1;
+    static final int REQUEST_CONTACTS_PERMISSON = 2;
 
     private Patient mPatient;
 
@@ -193,6 +195,25 @@ public class PatientActivity extends AppCompatActivity {
         }
     }
 
+    void queryContacts() {
+        int hasPermission = checkSelfPermission(Manifest.permission.READ_CONTACTS);
+        if (hasPermission != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    REQUEST_CONTACTS_PERMISSON);
+            return;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++) {
+            if (permissions[i].equals(Manifest.permission.READ_CONTACTS) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                queryContacts();
+                return;
+            }
+        }
+    }
     void showEmptySexAlert() {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.sex_not_selected))

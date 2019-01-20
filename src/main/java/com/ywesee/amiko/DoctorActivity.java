@@ -85,8 +85,7 @@ public class DoctorActivity extends AppCompatActivity {
     }
 
     private void pickDoctorSignatureFromLibrary() {
-        int hasPermission = ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE);
+        int hasPermission = checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE);
         if (hasPermission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
@@ -186,8 +185,11 @@ public class DoctorActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_ASK_PERMISSIONS) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pickDoctorSignatureFromLibrary();
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(android.Manifest.permission.READ_EXTERNAL_STORAGE) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    pickDoctorSignatureFromLibrary();
+                    return;
+                }
             }
         }
     }
