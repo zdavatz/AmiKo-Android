@@ -1,195 +1,220 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
-    <ScrollView
-        android:layout_width="match_parent"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical" android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <LinearLayout
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent">
 
-            <TextView
-            android:id="@+id/patient_name_title"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/name" />
-            <EditText
-                android:id="@+id/patient_name"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName"
-                android:text="" />
+                android:orientation="vertical">
 
-            <TextView
-                    android:id="@+id/patient_surname_title"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/surname" />
-            <EditText
-                android:id="@+id/patient_surname"
+                <TextView
+                android:id="@+id/patient_name_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName"
-                android:text="" />
-
-            <TextView
-                    android:id="@+id/patient_street_title"
+                android:text="@string/name" />
+                <EditText
+                    android:id="@+id/patient_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/street" />
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_street"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPostalAddress"
-                android:text="" />
-
-            <TextView
-                    android:id="@+id/patient_city_title"
+                <TextView
+                        android:id="@+id/patient_surname_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/surname" />
+                <EditText
+                    android:id="@+id/patient_surname"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/city" />
+                    android:ems="10"
+                    android:inputType="textPersonName"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_city"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPostalAddress"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_street_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/street" />
 
-            <TextView
-                    android:id="@+id/patient_zip_title"
+                <EditText
+                    android:id="@+id/patient_street"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/zip" />
+                    android:ems="10"
+                    android:inputType="textPostalAddress"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_zip"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPostalAddress"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_city_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/city" />
 
-            <TextView
-                    android:id="@+id/patient_country_title"
+                <EditText
+                    android:id="@+id/patient_city"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/country" />
+                    android:ems="10"
+                    android:inputType="textPostalAddress"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_country"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPostalAddress"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_zip_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/zip" />
 
-            <TextView
-                    android:id="@+id/patient_birthday_title"
+                <EditText
+                    android:id="@+id/patient_zip"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/birthday" />
+                    android:ems="10"
+                    android:inputType="textPostalAddress"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_birthday"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="date"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_country_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/country" />
 
-            <TextView
-                    android:id="@+id/patient_sex_title"
+                <EditText
+                    android:id="@+id/patient_country"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/sex" />
+                    android:ems="10"
+                    android:inputType="textPostalAddress"
+                    android:text="" />
 
+                <TextView
+                        android:id="@+id/patient_birthday_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/birthday" />
 
-            <RadioGroup
-                android:id="@+id/patient_sex"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" >
-
-                <RadioButton
-                    android:id="@+id/patient_sex_male"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/male" />
-
-                <RadioButton
-                    android:id="@+id/patient_sex_female"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/female" />
-
-            </RadioGroup>
-
-            <TextView
-                    android:id="@+id/patient_weight_title"
+                <EditText
+                    android:id="@+id/patient_birthday"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="weight(kg)" />
-            <EditText
-                android:id="@+id/patient_weight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="number"
-                android:text="" />
+                    android:ems="10"
+                    android:inputType="date"
+                    android:text="" />
 
-            <TextView
-                    android:id="@+id/patient_height_title"
+                <TextView
+                        android:id="@+id/patient_sex_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/sex" />
+
+
+                <RadioGroup
+                    android:id="@+id/patient_sex"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
+
+                    <RadioButton
+                        android:id="@+id/patient_sex_male"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/male" />
+
+                    <RadioButton
+                        android:id="@+id/patient_sex_female"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/female" />
+
+                </RadioGroup>
+
+                <TextView
+                        android:id="@+id/patient_weight_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="weight(kg)" />
+                <EditText
+                    android:id="@+id/patient_weight"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/height_cm" />
+                    android:ems="10"
+                    android:inputType="number"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_height"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="number"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_height_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/height_cm" />
 
-            <TextView
-                    android:id="@+id/patient_phone_title"
+                <EditText
+                    android:id="@+id/patient_height"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/phone" />
+                    android:ems="10"
+                    android:inputType="number"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_phone"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="phone"
-                android:text="" />
+                <TextView
+                        android:id="@+id/patient_phone_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/phone" />
 
-            <TextView
-                    android:id="@+id/patient_email_title"
+                <EditText
+                    android:id="@+id/patient_phone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/email" />
+                    android:ems="10"
+                    android:inputType="phone"
+                    android:text="" />
 
-            <EditText
-                android:id="@+id/patient_email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textEmailAddress"
-                android:text="" />
-        </LinearLayout>
-    </ScrollView>
-</LinearLayout>
+                <TextView
+                        android:id="@+id/patient_email_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/email" />
+
+                <EditText
+                    android:id="@+id/patient_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:inputType="textEmailAddress"
+                    android:text="" />
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- View for drawer -->
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/contacts_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="right"
+        android:background="@color/white"
+        />
+
+    <!--android:layout_width="200dp"-->
+    <!--android:layout_height="match_parent"-->
+    <!--android:layout_gravity="right"-->
+    <!--android:choiceMode="singleChoice"-->
+    <!--android:dividerHeight="1dp"-->
+    <!--android:background="@color/white"-->
+
+</android.support.v4.widget.DrawerLayout>

@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -84,21 +85,15 @@ public class DoctorActivity extends AppCompatActivity {
     }
 
     private void pickDoctorSignatureFromLibrary() {
-        int hasPermission = ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE);
+        int hasPermission = checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE);
         if (hasPermission != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
                     REQUEST_CODE_ASK_PERMISSIONS);
         } else {
-//            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-//            intent.addCategory(Intent.CATEGORY_OPENABLE);
-//            intent.setType("image/*");
-//            startActivityForResult(intent, REQUEST_IMAGE_LIBRARY);
             Intent intent = new Intent();
             intent.setType("image/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, getString(R.string.select_picture)), REQUEST_IMAGE_LIBRARY);
             if (intent.resolveActivity(getPackageManager()) != null) {
                 startActivityForResult(intent, REQUEST_IMAGE_LIBRARY);
             }
@@ -157,7 +152,6 @@ public class DoctorActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        ImageView imageView = findViewById(R.id.imageView);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
             Bitmap imageBitmap = (Bitmap) extras.get("data");
@@ -165,9 +159,21 @@ public class DoctorActivity extends AppCompatActivity {
             saveSignatureImage(imageBitmap);
         } else if (requestCode == REQUEST_IMAGE_LIBRARY && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
+            Cursor cursor = getContentResolver().query(selectedImage,
+                    new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
+
+            cursor.moveToFirst();
+            int orientation = cursor.getInt(0);
             try {
                 InputStream is = getContentResolver().openInputStream(selectedImage);
                 Bitmap imageBitmap = BitmapFactory.decodeStream(is);
+                if (orientation != 0) {
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(orientation);
+
+                    imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, imageBitmap.getWidth(),
+                            imageBitmap.getHeight(), matrix, true);
+                }
                 saveSignatureImage(imageBitmap);
             } catch (Exception e) {
 
@@ -179,8 +185,11 @@ public class DoctorActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_ASK_PERMISSIONS) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                pickDoctorSignatureFromLibrary();
+            for (int i = 0; i < permissions.length; i++) {
+                if (permissions[i].equals(android.Manifest.permission.READ_EXTERNAL_STORAGE) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    pickDoctorSignatureFromLibrary();
+                    return;
+                }
             }
         }
     }

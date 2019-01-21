@@ -1,20 +1,41 @@
 package com.ywesee.amiko;
 
+import android.Manifest;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
+import static android.Manifest.permission.READ_CONTACTS;
 
 public class PatientActivity extends AppCompatActivity {
 
     static final int REQUEST_PATIENT = 1;
+    static final int REQUEST_CONTACTS_PERMISSON = 2;
 
     private Patient mPatient;
 
@@ -30,6 +51,10 @@ public class PatientActivity extends AppCompatActivity {
     private EditText editHeight;
     private EditText editPhone;
     private EditText editEmail;
+
+    private DrawerLayout mDrawerLayout;
+    private RecyclerView mContactsRecyclerView;
+    private ContactListAdapter mContactAdapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,6 +74,39 @@ public class PatientActivity extends AppCompatActivity {
         editHeight = findViewById(R.id.patient_height);
         editPhone = findViewById(R.id.patient_phone);
         editEmail = findViewById(R.id.patient_email);
+
+        mContactsRecyclerView = findViewById(R.id.contacts_recycler_view);
+        mContactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mContactsRecyclerView.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
+        mContactAdapter = new ContactListAdapter(new ArrayList<ContactListAdapter.Contact>());
+        mContactsRecyclerView.setAdapter(mContactAdapter);
+
+        final Context c = this;
+        ((ContactListAdapter) mContactAdapter).onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int itemPosition = mContactsRecyclerView.getChildLayoutPosition(v);
+                ContactListAdapter.Contact contact= mContactAdapter.mDataset.get(itemPosition);
+                mPatient = contact.toPatient(c.getContentResolver());
+                updateUIForPatient();
+                mDrawerLayout.closeDrawers();
+            }
+        };
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerOpened(@NonNull View view) {
+                queryContacts();
+            }
+            @Override
+            public void onDrawerSlide(@NonNull View view, float v) {}
+            @Override
+            public void onDrawerClosed(@NonNull View view) {}
+            @Override
+            public void onDrawerStateChanged(int i) {}
+        });
     }
 
     public void updateUIForPatient() {
@@ -60,7 +118,9 @@ public class PatientActivity extends AppCompatActivity {
             editZip.setText(mPatient.zipcode);
             editCountry.setText(mPatient.country);
             editBirthday.setText(mPatient.birthdate);
-            if (mPatient.gender.equals("man")) {
+            if (mPatient.gender == null) {
+                editSex.clearCheck();
+            } else if (mPatient.gender.equals("man")) {
                 editSex.check(R.id.patient_sex_male);
             } else if (mPatient.gender.equals("women")) {
                 editSex.check(R.id.patient_sex_female);
@@ -193,6 +253,64 @@ public class PatientActivity extends AppCompatActivity {
         }
     }
 
+    void queryContacts() {
+        int hasPermission = checkSelfPermission(Manifest.permission.READ_CONTACTS);
+        if (hasPermission != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                    new String[]{Manifest.permission.READ_CONTACTS},
+                    REQUEST_CONTACTS_PERMISSON);
+            return;
+        }
+        ContentResolver cr = getContentResolver();
+        Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI,
+                        new String[] {
+                                ContactsContract.Contacts._ID,
+                                ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
+                        },
+                        null,
+                        null,
+                        null
+                );
+        if (cursor == null) {
+            return;
+        }
+        ArrayList<ContactListAdapter.Contact> contacts = new ArrayList<ContactListAdapter.Contact>();
+        while(cursor.moveToNext()) {
+            String id = cursor.getString(0);
+            Cursor pCur = cr.query(
+                    ContactsContract.Data.CONTENT_URI,
+                    new String[] {
+                            ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                            ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME
+                    },
+                    ContactsContract.CommonDataKinds.StructuredName.RAW_CONTACT_ID + "= ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
+                    new String[]{ id, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE },
+                    null);
+            ContactListAdapter.Contact c = new ContactListAdapter.Contact();
+            while (pCur.moveToNext()) {
+                c.contactId = id;
+                c.givenName = pCur.getString(0);
+                c.familyName = pCur.getString(1);
+                c.displayName = cursor.getString(1);
+                contacts.add(c);
+            }
+            pCur.close();
+        }
+        cursor.close();
+        mContactAdapter.mDataset = contacts;
+        mContactAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        for (int i = 0; i < permissions.length; i++) {
+            if (permissions[i].equals(Manifest.permission.READ_CONTACTS) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                queryContacts();
+                return;
+            }
+        }
+    }
+
     void showEmptySexAlert() {
         new AlertDialog.Builder(this)
                 .setTitle(getString(R.string.sex_not_selected))
@@ -213,5 +331,157 @@ public class PatientActivity extends AppCompatActivity {
                 .setTitle(getString(R.string.patient_added))
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+
+
+    static class ContactListAdapter extends RecyclerView.Adapter<ContactListAdapter.ViewHolder> {
+        public List<ContactListAdapter.Contact> mDataset;
+        public View.OnClickListener onClickListener;
+        public View.OnLongClickListener onLongClickListener;
+
+        public static class ViewHolder extends RecyclerView.ViewHolder {
+            public TextView mTextView;
+            public ViewHolder(TextView v) {
+                super(v);
+                mTextView = v;
+            }
+        }
+
+        static class Contact {
+            public String contactId;
+            public String displayName;
+            public String givenName;
+            public String familyName;
+
+            Patient toPatient(ContentResolver cr) {
+                String phoneNumber = null;
+                String emailAddress = null;
+                String birthday = null;
+                String street = null;
+                String city = null;
+                String country = null;
+                String zip = null;
+
+                Cursor emailCur = cr.query(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                    new String[] {
+                        ContactsContract.CommonDataKinds.Email.ADDRESS,
+                    },
+                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + "= ? ",
+                    new String[]{ this.contactId },
+                    null);
+
+                if (emailCur.moveToFirst()) {
+                    emailAddress = emailCur.getString(0);
+                }
+                emailCur.close();
+
+                Cursor phoneCur = cr.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[] {
+                            ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        },
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[] { this.contactId },
+                        null);
+                if (phoneCur.moveToFirst()) {
+                    phoneNumber = phoneCur.getString(0);
+                }
+                phoneCur.close();
+
+                Cursor eventCur = cr.query(
+                        ContactsContract.Data.CONTENT_URI,
+                        new String[] {
+                            ContactsContract.CommonDataKinds.Event.START_DATE,
+                        },
+                        ContactsContract.CommonDataKinds.Event.CONTACT_ID + "= ? AND "
+                        + ContactsContract.Data.MIMETYPE + "= ? AND "
+                        + ContactsContract.CommonDataKinds.Event.TYPE + "= " + ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY,
+                        new String[] {
+                            this.contactId,
+                            ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE,
+                        },
+                        null);
+                if (eventCur.moveToFirst()) {
+                    birthday = eventCur.getString(0);
+                }
+                if (birthday != null) {
+                    String[] parts = birthday.split("-");
+                    if (parts.length == 3) {
+                        birthday = parts[2] + "." + parts[1] + "." + parts[0];
+                    } else if (parts.length == 4) {
+                        // birthday event without year
+                        birthday = parts[3] + "." + parts[2] + ".";
+                    }
+                }
+                eventCur.close();
+
+                Cursor addressCur = cr.query(
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
+                        new String[] {
+                                ContactsContract.CommonDataKinds.StructuredPostal.CITY,
+                                ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,
+                                ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,
+                                ContactsContract.CommonDataKinds.StructuredPostal.STREET,
+                        },
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID + "= ? ",
+                        new String[] {
+                                this.contactId,
+                        },
+                        null);
+                if (addressCur.moveToFirst()) {
+                    city = addressCur.getString(0);
+                    country = addressCur.getString(1);
+                    zip = addressCur.getString(2);
+                    street = addressCur.getString(3);
+                }
+                addressCur.close();
+
+                Patient p = new Patient();
+                p.givenname = this.givenName;
+                p.familyname = this.familyName;
+                p.email = emailAddress;
+                p.birthdate = birthday;
+                p.phone = phoneNumber;
+                p.city = city;
+                p.country = country;
+                p.zipcode = zip;
+                p.address = street;
+                return p;
+            }
+        }
+
+        // Provide a suitable constructor (depends on the kind of dataset)
+        public ContactListAdapter(List<ContactListAdapter.Contact> myDataset) {
+            mDataset = myDataset;
+        }
+
+        // Create new views (invoked by the layout manager)
+        @Override
+        public ContactListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                                int viewType) {
+            // create a new view
+            TextView v = new TextView(parent.getContext());
+            v.setTextSize(20);
+            v.setOnClickListener(onClickListener);
+            v.setOnLongClickListener(onLongClickListener);
+            v.setWidth(parent.getWidth());
+            v.setPadding(50, 30, 0, 30);
+            ViewHolder vh = new ViewHolder(v);
+            return vh;
+        }
+
+        // Replace the contents of a view (invoked by the layout manager)
+        @Override
+        public void onBindViewHolder(ViewHolder holder, int position) {
+            holder.mTextView.setText(mDataset.get(position).displayName);
+        }
+
+        // Return the size of your dataset (invoked by the layout manager)
+        @Override
+        public int getItemCount() {
+            return mDataset.size();
+        }
     }
 }
