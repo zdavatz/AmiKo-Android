@@ -2,6 +2,7 @@ package com.ywesee.amiko;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -81,6 +82,18 @@ public class PatientActivity extends AppCompatActivity {
         mContactAdapter = new ContactListAdapter(new ArrayList<ContactListAdapter.Contact>());
         mContactsRecyclerView.setAdapter(mContactAdapter);
 
+        final Context c = this;
+        ((ContactListAdapter) mContactAdapter).onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int itemPosition = mContactsRecyclerView.getChildLayoutPosition(v);
+                ContactListAdapter.Contact contact= mContactAdapter.mDataset.get(itemPosition);
+                mPatient = contact.toPatient(c.getContentResolver());
+                updateUIForPatient();
+                mDrawerLayout.closeDrawers();
+            }
+        };
+
         mDrawerLayout = findViewById(R.id.drawer_layout);
         mDrawerLayout.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
@@ -105,7 +118,9 @@ public class PatientActivity extends AppCompatActivity {
             editZip.setText(mPatient.zipcode);
             editCountry.setText(mPatient.country);
             editBirthday.setText(mPatient.birthdate);
-            if (mPatient.gender.equals("man")) {
+            if (mPatient.gender == null) {
+                editSex.clearCheck();
+            } else if (mPatient.gender.equals("man")) {
                 editSex.check(R.id.patient_sex_male);
             } else if (mPatient.gender.equals("women")) {
                 editSex.check(R.id.patient_sex_female);
@@ -251,9 +266,6 @@ public class PatientActivity extends AppCompatActivity {
                         new String[] {
                                 ContactsContract.Contacts._ID,
                                 ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
-//                                ContactsContract.CommonDataKinds.Phone.HAS_PHONE_NUMBER,
-//                                ContactsContract.CommonDataKinds.Phone.NUMBER,
-//                                ContactsContract.CommonDataKinds.Email.ADDRESS,
                         },
                         null,
                         null,
@@ -341,6 +353,103 @@ public class PatientActivity extends AppCompatActivity {
             public String displayName;
             public String givenName;
             public String familyName;
+
+            Patient toPatient(ContentResolver cr) {
+                String phoneNumber = null;
+                String emailAddress = null;
+                String birthday = null;
+                String street = null;
+                String city = null;
+                String country = null;
+                String zip = null;
+
+                Cursor emailCur = cr.query(
+                    ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                    new String[] {
+                        ContactsContract.CommonDataKinds.Email.ADDRESS,
+                    },
+                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + "= ? ",
+                    new String[]{ this.contactId },
+                    null);
+
+                if (emailCur.moveToFirst()) {
+                    emailAddress = emailCur.getString(0);
+                }
+                emailCur.close();
+
+                Cursor phoneCur = cr.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        new String[] {
+                            ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        },
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        new String[] { this.contactId },
+                        null);
+                if (phoneCur.moveToFirst()) {
+                    phoneNumber = phoneCur.getString(0);
+                }
+                phoneCur.close();
+
+                Cursor eventCur = cr.query(
+                        ContactsContract.Data.CONTENT_URI,
+                        new String[] {
+                            ContactsContract.CommonDataKinds.Event.START_DATE,
+                        },
+                        ContactsContract.CommonDataKinds.Event.CONTACT_ID + "= ? AND "
+                        + ContactsContract.Data.MIMETYPE + "= ? AND "
+                        + ContactsContract.CommonDataKinds.Event.TYPE + "= " + ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY,
+                        new String[] {
+                            this.contactId,
+                            ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE,
+                        },
+                        null);
+                if (eventCur.moveToFirst()) {
+                    birthday = eventCur.getString(0);
+                }
+                if (birthday != null) {
+                    String[] parts = birthday.split("-");
+                    if (parts.length == 3) {
+                        birthday = parts[2] + "." + parts[1] + "." + parts[0];
+                    } else if (parts.length == 4) {
+                        // birthday event without year
+                        birthday = parts[3] + "." + parts[2] + ".";
+                    }
+                }
+                eventCur.close();
+
+                Cursor addressCur = cr.query(
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
+                        new String[] {
+                                ContactsContract.CommonDataKinds.StructuredPostal.CITY,
+                                ContactsContract.CommonDataKinds.StructuredPostal.COUNTRY,
+                                ContactsContract.CommonDataKinds.StructuredPostal.POSTCODE,
+                                ContactsContract.CommonDataKinds.StructuredPostal.STREET,
+                        },
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID + "= ? ",
+                        new String[] {
+                                this.contactId,
+                        },
+                        null);
+                if (addressCur.moveToFirst()) {
+                    city = addressCur.getString(0);
+                    country = addressCur.getString(1);
+                    zip = addressCur.getString(2);
+                    street = addressCur.getString(3);
+                }
+                addressCur.close();
+
+                Patient p = new Patient();
+                p.givenname = this.givenName;
+                p.familyname = this.familyName;
+                p.email = emailAddress;
+                p.birthdate = birthday;
+                p.phone = phoneNumber;
+                p.city = city;
+                p.country = country;
+                p.zipcode = zip;
+                p.address = street;
+                return p;
+            }
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
