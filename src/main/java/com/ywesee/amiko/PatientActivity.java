@@ -10,14 +10,12 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +26,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import static android.Manifest.permission.READ_CONTACTS;
@@ -274,29 +273,55 @@ public class PatientActivity extends AppCompatActivity {
         if (cursor == null) {
             return;
         }
+
         ArrayList<ContactListAdapter.Contact> contacts = new ArrayList<ContactListAdapter.Contact>();
+        HashMap<String, ContactListAdapter.Contact> contactById = new HashMap<>();
         while(cursor.moveToNext()) {
-            String id = cursor.getString(0);
-            Cursor pCur = cr.query(
-                    ContactsContract.Data.CONTENT_URI,
-                    new String[] {
-                            ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
-                            ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME
-                    },
-                    ContactsContract.CommonDataKinds.StructuredName.RAW_CONTACT_ID + "= ? AND " + ContactsContract.Data.MIMETYPE + " = ?",
-                    new String[]{ id, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE },
-                    null);
             ContactListAdapter.Contact c = new ContactListAdapter.Contact();
-            while (pCur.moveToNext()) {
-                c.contactId = id;
-                c.givenName = pCur.getString(0);
-                c.familyName = pCur.getString(1);
-                c.displayName = cursor.getString(1);
-                contacts.add(c);
-            }
-            pCur.close();
+            String id = cursor.getString(0);
+            c.contactId = id;
+            c.displayName = cursor.getString(1);
+            contacts.add(c);
+            contactById.put(id, c);
         }
         cursor.close();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(ContactsContract.CommonDataKinds.StructuredName.RAW_CONTACT_ID);
+        sb.append(" IN (");
+        int i = 0;
+        for (String id : contactById.keySet()) {
+            sb.append("'" + id + "'");
+            i++;
+            if (i < contactById.size()) {
+                sb.append(",");
+            }
+        }
+        sb.append(")");
+        sb.append(" AND " + ContactsContract.Data.MIMETYPE + " = ? ");
+
+        Cursor pCur = cr.query(
+                ContactsContract.Data.CONTENT_URI,
+                new String[] {
+                        ContactsContract.Data.CONTACT_ID,
+                        ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
+                        ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
+                },
+                sb.toString(),
+                new String[] { ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE },
+                null);
+
+        while (pCur.moveToNext()) {
+            String id = pCur.getString(0);
+            ContactListAdapter.Contact c = contactById.get(id);
+            if (c == null) {
+                continue;
+            }
+            c.givenName = pCur.getString(1);
+            c.familyName = pCur.getString(2);
+        }
+        pCur.close();
+
         mContactAdapter.mDataset = contacts;
         mContactAdapter.notifyDataSetChanged();
     }
@@ -368,7 +393,7 @@ public class PatientActivity extends AppCompatActivity {
                     new String[] {
                         ContactsContract.CommonDataKinds.Email.ADDRESS,
                     },
-                    ContactsContract.CommonDataKinds.Email.CONTACT_ID + "= ? ",
+                    ContactsContract.CommonDataKinds.Email.RAW_CONTACT_ID + "= ? ",
                     new String[]{ this.contactId },
                     null);
 
@@ -382,7 +407,7 @@ public class PatientActivity extends AppCompatActivity {
                         new String[] {
                             ContactsContract.CommonDataKinds.Phone.NUMBER,
                         },
-                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        ContactsContract.CommonDataKinds.Phone.RAW_CONTACT_ID + " = ?",
                         new String[] { this.contactId },
                         null);
                 if (phoneCur.moveToFirst()) {
@@ -395,7 +420,7 @@ public class PatientActivity extends AppCompatActivity {
                         new String[] {
                             ContactsContract.CommonDataKinds.Event.START_DATE,
                         },
-                        ContactsContract.CommonDataKinds.Event.CONTACT_ID + "= ? AND "
+                        ContactsContract.CommonDataKinds.Event.RAW_CONTACT_ID + "= ? AND "
                         + ContactsContract.Data.MIMETYPE + "= ? AND "
                         + ContactsContract.CommonDataKinds.Event.TYPE + "= " + ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY,
                         new String[] {
