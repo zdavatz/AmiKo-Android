@@ -124,7 +124,8 @@ class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.ViewHol
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.mTextView.setText(mDataset.get(position).givenname);
+        Patient p = mDataset.get(position);
+        holder.mTextView.setText(p.familyname + " " + p.givenname);
     }
 
     // Return the size of your dataset (invoked by the layout manager)

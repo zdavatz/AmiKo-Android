@@ -264,7 +264,6 @@ public class PatientActivity extends AppCompatActivity {
         Cursor cursor = cr.query(ContactsContract.Contacts.CONTENT_URI,
                         new String[] {
                                 ContactsContract.Contacts._ID,
-                                ContactsContract.Contacts.DISPLAY_NAME_PRIMARY,
                         },
                         null,
                         null,
@@ -280,7 +279,6 @@ public class PatientActivity extends AppCompatActivity {
             ContactListAdapter.Contact c = new ContactListAdapter.Contact();
             String id = cursor.getString(0);
             c.contactId = id;
-            c.displayName = cursor.getString(1);
             contacts.add(c);
             contactById.put(id, c);
         }
@@ -402,7 +400,6 @@ public class PatientActivity extends AppCompatActivity {
 
         static class Contact {
             public String contactId;
-            public String displayName;
             public String givenName;
             public String familyName;
 
@@ -527,7 +524,16 @@ public class PatientActivity extends AppCompatActivity {
         // Replace the contents of a view (invoked by the layout manager)
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.mTextView.setText(mDataset.get(position).displayName);
+            Contact c = mDataset.get(position);
+            String familyName = c.familyName;
+            String givenName = c.givenName;
+            if (familyName == null) {
+                familyName = "";
+            }
+            if (givenName == null) {
+                givenName = "";
+            }
+            holder.mTextView.setText(familyName + " " + givenName);
         }
 
         // Return the size of your dataset (invoked by the layout manager)
