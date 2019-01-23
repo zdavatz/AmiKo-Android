@@ -89,6 +89,8 @@ public class PatientActivity extends AppCompatActivity {
                 ContactListAdapter.Contact contact= mContactAdapter.mDataset.get(itemPosition);
                 mPatient = contact.toPatient(c.getContentResolver());
                 updateUIForPatient();
+                // Reset patient so new record will be saved
+                mPatient = null;
                 mDrawerLayout.closeDrawers();
             }
         };
