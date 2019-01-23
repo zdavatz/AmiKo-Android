@@ -209,7 +209,7 @@ public class PatientActivity extends AppCompatActivity {
 
                 boolean errored = false;
 
-                for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editBirthday)) {
+                for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editBirthday, editPhone, editEmail)) {
                     if (v.length() == 0) {
                         v.setError(getString(R.string.required));
                         errored = true;
