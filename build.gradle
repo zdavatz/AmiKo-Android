@@ -53,7 +53,7 @@ android {
     */
 
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion 26
     }
     flavorDimensions "version"

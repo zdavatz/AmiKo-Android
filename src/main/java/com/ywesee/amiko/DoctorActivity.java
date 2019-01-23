@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -159,17 +160,31 @@ public class DoctorActivity extends AppCompatActivity {
             saveSignatureImage(imageBitmap);
         } else if (requestCode == REQUEST_IMAGE_LIBRARY && resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-            Cursor cursor = getContentResolver().query(selectedImage,
-                    new String[] { MediaStore.Images.ImageColumns.ORIENTATION }, null, null, null);
-
-            cursor.moveToFirst();
-            int orientation = cursor.getInt(0);
             try {
                 InputStream is = getContentResolver().openInputStream(selectedImage);
                 Bitmap imageBitmap = BitmapFactory.decodeStream(is);
-                if (orientation != 0) {
+                InputStream is2 = getContentResolver().openInputStream(selectedImage);
+                ExifInterface exif = new ExifInterface(is2);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_UNDEFINED);
+                int orientationInt = 0;
+                switch (orientation) {
+                    case ExifInterface.ORIENTATION_ROTATE_90:
+                        orientationInt = 90;
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_180:
+                        orientationInt = 180;
+                        break;
+                    case ExifInterface.ORIENTATION_ROTATE_270:
+                        orientationInt = 270;
+                        break;
+                    default:
+                        orientationInt = 0;
+                }
+
+                if (orientationInt != 0) {
                     Matrix matrix = new Matrix();
-                    matrix.postRotate(orientation);
+                    matrix.postRotate(orientationInt);
 
                     imageBitmap = Bitmap.createBitmap(imageBitmap, 0, 0, imageBitmap.getWidth(),
                             imageBitmap.getHeight(), matrix, true);
