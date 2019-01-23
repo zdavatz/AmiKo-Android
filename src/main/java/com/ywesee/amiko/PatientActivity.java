@@ -322,6 +322,33 @@ public class PatientActivity extends AppCompatActivity {
         }
         pCur.close();
 
+        Collections.sort(contacts, new Comparator<ContactListAdapter.Contact>() {
+            @Override
+            public int compare(ContactListAdapter.Contact c1, ContactListAdapter.Contact c2) {
+                String familyName1 = c1.familyName;
+                String familyName2 = c2.familyName;
+                String givenName1 = c1.givenName;
+                String givenName2 = c2.givenName;
+                if (familyName1 == null) {
+                    familyName1 = "";
+                }
+                if (familyName2 == null) {
+                    familyName2 = "";
+                }
+                if (givenName1 == null) {
+                    givenName1 = "";
+                }
+                if (givenName2 == null) {
+                    givenName2 = "";
+                }
+                int result1 = familyName1.compareToIgnoreCase(familyName2);
+                if (result1 != 0) {
+                    return result1;
+                }
+                return givenName1.compareToIgnoreCase(givenName2);
+            }
+        });
+
         mContactAdapter.mDataset = contacts;
         mContactAdapter.notifyDataSetChanged();
     }

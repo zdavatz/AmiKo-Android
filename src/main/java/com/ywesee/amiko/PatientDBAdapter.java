@@ -92,7 +92,7 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
                 new String[] {KEY_ROWID, KEY_TIMESTAMP, KEY_UID, KEY_FAMILYNAME, KEY_GIVENNAME, KEY_BIRTHDATE, KEY_GENDER,
                         KEY_WEIGHT_KG, KEY_HEIGHT_CM, KEY_ZIPCODE, KEY_CITY, KEY_COUNTRY, KEY_ADDRESS, KEY_PHONE,
                         KEY_EMAIL},
-                null, null, null, null, null);
+                null, null, null, null, KEY_FAMILYNAME + "," + KEY_GIVENNAME);
 
         cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
