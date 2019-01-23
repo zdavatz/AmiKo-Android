@@ -26,10 +26,10 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-
-import static android.Manifest.permission.READ_CONTACTS;
 
 public class PatientActivity extends AppCompatActivity {
 
@@ -284,20 +284,6 @@ public class PatientActivity extends AppCompatActivity {
         }
         cursor.close();
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(ContactsContract.CommonDataKinds.StructuredName.RAW_CONTACT_ID);
-        sb.append(" IN (");
-        int i = 0;
-        for (String id : contactById.keySet()) {
-            sb.append("'" + id + "'");
-            i++;
-            if (i < contactById.size()) {
-                sb.append(",");
-            }
-        }
-        sb.append(")");
-        sb.append(" AND " + ContactsContract.Data.MIMETYPE + " = ? ");
-
         Cursor pCur = cr.query(
                 ContactsContract.Data.CONTENT_URI,
                 new String[] {
@@ -305,7 +291,7 @@ public class PatientActivity extends AppCompatActivity {
                         ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,
                         ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME,
                 },
-                sb.toString(),
+                ContactsContract.Data.MIMETYPE + " = ? ",
                 new String[] { ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE },
                 null);
 
