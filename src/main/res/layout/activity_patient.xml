@@ -202,19 +202,26 @@
     </LinearLayout>
 
     <!-- View for drawer -->
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/contacts_recycler_view"
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="right"
         android:background="@color/white"
-        />
-
-    <!--android:layout_width="200dp"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:layout_gravity="right"-->
-    <!--android:choiceMode="singleChoice"-->
-    <!--android:dividerHeight="1dp"-->
-    <!--android:background="@color/white"-->
+        >
+        <EditText
+            android:id="@+id/search_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:hint="@string/search"
+            android:singleLine="true"
+            android:text="" />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/contacts_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+    </LinearLayout>
 
 </android.support.v4.widget.DrawerLayout>

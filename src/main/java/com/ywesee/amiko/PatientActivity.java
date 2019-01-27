@@ -16,6 +16,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -51,7 +53,10 @@ public class PatientActivity extends AppCompatActivity {
     private EditText editPhone;
     private EditText editEmail;
 
+    private EditText mSearchField;
+
     private DrawerLayout mDrawerLayout;
+    private ArrayList<ContactListAdapter.Contact> allContacts;
     private RecyclerView mContactsRecyclerView;
     private ContactListAdapter mContactAdapter;
 
@@ -73,6 +78,20 @@ public class PatientActivity extends AppCompatActivity {
         editHeight = findViewById(R.id.patient_height);
         editPhone = findViewById(R.id.patient_phone);
         editEmail = findViewById(R.id.patient_email);
+
+        mSearchField = findViewById(R.id.search_field);
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                applyContactsAndUpdateSearchResult();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) { }
+        });
 
         mContactsRecyclerView = findViewById(R.id.contacts_recycler_view);
         mContactsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -100,11 +119,14 @@ public class PatientActivity extends AppCompatActivity {
             @Override
             public void onDrawerOpened(@NonNull View view) {
                 queryContacts();
+                mSearchField.requestFocus();
             }
             @Override
             public void onDrawerSlide(@NonNull View view, float v) {}
             @Override
-            public void onDrawerClosed(@NonNull View view) {}
+            public void onDrawerClosed(@NonNull View view) {
+                mSearchField.clearFocus();
+            }
             @Override
             public void onDrawerStateChanged(int i) {}
         });
@@ -335,7 +357,23 @@ public class PatientActivity extends AppCompatActivity {
             }
         });
 
-        mContactAdapter.mDataset = contacts;
+        allContacts = contacts;
+        applyContactsAndUpdateSearchResult();
+    }
+
+    public void applyContactsAndUpdateSearchResult() {
+        String searchQuery = mSearchField.getText().toString();
+        if (searchQuery.equals("")) {
+            mContactAdapter.mDataset = allContacts;
+        } else {
+            ArrayList<ContactListAdapter.Contact> contacts = new ArrayList<>();
+            for (ContactListAdapter.Contact c : allContacts) {
+                if (c.stringForDisplay().toLowerCase().contains(searchQuery.toLowerCase())) {
+                    contacts.add(c);
+                }
+            }
+            mContactAdapter.mDataset = contacts;
+        }
         mContactAdapter.notifyDataSetChanged();
     }
 
@@ -487,6 +525,18 @@ public class PatientActivity extends AppCompatActivity {
                 p.address = street;
                 return p;
             }
+
+            public String stringForDisplay() {
+                String f = this.familyName;
+                String g= this.givenName;
+                if (f == null) {
+                    f = "";
+                }
+                if (g == null) {
+                    g = "";
+                }
+                return f + " " + g;
+            }
         }
 
         // Provide a suitable constructor (depends on the kind of dataset)
@@ -513,15 +563,7 @@ public class PatientActivity extends AppCompatActivity {
         @Override
         public void onBindViewHolder(ViewHolder holder, int position) {
             Contact c = mDataset.get(position);
-            String familyName = c.familyName;
-            String givenName = c.givenName;
-            if (familyName == null) {
-                familyName = "";
-            }
-            if (givenName == null) {
-                givenName = "";
-            }
-            holder.mTextView.setText(familyName + " " + givenName);
+            holder.mTextView.setText(c.stringForDisplay());
         }
 
         // Return the size of your dataset (invoked by the layout manager)
