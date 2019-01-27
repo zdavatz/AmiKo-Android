@@ -9,17 +9,22 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class PatientListActivity extends AppCompatActivity {
     private RecyclerView mRecyclerView;
-    private RecyclerView.Adapter mAdapter;
+    private EditText mSearchField;
+    private PatientListAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private PatientDBAdapter mDBAdapter;
     private List<Patient> mAllPatients;
@@ -45,11 +50,11 @@ public class PatientListActivity extends AppCompatActivity {
 
         // specify an adapter (see also next example)
         mAdapter = new PatientListAdapter(mAllPatients);
-        ((PatientListAdapter) mAdapter).onClickListener = new View.OnClickListener() {
+        mAdapter.onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int itemPosition = mRecyclerView.getChildLayoutPosition(v);
-                Patient patient = mAllPatients.get(itemPosition);
+                Patient patient = mAdapter.mDataset.get(itemPosition);
                 Intent data = new Intent();
                 data.putExtra("patient",patient);
                 setResult(0, data);
@@ -57,7 +62,7 @@ public class PatientListActivity extends AppCompatActivity {
             }
         };
         final Context context = this;
-        ((PatientListAdapter) mAdapter).onLongClickListener = new View.OnLongClickListener() {
+        mAdapter.onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 int itemPosition = mRecyclerView.getChildLayoutPosition(v);
@@ -78,6 +83,40 @@ public class PatientListActivity extends AppCompatActivity {
             }
         };
         mRecyclerView.setAdapter(mAdapter);
+
+        mSearchField = (EditText)findViewById(R.id.search_field);
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                applyPatientsAndUpdateSearchResult();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+    }
+
+    public void applyPatientsAndUpdateSearchResult() {
+        String searchQuery = mSearchField.getText().toString();
+        if (searchQuery.equals("")) {
+            mAdapter.mDataset = mAllPatients;
+        } else {
+            ArrayList<Patient> contacts = new ArrayList<>();
+            for (Patient p : mAllPatients) {
+                if (p.stringForDisplay().toLowerCase().contains(searchQuery.toLowerCase())) {
+                    contacts.add(p);
+                }
+            }
+            mAdapter.mDataset = contacts;
+        }
+        mAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -125,7 +164,7 @@ class PatientListAdapter extends RecyclerView.Adapter<PatientListAdapter.ViewHol
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Patient p = mDataset.get(position);
-        holder.mTextView.setText(p.familyname + " " + p.givenname);
+        holder.mTextView.setText(p.stringForDisplay());
     }
 
     // Return the size of your dataset (invoked by the layout manager)

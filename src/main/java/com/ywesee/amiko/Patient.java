@@ -85,4 +85,8 @@ public class Patient implements Serializable {
     public int hashValue() {
         return String.format("%s.%s.%s", this.familyname, this.givenname, this.birthdate).hashCode();
     }
+
+    public String stringForDisplay() {
+        return this.familyname + " " + this.givenname;
+    }
 }
