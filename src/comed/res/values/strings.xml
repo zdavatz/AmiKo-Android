@@ -59,6 +59,7 @@
     <string name="country">Pays</string>
     <string name="birthday">Annivrs.*</string>
     <string name="sex">Gendre*</string>
+    <string name="weight_kg">Poids (kg)</string>
     <string name="height_cm">Taille (cm)</string>
 
     <string name="save">Sauver</string>

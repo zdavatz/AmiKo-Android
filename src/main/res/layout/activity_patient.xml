@@ -147,7 +147,7 @@
                         android:id="@+id/patient_weight_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="weight(kg)" />
+                        android:text="@string/weight_kg" />
                 <EditText
                     android:id="@+id/patient_weight"
                     android:layout_width="match_parent"
