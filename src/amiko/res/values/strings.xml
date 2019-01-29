@@ -59,6 +59,7 @@
     <string name="country">Land</string>
     <string name="birthday">Geburtstag*</string>
     <string name="sex">Geschlecht*</string>
+    <string name="weight_kg">Gewicht (kg)</string>
     <string name="height_cm">Grösse (cm)</string>
 
     <string name="save">Speichern</string>
