@@ -521,9 +521,7 @@ public class MainActivity extends AppCompatActivity {
     // Change view
     setCurrentView(mSuggestView, true);
     // Set tab
-      if (getSupportActionBar().getNavigationMode() == ActionBar.NAVIGATION_MODE_TABS) {
-        getSupportActionBar().setSelectedNavigationItem(0);
-      }
+    getSupportActionBar().setSelectedNavigationItem(0);
       // Restore hint
     mActionName = getString(R.string.tab_name_1); // Präparat
     mSearch.setHint(getString(R.string.search) + " " + mActionName);
@@ -878,25 +876,6 @@ public class MainActivity extends AppCompatActivity {
     getMenuInflater().inflate(R.menu.actionbar, menu);
 
     mSearchItem = menu.findItem(R.id.menu_search);
-    mSearchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-      @Override
-      public boolean onMenuItemActionExpand(MenuItem item) {
-        int orientation = getResources().getConfiguration().orientation;
-        if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        }
-        return true;
-      }
-
-      @Override
-      public boolean onMenuItemActionCollapse(MenuItem item) {
-        int orientation = getResources().getConfiguration().orientation;
-        if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        }
-        return true;
-      }
-    });
     mSearchItem.expandActionView();
     mSearchItem.setVisible(true);
     mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
@@ -1350,14 +1329,8 @@ public class MainActivity extends AppCompatActivity {
       // Checks the orientation of the screen
       if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
         mWebView.getSettings().setTextZoom(125);
-        if (mSearchItem.isActionViewExpanded()) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        } else {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        }
       } else if (newConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
         mWebView.getSettings().setTextZoom(175);
-        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
       }
     }
   }
