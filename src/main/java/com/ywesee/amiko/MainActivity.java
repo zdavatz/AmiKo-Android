@@ -63,6 +63,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Picture;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.PictureDrawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -74,12 +75,12 @@ import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBar.Tab;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.Selection;
@@ -109,6 +110,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
@@ -175,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
   private MenuItem mSearchItem = null;
   private EditText mSearch = null;
   private Button mDelete = null;
+  private TabLayout mTabLayout = null;
 
   // Viewholder and views
   private ViewGroup mViewHolder = null;
@@ -227,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
    * Show soft keyboard
    */
   private void showSoftKeyboard(int duration) {
+    if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) return;
     mSearch.requestFocus();
     mSearch.postDelayed(new Runnable() {
             @Override
@@ -386,52 +390,49 @@ public class MainActivity extends AppCompatActivity {
     actionBar.setBackgroundDrawable(new ColorDrawable(Color.argb(255,180,180,180)));
 
     //
-    actionBar.removeAllTabs();
-    actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
     actionBar.setTitle(R.string.app_name);
 
-    Tab tab = actionBar.newTab().setText(R.string.tab_name_1)
-        .setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_1)));
-    actionBar.addTab(tab);
+    TabLayout.Tab tab = mTabLayout.newTab().setText(R.string.tab_name_1);
+    mTabLayout.addTab(tab);
 
-    tab = actionBar.newTab().setText(R.string.tab_name_2)
-        .setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_2)));
-    actionBar.addTab(tab);
+    tab = mTabLayout.newTab().setText(R.string.tab_name_2);
+    mTabLayout.addTab(tab);
 
-    tab = actionBar.newTab().setText(R.string.tab_name_3)
-        .setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_3)));
-    actionBar.addTab(tab);
+    tab = mTabLayout.newTab().setText(R.string.tab_name_3);
+    mTabLayout.addTab(tab);
 
-    tab = actionBar.newTab().setText(R.string.tab_name_4)
-        .setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_4)));
-    actionBar.addTab(tab);
+    tab = mTabLayout.newTab().setText(R.string.tab_name_4);
+    mTabLayout.addTab(tab);
 
-    tab = actionBar.newTab().setText(R.string.tab_name_5)
-        .setTabListener(new MyTabListener(this, TabFragment.class.getName(), getString(R.string.tab_name_5)));
-    actionBar.addTab(tab);
+    tab = mTabLayout.newTab().setText(R.string.tab_name_5);
+    mTabLayout.addTab(tab);
+    mTabLayout.addOnTabSelectedListener(new MyTabListener(this, TabFragment.class.getName()));
+
+    LinearLayout linearLayout = (LinearLayout)mTabLayout.getChildAt(0);
+    linearLayout.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+    GradientDrawable drawable = new GradientDrawable();
+    drawable.setColor(Color.GRAY);
+    drawable.setSize(1, 1);
+    linearLayout.setDividerPadding(10);
+    linearLayout.setDividerDrawable(drawable);
   }
 
   private void restoreTabNavigation() {
-    if (mActionName.equals(getString(R.string.tab_name_1)))
-      getSupportActionBar().setSelectedNavigationItem(0);
-    else if (mActionName.equals(getString(R.string.tab_name_2)))
-      getSupportActionBar().setSelectedNavigationItem(1);
-    else if (mActionName.equals(getString(R.string.tab_name_3)))
-      getSupportActionBar().setSelectedNavigationItem(2);
-    else if (mActionName.equals(getString(R.string.tab_name_4)))
-      getSupportActionBar().setSelectedNavigationItem(3);
-    else if (mActionName.equals(getString(R.string.tab_name_5)))
-      getSupportActionBar().setSelectedNavigationItem(4);
+    if (mActionName.equals(getString(R.string.tab_name_1))) {
+      mTabLayout.getTabAt(0).select();
+    } else if (mActionName.equals(getString(R.string.tab_name_2))) {
+      mTabLayout.getTabAt(1).select();
+    } else if (mActionName.equals(getString(R.string.tab_name_3))) {
+      mTabLayout.getTabAt(2).select();
+    } else if (mActionName.equals(getString(R.string.tab_name_4))) {
+      mTabLayout.getTabAt(0).select();
+    } else if (mActionName.equals(getString(R.string.tab_name_5))) {
+      mTabLayout.getTabAt(0).select();
+    }
   }
 
   private void removeTabNavigation() {
-    try {
-      ActionBar actionbar = (ActionBar) getSupportActionBar();
-          actionbar.selectTab(null);
-    } catch (Exception e) {
-      // Do nothing
-    }
-    // Alternative -> removeAllTabs();
+
   }
 
   /**
@@ -475,10 +476,8 @@ public class MainActivity extends AppCompatActivity {
         if (mCurrentView==mShowView) {
           hideSoftKeyboard(300);
           removeTabNavigation();
-          // getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         } else if (mCurrentView==mSuggestView) {
           restoreTabNavigation();
-          // getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
         }
       }
     }
@@ -521,9 +520,7 @@ public class MainActivity extends AppCompatActivity {
     // Change view
     setCurrentView(mSuggestView, true);
     // Set tab
-      if (getSupportActionBar().getNavigationMode() == ActionBar.NAVIGATION_MODE_TABS) {
-        getSupportActionBar().setSelectedNavigationItem(0);
-      }
+    mTabLayout.getTabAt(0).select();
       // Restore hint
     mActionName = getString(R.string.tab_name_1); // Präparat
     mSearch.setHint(getString(R.string.search) + " " + mActionName);
@@ -541,32 +538,34 @@ public class MainActivity extends AppCompatActivity {
    * Implements listeners for action bar
    * @author MaxL
    */
-  private class MyTabListener implements ActionBar.TabListener {
+  private class MyTabListener implements TabLayout.OnTabSelectedListener {
 
     private Fragment mFragment;
     private final Activity mActivity;
     private final String mFragName;
-    private final String mTabName;
+//    private final String mTabName;
 
-    public MyTabListener(Activity activity, String fragName, String tabName) {
+    public MyTabListener(Activity activity, String fragName) {
       mActivity = activity;
       mFragName = fragName;
-      mTabName = tabName;
+
       // mActionName = getString(R.string.tab_name_1); // Präparat
     }
 
     @Override
-    public void onTabSelected(Tab tab, FragmentTransaction ft) {
+    public void onTabSelected(TabLayout.Tab tab) {
       mFragment = Fragment.instantiate(mActivity, mFragName);
+      FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
       ft.add(android.R.id.content, mFragment);
-      mActionName = mTabName;
+      ft.commit();
+      mActionName = tab.getText().toString();
       if (mMedis!=null) {
         mTimer = System.currentTimeMillis();
         showResults(mMedis);
       }
       // Set hint
       if (mSearch!=null) {
-        mSearch.setHint(getString(R.string.search) + " " + mTabName);
+        mSearch.setHint(getString(R.string.search) + " " + mActionName);
       }
       // Change content view
       if (mCurrentView==mSuggestView)
@@ -576,10 +575,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onTabReselected(Tab tab, FragmentTransaction ft) {
+    public void onTabReselected(TabLayout.Tab tab) {
       if (mSearch!=null) {
         // Set hint
-        mSearch.setHint(getString(R.string.search) + " " + mTabName);
+        mSearch.setHint(getString(R.string.search) + " " + tab.getText().toString());
       }
       // Change content view
       if (mCurrentView==mSuggestView)
@@ -589,8 +588,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onTabUnselected(Tab tab, FragmentTransaction ft) {
-      ft.remove( mFragment );
+    public void onTabUnselected(TabLayout.Tab tab) {
+      FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+      if (mFragment != null) {
+        ft.remove(mFragment);
+      }
+      ft.commit();
       mFragment = null;
     }
   }
@@ -646,6 +649,9 @@ public class MainActivity extends AppCompatActivity {
     mViewHolder = (ViewGroup) findViewById(R.id.main_layout);
     mViewHolder.addView(mSuggestView);
     mViewHolder.addView(mShowView);
+
+    mTabLayout = findViewById(R.id.top_tab_bar);
+    addTabNavigation();
 
     setLayoutTransition();
 
@@ -768,15 +774,6 @@ public class MainActivity extends AppCompatActivity {
     // Enable overlay mode for action bar (no good, search results disappear behind it...)
     // getWindow().requestFeature(Window.FEATURE_ACTION_BAR_OVERLAY);
 
-    // Create action bar
-    int mode = ActionBar.NAVIGATION_MODE_TABS;
-    if (savedInstanceState != null) {
-      mode = savedInstanceState.getInt("mode", ActionBar.NAVIGATION_MODE_TABS);
-    }
-
-    // Sets tab bar items
-    addTabNavigation();
-
     // Reset action name
     Log.d(TAG, "OnCreate -> " + mActionName);
     mActionName = getString(R.string.tab_name_1);
@@ -878,25 +875,6 @@ public class MainActivity extends AppCompatActivity {
     getMenuInflater().inflate(R.menu.actionbar, menu);
 
     mSearchItem = menu.findItem(R.id.menu_search);
-    mSearchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-      @Override
-      public boolean onMenuItemActionExpand(MenuItem item) {
-        int orientation = getResources().getConfiguration().orientation;
-        if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        }
-        return true;
-      }
-
-      @Override
-      public boolean onMenuItemActionCollapse(MenuItem item) {
-        int orientation = getResources().getConfiguration().orientation;
-        if (orientation==Configuration.ORIENTATION_LANDSCAPE) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        }
-        return true;
-      }
-    });
     mSearchItem.expandActionView();
     mSearchItem.setVisible(true);
     mSearch = (EditText) mSearchItem.getActionView().findViewById(R.id.search_box);
@@ -1340,24 +1318,25 @@ public class MainActivity extends AppCompatActivity {
     super.onSaveInstanceState(savedInstanceState);
     // Save UI state changes to the savedInstanceState.
     // This bundle will be passed to onCreate if the process is killed and restarted.
-    savedInstanceState.putInt("mode", getSupportActionBar().getNavigationMode());
+//    savedInstanceState.putInt("mode", getSupportActionBar().getNavigationMode());
   }
 
   @Override
   public void onConfigurationChanged(Configuration newConfig) {
     super.onConfigurationChanged(newConfig);
+    if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
+      getSupportActionBar().hide();
+      InputMethodManager keyboard = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+      keyboard.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+    } else if (newConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
+      getSupportActionBar().show();
+    }
     if (mWebView!=null) {
       // Checks the orientation of the screen
       if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
         mWebView.getSettings().setTextZoom(125);
-        if (mSearchItem.isActionViewExpanded()) {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        } else {
-          getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-        }
       } else if (newConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
         mWebView.getSettings().setTextZoom(175);
-        getSupportActionBar().setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
       }
     }
   }
