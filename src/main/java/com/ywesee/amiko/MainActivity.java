@@ -476,8 +476,10 @@ public class MainActivity extends AppCompatActivity {
         if (mCurrentView==mShowView) {
           hideSoftKeyboard(300);
           removeTabNavigation();
+          mBottomNavigationView.setVisibility(View.GONE);
         } else if (mCurrentView==mSuggestView) {
           restoreTabNavigation();
+          mBottomNavigationView.setVisibility(View.VISIBLE);
         }
       }
     }
