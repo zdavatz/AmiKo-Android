@@ -153,7 +153,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */
-	public void copyFilesFromNonPersistentFolder() throws IOException {
+	public void copyFilesFromNonPersistentFolder() throws Exception {
 		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
 			/*
 			this.getReadableDatabase();
@@ -165,7 +165,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
-				throw new Error("Error copying database!");
+				throw new Exception("Error copying database!");
 			}
 		}
 		if (!checkFileExistsAtPath(mReportName, mAppDataDir)) {
@@ -175,7 +175,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): report file copied");
 			} catch (IOException e) {
-				throw new Error("Error copying report file!");
+				throw new Exception("Error copying report file!");
 			}
 		}
 		if (!checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
@@ -185,7 +185,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): drug interactions file copied");
 			} catch (IOException e) {
-				throw new Error("Error copying drug interactions file!");
+				throw new Exception("Error copying drug interactions file!");
 			}
 		}
 	}
@@ -378,14 +378,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 			Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
-			throw new Error("Error overwriting database!");
+			throw new Exception("Error overwriting database: " + e);
 		}
 	}
 
 	/**
 	 * Overwrite drug interactions file
 	 */
-	public void overwriteInteractionsFile(String srcFile, int fileSize) throws IOException {
+	public void overwriteInteractionsFile(String srcFile, int fileSize) throws Exception {
 		try {
         	if (fileSize<0)
         		fileSize = Constants.INTERACTIONS_FILE_SIZE;
@@ -394,7 +394,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old drug interactions file overwritten");
 		} catch (IOException e) {
-			throw new Error("Error overwriting drug interactions file!");
+			throw new Exception("Error overwriting drug interactions file!");
 		}
 	}
 
@@ -466,7 +466,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			try {
 				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
 			} catch (IOException e) {
-				throw new Error("Error upgrading database from version " + oldVersion + " to version " + newVersion);
+				throw new Exception("Error upgrading database from version " + oldVersion + " to version " + newVersion);
 		    }
 		    */
 		}

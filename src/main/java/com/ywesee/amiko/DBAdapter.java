@@ -186,7 +186,7 @@ public class DBAdapter {
 	 * Creates database
 	 * @throws IOException
 	 */
-	public void create() throws IOException {
+	public void create() throws Exception {
 		try {
 			if (!mDatabaseCreated) {
 				// Copies interactions db and report file from asset folder
@@ -196,9 +196,9 @@ public class DBAdapter {
 				overwriteSQLiteDB();
 				overwriteInteractionsFile();
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e(TAG, e.toString() + " Unable to create database");
-			throw new Error("Unable to create database");
+			throw new Exception("Unable to create database");
 		}
 	}
 
@@ -206,15 +206,15 @@ public class DBAdapter {
 	 * Overwrites old database
 	 * @throws IOException
 	 */
-	public void overwriteSQLiteDB() throws IOException {
+	public void overwriteSQLiteDB() throws Exception {
 		try {
 			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 					+ "/" + Constants.appZippedDatabase();
 			// copies and overwrites (if necessary) while unzipping (if necessary)
 			mDbHelper.overwriteSQLiteDataBase(zippedFile, getSizeZippedFile(zippedFile));
-		} catch (IOException e) {
+		} catch (Exception e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");
-			throw new Error("Unable to overwrite database");	
+			throw new Exception("Unable to overwrite database");
 		}
 	}
 	
@@ -222,7 +222,7 @@ public class DBAdapter {
 	 * Overwrites old drug interactions file
 	 * @throws IOException
 	 */
-	public void overwriteInteractionsFile() throws IOException {
+	public void overwriteInteractionsFile() throws Exception {
 		try {
 			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) 
 					+ "/" + Constants.appZippedInteractionsFile();
@@ -230,7 +230,7 @@ public class DBAdapter {
 			mDbHelper.overwriteInteractionsFile(zippedFile, getSizeZippedFile(zippedFile));
 		} catch (IOException e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite drug interactions file");
-			throw new Error("Unable to overwrite drug interactions file");	
+			throw new Exception("Unable to overwrite drug interactions file");
 		}
 	}
 		
