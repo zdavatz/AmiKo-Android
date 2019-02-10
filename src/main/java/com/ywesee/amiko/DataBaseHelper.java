@@ -33,12 +33,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observer;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.DatabaseErrorHandler;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -58,6 +60,36 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	private Observer mObserver;
 
 	private final Context mContext;
+
+	public static boolean checkIfDatabaseIsCorrupted(String path) {
+		final AtomicBoolean success = new AtomicBoolean(true);
+		try {
+			Log.d(TAG, "checking database " + path);
+			SQLiteDatabase db = SQLiteDatabase.openDatabase(
+					path,
+					null,
+					SQLiteDatabase.OPEN_READONLY,
+					new DatabaseErrorHandler() {
+						@Override
+						public void onCorruption(SQLiteDatabase dbObj) {
+							success.set(false);
+						}
+					});
+			if (db == null) {
+				success.set(false);
+			} else {
+				try {
+					db.close();
+				} catch (Exception e){
+					/* Ignore */
+				}
+			}
+		} catch (SQLException sqle ) {
+			Log.e(TAG, "detected corrupted database: " + path + " : " + sqle.toString());
+			success.set(false);
+		}
+		return !success.get();
+	}
 
     /**
      * Constructor
@@ -121,7 +153,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
      * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
      */
-	public void copyFilesFromNonPersistentFolder() throws IOException {
+	public void copyFilesFromNonPersistentFolder() throws Exception {
 		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
 			/*
 			this.getReadableDatabase();
@@ -133,7 +165,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
-				throw new Error("Error copying database!");
+				throw new Exception("Error copying database!");
 			}
 		}
 		if (!checkFileExistsAtPath(mReportName, mAppDataDir)) {
@@ -143,7 +175,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): report file copied");
 			} catch (IOException e) {
-				throw new Error("Error copying report file!");
+				throw new Exception("Error copying report file!");
 			}
 		}
 		if (!checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
@@ -153,7 +185,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): drug interactions file copied");
 			} catch (IOException e) {
-				throw new Error("Error copying drug interactions file!");
+				throw new Exception("Error copying drug interactions file!");
 			}
 		}
 	}
@@ -318,27 +350,42 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	/**
 	 * Overwrite database
 	 */
-	public void overwriteSQLiteDataBase(String srcFile, int fileSize) throws IOException {
+	public void overwriteSQLiteDataBase(String srcFile, int fileSize) throws Exception {
 		/*
 		this.getReadableDatabase();
 		this.close();
 		*/
 		try {
-        	if (fileSize<0)
-        		fileSize = Constants.SQLITE_DB_SIZE;
-			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mAppDataDir + mMainDBName, fileSize, true);
-			if (Constants.DEBUG)
-				Log.d(TAG, "overwriteDataBase(): old database overwritten");
+        	if (fileSize<0) {
+				fileSize = Constants.SQLITE_DB_SIZE;
+			}
+			String dbPath = mAppDataDir + mMainDBName;
+        	String tempFilename = mMainDBName + ".temp.db";
+        	String tempPath= mAppDataDir + mReportName ;
+			// Copy database from src to a temp file, check if it's valid, if yes, override the existing db
+			copyFileFromSrcToPath(srcFile, tempPath, fileSize, true);
+			boolean corrupted = DataBaseHelper.checkIfDatabaseIsCorrupted(tempPath);
+			if (!corrupted) {
+				Log.d(TAG, "overwriteDataBase(): database is not corrupted, overwritting");
+				copyFileFromSrcToPath(tempPath, dbPath, fileSize, false);
+			}
+			File file = new File(mAppDataDir, tempFilename);
+			file.delete();
+			Log.d(TAG, "overwriteDataBase(): deleted temp database file");
+			if (corrupted) {
+				Log.d(TAG, "overwriteDataBase(): database is corrupted, not overwritting");
+				throw new Exception("Corrupted database");
+			}
+			Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
-			throw new Error("Error overwriting database!");
+			throw new Exception("Error overwriting database: " + e);
 		}
 	}
 
 	/**
 	 * Overwrite drug interactions file
 	 */
-	public void overwriteInteractionsFile(String srcFile, int fileSize) throws IOException {
+	public void overwriteInteractionsFile(String srcFile, int fileSize) throws Exception {
 		try {
         	if (fileSize<0)
         		fileSize = Constants.INTERACTIONS_FILE_SIZE;
@@ -347,7 +394,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			if (Constants.DEBUG)
 				Log.d(TAG, "overwriteDataBase(): old drug interactions file overwritten");
 		} catch (IOException e) {
-			throw new Error("Error overwriting drug interactions file!");
+			throw new Exception("Error overwriting drug interactions file!");
 		}
 	}
 
@@ -419,7 +466,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			try {
 				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
 			} catch (IOException e) {
-				throw new Error("Error upgrading database from version " + oldVersion + " to version " + newVersion);
+				throw new Exception("Error upgrading database from version " + oldVersion + " to version " + newVersion);
 		    }
 		    */
 		}

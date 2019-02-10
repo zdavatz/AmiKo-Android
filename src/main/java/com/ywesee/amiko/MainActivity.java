@@ -1122,9 +1122,8 @@ public class MainActivity extends AppCompatActivity {
           mMediDataSource.create();
           // Opens SQLite database
           mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
-        } catch( IOException e) {
+        } catch(Exception e) {
           Log.d(TAG, "AsyncLoadDBTask: Unable to create database folders!");
-          throw new Error("AsyncLoadDBTask: Unable to create database folders");
         }
         // Open drug interactions csv file
         mMedInteractionBasket.loadCsv();
@@ -1204,10 +1203,11 @@ public class MainActivity extends AppCompatActivity {
         });
         // Creates database, interactions, and report file
         // or overwrites them if they already exists
+        Log.d(TAG, "AsyncUpdateDBTask: Updating database");
         mMediDataSource.create();
-      } catch(IOException e) {
-        Log.d(TAG, "Unable to create database!");
-        throw new Error("Unable to create database");
+        Log.d(TAG, "AsyncUpdateDBTask: Updated database");
+      } catch(Exception e) {
+        Log.d(TAG, "Unable to update database!");
       }
 
       // Opens SQLite database
