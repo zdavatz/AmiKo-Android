@@ -432,6 +432,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 */
 	@Override
 	public void onCreate(SQLiteDatabase db)	{
+		super.onOpen(db);
+		db.disableWriteAheadLogging();
 		/*
 		try {
 	        db.execSQL("DROP TABLE IF EXISTS amikodb;");

@@ -67,6 +67,10 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
 
     }
 
+    public void close() {
+        this.close();
+    }
+
     public long insertRecord(Patient p) {
         ContentValues values = p.toContentValues();
         return this.getWritableDatabase().insert(DATABASE_TABLE, null, values);
