@@ -193,7 +193,9 @@ public class DBAdapter {
 				mDbHelper.copyFilesFromNonPersistentFolder();
 				mDatabaseCreated = true;
 			} else {
+				this.closeSQLiteDB();
 				overwriteSQLiteDB();
+				this.openSQLiteDB();
 				overwriteInteractionsFile();
 			}
 		} catch (Exception e) {
