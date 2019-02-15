@@ -361,7 +361,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			}
 			String dbPath = mAppDataDir + mMainDBName;
         	String tempFilename = mMainDBName + ".temp.db";
-        	String tempPath= mAppDataDir + mReportName ;
+        	String tempPath= mAppDataDir + tempFilename;
 			// Copy database from src to a temp file, check if it's valid, if yes, override the existing db
 			copyFileFromSrcToPath(srcFile, tempPath, fileSize, true);
 			boolean corrupted = DataBaseHelper.checkIfDatabaseIsCorrupted(tempPath);
