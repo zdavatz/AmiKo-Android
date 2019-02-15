@@ -61,36 +61,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 	private final Context mContext;
 
-	public static boolean checkIfDatabaseIsCorrupted(String path) {
-		final AtomicBoolean success = new AtomicBoolean(true);
-		try {
-			Log.d(TAG, "checking database " + path);
-			SQLiteDatabase db = SQLiteDatabase.openDatabase(
-					path,
-					null,
-					SQLiteDatabase.OPEN_READONLY,
-					new DatabaseErrorHandler() {
-						@Override
-						public void onCorruption(SQLiteDatabase dbObj) {
-							success.set(false);
-						}
-					});
-			if (db == null) {
-				success.set(false);
-			} else {
-				try {
-					db.close();
-				} catch (Exception e){
-					/* Ignore */
-				}
-			}
-		} catch (SQLException sqle ) {
-			Log.e(TAG, "detected corrupted database: " + path + " : " + sqle.toString());
-			success.set(false);
-		}
-		return !success.get();
-	}
-
     /**
      * Constructor
      * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
@@ -360,22 +330,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				fileSize = Constants.SQLITE_DB_SIZE;
 			}
 			String dbPath = mAppDataDir + mMainDBName;
-        	String tempFilename = mMainDBName + ".temp.db";
-        	String tempPath= mAppDataDir + tempFilename;
-			// Copy database from src to a temp file, check if it's valid, if yes, override the existing db
-			copyFileFromSrcToPath(srcFile, tempPath, fileSize, true);
-			boolean corrupted = DataBaseHelper.checkIfDatabaseIsCorrupted(tempPath);
-			if (!corrupted) {
-				Log.d(TAG, "overwriteDataBase(): database is not corrupted, overwritting");
-				copyFileFromSrcToPath(tempPath, dbPath, fileSize, false);
-			}
-			File file = new File(mAppDataDir, tempFilename);
-			file.delete();
-			Log.d(TAG, "overwriteDataBase(): deleted temp database file");
-			if (corrupted) {
-				Log.d(TAG, "overwriteDataBase(): database is corrupted, not overwritting");
-				throw new Exception("Corrupted database");
-			}
+			// Copy database from src to dest db
+			copyFileFromSrcToPath(srcFile, dbPath, fileSize, true);
 			Log.d(TAG, "overwriteDataBase(): old database overwritten");
 		} catch (IOException e) {
 			throw new Exception("Error overwriting database: " + e);
