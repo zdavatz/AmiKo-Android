@@ -77,7 +77,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -182,7 +181,6 @@ public class MainActivity extends AppCompatActivity {
   private ViewGroup mViewHolder = null;
   private View mSuggestView = null;
   private View mShowView = null;
-  private View mPrescriptView = null;
   // This is the currently visible view
   private View mCurrentView = null;
   private BottomNavigationView mBottomNavigationView;
@@ -284,8 +282,7 @@ public class MainActivity extends AppCompatActivity {
     }
     alert.setPositiveButton(yes, new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int whichButton) {
-        if (!mUpdateInProgress)
-          requestPermissionAndDownloadUpdates();
+        requestPermissionAndDownloadUpdates();
       }
     });
     alert.setNegativeButton(no, new DialogInterface.OnClickListener() {
@@ -417,6 +414,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void restoreTabNavigation() {
+    this.mTabLayout.setVisibility(View.GONE);
     if (mActionName.equals(getString(R.string.tab_name_1))) {
       mTabLayout.getTabAt(0).select();
     } else if (mActionName.equals(getString(R.string.tab_name_2))) {
@@ -431,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void removeTabNavigation() {
-
+    this.mTabLayout.setVisibility(View.GONE);
   }
 
   /**
@@ -472,12 +470,12 @@ public class MainActivity extends AppCompatActivity {
           // Update currently visible view
           mCurrentView = newCurrentView;
           // Hide keyboard
-        if (mCurrentView==mShowView) {
+        if (mCurrentView == mShowView) {
           hideSoftKeyboard(300);
-          removeTabNavigation();
+//          removeTabNavigation();
           mBottomNavigationView.setVisibility(View.GONE);
-        } else if (mCurrentView==mSuggestView) {
-          restoreTabNavigation();
+        } else if (mCurrentView == mSuggestView) {
+//          restoreTabNavigation();
           mBottomNavigationView.setVisibility(View.VISIBLE);
         }
       }
@@ -1480,8 +1478,7 @@ public class MainActivity extends AppCompatActivity {
     }
     case (R.id.menu_pref3): {
       // Download new database (blocking call)
-      if (!mUpdateInProgress)
-        requestPermissionAndDownloadUpdates();
+      requestPermissionAndDownloadUpdates();
       mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
       return true;
     }
@@ -1639,6 +1636,9 @@ public class MainActivity extends AppCompatActivity {
    */
   public void downloadUpdates() {
     // Signal that update is in progress
+    if (mUpdateInProgress) {
+        return;
+    }
     mUpdateInProgress = true;
     mDownloadedFileCount = 0;
 
@@ -1701,33 +1701,35 @@ public class MainActivity extends AppCompatActivity {
       mProgressBar.show();
 
       new Thread(new Runnable() {
+        @Override
+        public void run() {
+          boolean downloading = true;
+            while (downloading) {
+              DownloadManager.Query q = new DownloadManager.Query();
+              q.setFilterById(mDatabaseId);
+              Cursor cursor = mDownloadManager.query(q);
+              cursor.moveToFirst();
+              int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+              int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+              if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
+                downloading = false;
+                if (mProgressBar.isShowing()) {
+                    mProgressBar.dismiss();
+                }
+              }
+              final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
+              runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                  boolean downloading = true;
-                    while (downloading) {
-                      DownloadManager.Query q = new DownloadManager.Query();
-                      q.setFilterById(mDatabaseId);
-                      Cursor cursor = mDownloadManager.query(q);
-                      cursor.moveToFirst();
-                      int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                      int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                        if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
-                          downloading = false;
-                          if (mProgressBar.isShowing())
-                            mProgressBar.dismiss();
-                        }
-                        final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mProgressBar.setProgress((int) dl_progress);
-                        }
-                    });
-                    cursor.close();
-                  }
+                  mProgressBar.setProgress((int) dl_progress);
                 }
+            });
+            cursor.close();
+          }
+        }
       }).start();
     } else {
+      mUpdateInProgress = false;
       // Display error report
     }
   }
