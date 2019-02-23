@@ -2,6 +2,9 @@ package com.ywesee.amiko;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.util.Log;
+
+import org.json.JSONObject;
 
 import java.io.Serializable;
 
@@ -38,6 +41,22 @@ public class Patient implements Serializable {
     public String phone = null;
     public String email = null;
 
+    static public final String KEY_AMK_PAT_ID = "patient_id";
+    static public final String KEY_AMK_PAT_NAME = "given_name";
+    static public final String KEY_AMK_PAT_SURNAME = "family_name";
+    static public final String KEY_AMK_PAT_BIRTHDATE = "birth_date";
+    static public final String KEY_AMK_PAT_WEIGHT = "weight_kg";
+    static public final String KEY_AMK_PAT_HEIGHT = "height_cm";
+    static public final String KEY_AMK_PAT_GENDER = "gender";
+    static public final String KEY_AMK_PAT_GENDER_M = "man";
+    static public final String KEY_AMK_PAT_GENDER_F = "woman";
+    static public final String KEY_AMK_PAT_ADDRESS = "postal_address";
+    static public final String KEY_AMK_PAT_ZIP = "zip_code";
+    static public final String KEY_AMK_PAT_CITY = "city";
+    static public final String KEY_AMK_PAT_COUNTRY = "country";
+    static public final String KEY_AMK_PAT_PHONE = "phone_number";
+    static public final String KEY_AMK_PAT_EMAIL = "email_address";
+
     Patient() {
         this.timestamp = Utilities.currentTimeString();
     }
@@ -57,6 +76,21 @@ public class Patient implements Serializable {
         address = cursor.getString(12);
         phone = cursor.getString(13);
         email = cursor.getString(14);
+    }
+    public Patient(JSONObject json) {
+        this.uid = json.optString(KEY_AMK_PAT_ID);
+        this.givenname = json.optString(KEY_AMK_PAT_NAME);
+        this.familyname = json.optString(KEY_AMK_PAT_SURNAME);
+        this.birthdate = json.optString(KEY_AMK_PAT_BIRTHDATE);
+        this.weight_kg = json.optInt(KEY_AMK_PAT_WEIGHT);
+        this.height_cm = json.optInt(KEY_AMK_PAT_HEIGHT);
+        this.gender = json.optString(KEY_AMK_PAT_GENDER);
+        this.address = json.optString(KEY_AMK_PAT_ADDRESS);
+        this.zipcode = json.optString(KEY_AMK_PAT_ZIP);
+        this.city = json.optString(KEY_AMK_PAT_CITY);
+        this.country = json.optString(KEY_AMK_PAT_COUNTRY);
+        this.phone = json.optString(KEY_AMK_PAT_PHONE);
+        this.email = json.optString(KEY_AMK_PAT_EMAIL);
     }
 
     ContentValues toContentValues() {
@@ -88,5 +122,27 @@ public class Patient implements Serializable {
 
     public String stringForDisplay() {
         return this.familyname + " " + this.givenname;
+    }
+
+    public JSONObject toJSON() {
+        JSONObject j = new JSONObject();
+        try {
+            j.put(KEY_AMK_PAT_ID, this.uid);
+            j.put(KEY_AMK_PAT_NAME, this.givenname);
+            j.put(KEY_AMK_PAT_SURNAME, this.familyname);
+            j.put(KEY_AMK_PAT_BIRTHDATE, this.birthdate);
+            j.put(KEY_AMK_PAT_WEIGHT, Integer.toString(this.weight_kg));
+            j.put(KEY_AMK_PAT_HEIGHT, Integer.toString(this.height_cm));
+            j.put(KEY_AMK_PAT_GENDER, this.gender);
+            j.put(KEY_AMK_PAT_ADDRESS, this.address);
+            j.put(KEY_AMK_PAT_ZIP, this.zipcode);
+            j.put(KEY_AMK_PAT_CITY, this.city);
+            j.put(KEY_AMK_PAT_COUNTRY, this.country);
+            j.put(KEY_AMK_PAT_PHONE, this.phone);
+            j.put(KEY_AMK_PAT_EMAIL, this.email);
+        } catch (Exception e) {
+            Log.w("Amiko.Patient", e.toString());
+        }
+        return j;
     }
 }
