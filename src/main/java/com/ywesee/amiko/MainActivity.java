@@ -77,7 +77,6 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -406,7 +405,7 @@ public class MainActivity extends AppCompatActivity {
 
     tab = mTabLayout.newTab().setText(R.string.tab_name_5);
     mTabLayout.addTab(tab);
-    mTabLayout.addOnTabSelectedListener(new MyTabListener(this, TabFragment.class.getName()));
+    mTabLayout.addOnTabSelectedListener(new MyTabListener());
 
     LinearLayout linearLayout = (LinearLayout)mTabLayout.getChildAt(0);
     linearLayout.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
@@ -542,24 +541,11 @@ public class MainActivity extends AppCompatActivity {
    */
   private class MyTabListener implements TabLayout.OnTabSelectedListener {
 
-    private Fragment mFragment;
-    private final Activity mActivity;
-    private final String mFragName;
-//    private final String mTabName;
-
-    public MyTabListener(Activity activity, String fragName) {
-      mActivity = activity;
-      mFragName = fragName;
-
-      // mActionName = getString(R.string.tab_name_1); // Präparat
+    public MyTabListener() {
     }
 
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
-      mFragment = Fragment.instantiate(mActivity, mFragName);
-      FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-      ft.add(android.R.id.content, mFragment);
-      ft.commit();
       mActionName = tab.getText().toString();
       if (mMedis!=null) {
         mTimer = System.currentTimeMillis();
@@ -570,10 +556,9 @@ public class MainActivity extends AppCompatActivity {
         mSearch.setHint(getString(R.string.search) + " " + mActionName);
       }
       // Change content view
-      if (mCurrentView==mSuggestView)
-        setCurrentView(mSuggestView, true);
-      else if (mCurrentView==mShowView)
+      if (mCurrentView != mSuggestView) {
         setSuggestView();
+      }
     }
 
     @Override
@@ -583,20 +568,13 @@ public class MainActivity extends AppCompatActivity {
         mSearch.setHint(getString(R.string.search) + " " + tab.getText().toString());
       }
       // Change content view
-      if (mCurrentView==mSuggestView)
-        setCurrentView(mSuggestView, true);
-      else if (mCurrentView==mShowView)
+      if (mCurrentView != mSuggestView) {
         setSuggestView();
+      }
     }
 
     @Override
     public void onTabUnselected(TabLayout.Tab tab) {
-      FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-      if (mFragment != null) {
-        ft.remove(mFragment);
-      }
-      ft.commit();
-      mFragment = null;
     }
   }
 
