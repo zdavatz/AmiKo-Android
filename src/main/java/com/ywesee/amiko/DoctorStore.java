@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.util.HashMap;
 
 public class DoctorStore {
+    public static final String DOC_SIGNATURE_FILENAME = "doctor.png";
+
     private String dir;
 
     public String title;
@@ -81,14 +83,14 @@ public class DoctorStore {
     }
 
     public Bitmap getSignature() {
-        String targetPath = new File(dir, "doctor.png").getPath();
+        String targetPath = new File(dir, DOC_SIGNATURE_FILENAME).getPath();
         Bitmap bm = BitmapFactory.decodeFile(targetPath);
         return bm;
     }
 
     public void saveSignature(Bitmap bitmap) {
         try {
-            String targetPath = new File(dir, "doctor.png").getPath();
+            String targetPath = new File(dir, DOC_SIGNATURE_FILENAME).getPath();
             File file = new File(targetPath);
             OutputStream os = new BufferedOutputStream(new FileOutputStream(file));
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
