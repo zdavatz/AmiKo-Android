@@ -1008,6 +1008,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private void setupBottomNavigationViewListener() {
+    final Context _this = this;
     mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
       @Override
       public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -1059,6 +1060,9 @@ public class MainActivity extends AppCompatActivity {
             return true;
           }
           case (R.id.bottom_nav_prescription): {
+            mSearchInteractions = false;
+            Intent intent = new Intent(_this, PrescriptionActivity.class);
+            startActivity(intent);
             return true;
           }
         }
