@@ -1,12 +1,15 @@
 package com.ywesee.amiko;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -39,14 +42,13 @@ public class PrescriptionActivity extends AppCompatActivity {
     private MedicineListAdapter mRecyclerAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    static final int REQUEST_PATIENT = 1;
+
     public PrescriptionActivity() {
         super();
         products = new ArrayList<Product>();
     }
 
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState) {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,7 +119,9 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
     public void reloadPatientText() {
         this.patientNameText.setText(patient.familyname + " " + patient.givenname);
-        this.patientWeightHeightGenderBirthdayText.setText(Integer.toString(patient.weight_kg)+"kg/"+patient.height_cm+"cm " + patient.gender + " " + patient.birthdate);
+        String genderString = patient.gender == Patient.KEY_AMK_PAT_GENDER_M ? "m"
+                            : patient.gender == Patient.KEY_AMK_PAT_GENDER_F ? "f" : "";
+        this.patientWeightHeightGenderBirthdayText.setText(Integer.toString(patient.weight_kg)+"kg/"+patient.height_cm+"cm " + genderString + " " + patient.birthdate);
         this.patientStreetText.setText(patient.address);
         this.patientZipCityCountryText.setText(patient.zipcode + " " + patient.city + " " + patient.country);
     }
@@ -129,6 +133,34 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
     public void reloadMedicinesText() {
         medicinesText.setText(getString(R.string.search)+"(" + products.size() + ")");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.prescription_actionbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.patient_list: {
+                Intent intent = new Intent(this, PatientListActivity.class);
+                startActivityForResult(intent, REQUEST_PATIENT);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_PATIENT && resultCode == 0 && data != null) {
+            Patient p = (Patient)data.getSerializableExtra("patient");
+            this.setPatient(p);
+        }
     }
 }
 

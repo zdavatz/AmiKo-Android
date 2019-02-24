@@ -68,7 +68,7 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
     }
 
     public void close() {
-        this.close();
+        super.close();
     }
 
     public long insertRecord(Patient p) {

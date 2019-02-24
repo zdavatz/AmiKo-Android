@@ -91,9 +91,9 @@
         </activity>
 
         <activity android:name=".PatientListActivity" android:alwaysRetainTaskState="true">
-            <meta-data
+         <!--   <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.ywesee.amiko.PatientActivity" />
+                android:value="com.ywesee.amiko.PatientActivity" /> -->
         </activity>
 
         <activity android:name=".PrescriptionActivity" android:alwaysRetainTaskState="true">

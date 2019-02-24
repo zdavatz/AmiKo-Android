@@ -143,9 +143,9 @@ public class PatientActivity extends AppCompatActivity {
             editBirthday.setText(mPatient.birthdate);
             if (mPatient.gender == null) {
                 editSex.clearCheck();
-            } else if (mPatient.gender.equals("man")) {
+            } else if (mPatient.gender.equals(Patient.KEY_AMK_PAT_GENDER_M)) {
                 editSex.check(R.id.patient_sex_male);
-            } else if (mPatient.gender.equals("women")) {
+            } else if (mPatient.gender.equals(Patient.KEY_AMK_PAT_GENDER_F)) {
                 editSex.check(R.id.patient_sex_female);
             } else {
                 editSex.clearCheck();
@@ -202,10 +202,10 @@ public class PatientActivity extends AppCompatActivity {
                 String sexString = null;
                 switch (editSex.getCheckedRadioButtonId()) {
                     case R.id.patient_sex_male:
-                        sexString = "man";
+                        sexString = Patient.KEY_AMK_PAT_GENDER_M;
                         break;
                     case R.id.patient_sex_female:
-                        sexString = "women";
+                        sexString = Patient.KEY_AMK_PAT_GENDER_F;
                         break;
                     default:
                         showEmptySexAlert();
@@ -269,7 +269,7 @@ public class PatientActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_PATIENT && resultCode == 0) {
+        if (requestCode == REQUEST_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             mPatient = p;
             updateUIForPatient();
