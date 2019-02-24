@@ -42,6 +42,10 @@ public class PrescriptionActivity extends AppCompatActivity {
     private MedicineListAdapter mRecyclerAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private RecyclerView amkRecyclerView;
+    private AMKListAdapter mAMKAdapter;
+    private RecyclerView.LayoutManager mAMKLayoutManager;
+
     static final int REQUEST_PATIENT = 1;
 
     public PrescriptionActivity() {
@@ -68,6 +72,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.patientZipCityCountryText = findViewById(R.id.patient_zip_city_country_text);
         this.medicinesText = findViewById(R.id.medicines_text);
         this.medicineRecyclerView = findViewById(R.id.medicine_recycler_view);
+        this.amkRecyclerView = findViewById(R.id.amk_recycler_view);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
@@ -84,7 +89,6 @@ public class PrescriptionActivity extends AppCompatActivity {
                 Product product = mRecyclerAdapter.mDataset.get(itemPosition);
             }
         };
-        final Context context = this;
         mRecyclerAdapter.onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -94,6 +98,28 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         };
         medicineRecyclerView.setAdapter(mRecyclerAdapter);
+
+        // use a linear layout manager
+        mAMKLayoutManager= new LinearLayoutManager(this);
+        amkRecyclerView.setLayoutManager(mAMKLayoutManager);
+
+        amkRecyclerView.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
+
+        mAMKAdapter = new AMKListAdapter();
+        mAMKAdapter.onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int itemPosition = amkRecyclerView.getChildLayoutPosition(v);
+                String filename = mAMKAdapter.mDataset.get(itemPosition);
+            }
+        };
+        amkRecyclerView.setAdapter(mAMKAdapter);
+
+        // TODO: really read from file system
+        mAMKAdapter.mDataset.add("file 1");
+        mAMKAdapter.mDataset.add("file 2");
+        mAMKAdapter.notifyDataSetChanged();
 
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.reloadMedicinesText();
@@ -227,6 +253,49 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         holder.eanCodeTextView.setText(p.eanCode);
         holder.commentTextView.setText(p.comment);
         // TODO: need to make this editable
+    }
+
+    // Return the size of your dataset (invoked by the layout manager)
+    @Override
+    public int getItemCount() {
+        return mDataset.size();
+    }
+}
+
+class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
+    public List<String> mDataset;
+    public View.OnClickListener onClickListener;
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        // each data item is just a string in this case
+        public TextView filenameTextView;
+        public ViewHolder(TextView filenameTextView) {
+            super(filenameTextView);
+            this.filenameTextView = filenameTextView;
+        }
+    }
+
+    // Provide a suitable constructor (depends on the kind of dataset)
+    public AMKListAdapter() {
+        mDataset = new ArrayList<String>();
+    }
+
+    // Create new views (invoked by the layout manager)
+    @Override
+    public AMKListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                             int viewType) {
+        TextView filenameTextView = new TextView(parent.getContext());
+        filenameTextView.setOnClickListener(onClickListener);
+        filenameTextView.setWidth(parent.getWidth());
+        ViewHolder vh = new ViewHolder(filenameTextView);
+        return vh;
+    }
+
+    // Replace the contents of a view (invoked by the layout manager)
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        String filename = mDataset.get(position);
+        holder.filenameTextView.setText(filename);
     }
 
     // Return the size of your dataset (invoked by the layout manager)
