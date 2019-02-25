@@ -2,6 +2,7 @@ package com.ywesee.amiko;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -50,7 +51,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public PrescriptionActivity() {
         super();
-        products = new ArrayList<Product>();
+        products = PrescriptionProductBasket.getShared().products;
     }
 
     @Override
@@ -82,6 +83,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 DividerItemDecoration.VERTICAL));
 
         mRecyclerAdapter = new MedicineListAdapter();
+        mRecyclerAdapter.mDataset = products;
         mRecyclerAdapter.onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -228,17 +230,24 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         layout.setOrientation(LinearLayout.VERTICAL);
 
         TextView packageTextView = new TextView(context);
-//        v.setTextSize(25);
-//        v.setOnClickListener(onClickListener);
-//        v.setOnLongClickListener(onLongClickListener);
+        packageTextView.setTextColor(Color.rgb(0, 0, 0));
         packageTextView.setWidth(parent.getWidth());
-//        v.setPadding(50, 30, 0, 30);
 
         TextView eanCodeTextView = new TextView(context);
         eanCodeTextView.setWidth(parent.getWidth());
 
         TextView commentTextView = new TextView(context);
         commentTextView.setWidth(parent.getWidth());
+
+        layout.addView(packageTextView);
+        layout.addView(eanCodeTextView);
+        layout.addView(commentTextView);
+        layout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                return false;
+            }
+        });
 
         ViewHolder vh = new ViewHolder(layout, packageTextView, eanCodeTextView, commentTextView);
 

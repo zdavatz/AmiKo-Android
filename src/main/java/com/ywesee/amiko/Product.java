@@ -29,7 +29,7 @@ public class Product {
     public Product(Medication medi, int packageIndex) {
         String[] listOfPacks = medi.getPackages().split("\n");
         if (packageIndex < listOfPacks.length) {
-            String[] p = listOfPacks[packageIndex].split("|");
+            String[] p = listOfPacks[packageIndex].split("\\|");
             if (p.length > INDEX_EAN_CODE_IN_PACK) {
                 this.eanCode = p[INDEX_EAN_CODE_IN_PACK]; // 2nd line in prescription view
             }
