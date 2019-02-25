@@ -1309,7 +1309,9 @@ public class MainActivity extends AppCompatActivity {
     if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
       getSupportActionBar().hide();
       InputMethodManager keyboard = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-      keyboard.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+      if (keyboard != null) {
+        keyboard.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+      }
     } else if (newConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
       getSupportActionBar().show();
     }
