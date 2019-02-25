@@ -33,6 +33,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private TextView doctorPhoneText;
     private TextView doctorEmailText;
     private ImageView doctorImageView;
+    private LinearLayout patientLayout;
     private TextView patientNameText;
     private TextView patientWeightHeightGenderBirthdayText;
     private TextView patientStreetText;
@@ -67,6 +68,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.doctorPhoneText = findViewById(R.id.doctor_phone_text);
         this.doctorEmailText = findViewById(R.id.doctor_email_text);
         this.doctorImageView = findViewById(R.id.doctor_image_view);
+        this.patientLayout = findViewById(R.id.patient_layout);
         this.patientNameText = findViewById(R.id.patient_name_text);
         this.patientWeightHeightGenderBirthdayText = findViewById(R.id.patient_weight_height_gender_birthday_text);
         this.patientStreetText = findViewById(R.id.patient_street_text);
@@ -122,6 +124,16 @@ public class PrescriptionActivity extends AppCompatActivity {
         mAMKAdapter.mDataset.add("file 1");
         mAMKAdapter.mDataset.add("file 2");
         mAMKAdapter.notifyDataSetChanged();
+
+        final Context _this = this;
+        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(_this, PatientListActivity.class);
+                startActivityForResult(intent, REQUEST_PATIENT);
+                return true;
+            }
+        });
 
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.reloadMedicinesText();
