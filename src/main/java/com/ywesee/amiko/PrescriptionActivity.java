@@ -2,6 +2,7 @@ package com.ywesee.amiko;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -32,6 +33,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private TextView doctorPhoneText;
     private TextView doctorEmailText;
     private ImageView doctorImageView;
+    private LinearLayout patientLayout;
     private TextView patientNameText;
     private TextView patientWeightHeightGenderBirthdayText;
     private TextView patientStreetText;
@@ -42,11 +44,15 @@ public class PrescriptionActivity extends AppCompatActivity {
     private MedicineListAdapter mRecyclerAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+    private RecyclerView amkRecyclerView;
+    private AMKListAdapter mAMKAdapter;
+    private RecyclerView.LayoutManager mAMKLayoutManager;
+
     static final int REQUEST_PATIENT = 1;
 
     public PrescriptionActivity() {
         super();
-        products = new ArrayList<Product>();
+        products = PrescriptionProductBasket.getShared().products;
     }
 
     @Override
@@ -62,12 +68,14 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.doctorPhoneText = findViewById(R.id.doctor_phone_text);
         this.doctorEmailText = findViewById(R.id.doctor_email_text);
         this.doctorImageView = findViewById(R.id.doctor_image_view);
+        this.patientLayout = findViewById(R.id.patient_layout);
         this.patientNameText = findViewById(R.id.patient_name_text);
         this.patientWeightHeightGenderBirthdayText = findViewById(R.id.patient_weight_height_gender_birthday_text);
         this.patientStreetText = findViewById(R.id.patient_street_text);
         this.patientZipCityCountryText = findViewById(R.id.patient_zip_city_country_text);
         this.medicinesText = findViewById(R.id.medicines_text);
         this.medicineRecyclerView = findViewById(R.id.medicine_recycler_view);
+        this.amkRecyclerView = findViewById(R.id.amk_recycler_view);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
@@ -77,6 +85,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 DividerItemDecoration.VERTICAL));
 
         mRecyclerAdapter = new MedicineListAdapter();
+        mRecyclerAdapter.mDataset = products;
         mRecyclerAdapter.onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,7 +93,6 @@ public class PrescriptionActivity extends AppCompatActivity {
                 Product product = mRecyclerAdapter.mDataset.get(itemPosition);
             }
         };
-        final Context context = this;
         mRecyclerAdapter.onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -94,6 +102,38 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         };
         medicineRecyclerView.setAdapter(mRecyclerAdapter);
+
+        // use a linear layout manager
+        mAMKLayoutManager= new LinearLayoutManager(this);
+        amkRecyclerView.setLayoutManager(mAMKLayoutManager);
+
+        amkRecyclerView.addItemDecoration(new DividerItemDecoration(this,
+                DividerItemDecoration.VERTICAL));
+
+        mAMKAdapter = new AMKListAdapter();
+        mAMKAdapter.onClickListener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int itemPosition = amkRecyclerView.getChildLayoutPosition(v);
+                String filename = mAMKAdapter.mDataset.get(itemPosition);
+            }
+        };
+        amkRecyclerView.setAdapter(mAMKAdapter);
+
+        // TODO: really read from file system
+        mAMKAdapter.mDataset.add("file 1");
+        mAMKAdapter.mDataset.add("file 2");
+        mAMKAdapter.notifyDataSetChanged();
+
+        final Context _this = this;
+        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(_this, PatientListActivity.class);
+                startActivityForResult(intent, REQUEST_PATIENT);
+                return true;
+            }
+        });
 
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.reloadMedicinesText();
@@ -202,17 +242,24 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         layout.setOrientation(LinearLayout.VERTICAL);
 
         TextView packageTextView = new TextView(context);
-//        v.setTextSize(25);
-//        v.setOnClickListener(onClickListener);
-//        v.setOnLongClickListener(onLongClickListener);
+        packageTextView.setTextColor(Color.rgb(0, 0, 0));
         packageTextView.setWidth(parent.getWidth());
-//        v.setPadding(50, 30, 0, 30);
 
         TextView eanCodeTextView = new TextView(context);
         eanCodeTextView.setWidth(parent.getWidth());
 
         TextView commentTextView = new TextView(context);
         commentTextView.setWidth(parent.getWidth());
+
+        layout.addView(packageTextView);
+        layout.addView(eanCodeTextView);
+        layout.addView(commentTextView);
+        layout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                return false;
+            }
+        });
 
         ViewHolder vh = new ViewHolder(layout, packageTextView, eanCodeTextView, commentTextView);
 
@@ -227,6 +274,49 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         holder.eanCodeTextView.setText(p.eanCode);
         holder.commentTextView.setText(p.comment);
         // TODO: need to make this editable
+    }
+
+    // Return the size of your dataset (invoked by the layout manager)
+    @Override
+    public int getItemCount() {
+        return mDataset.size();
+    }
+}
+
+class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
+    public List<String> mDataset;
+    public View.OnClickListener onClickListener;
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        // each data item is just a string in this case
+        public TextView filenameTextView;
+        public ViewHolder(TextView filenameTextView) {
+            super(filenameTextView);
+            this.filenameTextView = filenameTextView;
+        }
+    }
+
+    // Provide a suitable constructor (depends on the kind of dataset)
+    public AMKListAdapter() {
+        mDataset = new ArrayList<String>();
+    }
+
+    // Create new views (invoked by the layout manager)
+    @Override
+    public AMKListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+                                                             int viewType) {
+        TextView filenameTextView = new TextView(parent.getContext());
+        filenameTextView.setOnClickListener(onClickListener);
+        filenameTextView.setWidth(parent.getWidth());
+        ViewHolder vh = new ViewHolder(filenameTextView);
+        return vh;
+    }
+
+    // Replace the contents of a view (invoked by the layout manager)
+    @Override
+    public void onBindViewHolder(ViewHolder holder, int position) {
+        String filename = mDataset.get(position);
+        holder.filenameTextView.setText(filename);
     }
 
     // Return the size of your dataset (invoked by the layout manager)

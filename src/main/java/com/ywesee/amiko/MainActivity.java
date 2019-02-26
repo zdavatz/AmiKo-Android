@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1309,7 +1310,9 @@ public class MainActivity extends AppCompatActivity {
     if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
       getSupportActionBar().hide();
       InputMethodManager keyboard = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-      keyboard.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+      if (keyboard != null) {
+        keyboard.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
+      }
     } else if (newConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
       getSupportActionBar().show();
     }
@@ -2085,7 +2088,33 @@ public class MainActivity extends AppCompatActivity {
         mView.setOnLongClickListener(new OnLongClickListener() {
           @Override
           public boolean onLongClick(View v) {
-            if (mActionName.equals(getString(R.string.tab_name_3))) {
+            if (mActionName.equals(getString(R.string.tab_name_1)) || mActionName.equals(getString(R.string.tab_name_2))) {
+              final Medication m = mMediDataSource.searchId(med.getId());
+              String[] packs = m.packagesFromPackInfo();
+              final AtomicInteger choice = new AtomicInteger(0);
+              new AlertDialog.Builder(mContext)
+              .setSingleChoiceItems(packs, -1, new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialog, int which) {
+                    choice.set(which);
+                  }
+              })
+              .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialog, int which) {
+                    int packIndex = choice.get();
+                    PrescriptionProductBasket.getShared().products.add(new Product(m, packIndex));
+                  }
+              })
+              .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialog, int which) {
+                      dialog.dismiss();
+                  }
+              })
+              .create()
+              .show();
+            } else if (mActionName.equals(getString(R.string.tab_name_3))) {
               Medication m = mMediDataSource.searchId(med.getId());
               String[] atc_items = m.getAtcCode().split(";");
               if (atc_items!=null) {

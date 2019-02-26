@@ -189,6 +189,10 @@ public class Medication {
 	public String toString() {
 		return id + "-" + title;
 	}
+
+	public String[] packagesFromPackInfo() {
+		return this.getPackInfo().split("\n");
+	}
 }
 
 
