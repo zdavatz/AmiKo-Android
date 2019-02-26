@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -39,6 +40,8 @@ public class PrescriptionActivity extends AppCompatActivity {
     private TextView patientStreetText;
     private TextView patientZipCityCountryText;
     private TextView medicinesText;
+    private Button saveButton;
+    private Button newButton;
 
     private RecyclerView medicineRecyclerView;
     private MedicineListAdapter mRecyclerAdapter;
@@ -76,6 +79,9 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.medicinesText = findViewById(R.id.medicines_text);
         this.medicineRecyclerView = findViewById(R.id.medicine_recycler_view);
         this.amkRecyclerView = findViewById(R.id.amk_recycler_view);
+
+        this.saveButton = findViewById(R.id.save_button);
+        this.newButton = findViewById(R.id.new_button);
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
