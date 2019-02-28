@@ -123,7 +123,9 @@ public class PrescriptionActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 int itemPosition = amkRecyclerView.getChildLayoutPosition(v);
-                String filename = mAMKAdapter.mDataset.get(itemPosition);
+                File file = mAMKAdapter.mDataset.get(itemPosition);
+                openPrescriptionFromFile(file);
+                drawerLayout.closeDrawers();
             }
         };
         amkRecyclerView.setAdapter(mAMKAdapter);
@@ -184,6 +186,16 @@ public class PrescriptionActivity extends AppCompatActivity {
     public void addMedicine(Product p) {
         products.add(p);
         mRecyclerAdapter.addProduct(p);
+    public void openPrescriptionFromFile(File file) {
+        Prescription p = PrescriptionUtility.readFromFile(file);
+        openedPrescription = p;
+        openedFile = file;
+        setPatient(p.patient);
+        setDoctor(p.doctor);
+        setProducts(p.medications);
+        // TODO: show place date
+    }
+
         this.reloadMedicinesText();
     }
     public void reloadMedicinesText() {
@@ -321,7 +333,7 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
 }
 
 class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
-    public List<String> mDataset;
+    public List<File> mDataset;
     public View.OnClickListener onClickListener;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -335,7 +347,7 @@ class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
 
     // Provide a suitable constructor (depends on the kind of dataset)
     public AMKListAdapter() {
-        mDataset = new ArrayList<String>();
+        mDataset = new ArrayList<File>();
     }
 
     // Create new views (invoked by the layout manager)
@@ -352,8 +364,8 @@ class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
     // Replace the contents of a view (invoked by the layout manager)
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String filename = mDataset.get(position);
-        holder.filenameTextView.setText(filename);
+        File file = mDataset.get(position);
+        holder.filenameTextView.setText(file.getName());
     }
 
     // Return the size of your dataset (invoked by the layout manager)
