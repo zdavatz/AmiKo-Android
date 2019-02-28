@@ -52,18 +52,19 @@ public class PatientListActivity extends AppCompatActivity {
 
         // specify an adapter (see also next example)
         mAdapter = new PatientListAdapter(mAllPatients);
+        final Context context = this;
         mAdapter.onClickListener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int itemPosition = mRecyclerView.getChildLayoutPosition(v);
                 Patient patient = mAdapter.mDataset.get(itemPosition);
+                Patient.setCurrentPatientId(context, patient.uid);
                 Intent data = new Intent();
                 data.putExtra("patient",patient);
                 setResult(0, data);
                 finish();
             }
         };
-        final Context context = this;
         mAdapter.onLongClickListener = new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -77,6 +78,7 @@ public class PatientListActivity extends AppCompatActivity {
                                 mDBAdapter.deleteRecord(patient);
                                 mAllPatients = ((PatientListAdapter) mAdapter).mDataset = mDBAdapter.getAllRecords();
                                 mAdapter.notifyDataSetChanged();
+                                Patient.setCurrentPatientId(context, null);
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)

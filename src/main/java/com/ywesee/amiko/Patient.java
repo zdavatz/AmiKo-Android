@@ -1,12 +1,15 @@
 package com.ywesee.amiko;
 
 import android.content.ContentValues;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import static com.ywesee.amiko.PatientDBAdapter.KEY_ADDRESS;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_BIRTHDATE;
@@ -56,6 +59,8 @@ public class Patient implements Serializable {
     static public final String KEY_AMK_PAT_COUNTRY = "country";
     static public final String KEY_AMK_PAT_PHONE = "phone_number";
     static public final String KEY_AMK_PAT_EMAIL = "email_address";
+
+    private static final String PATIENT_PREFS_FILE = "PatientPrefsFile";
 
     Patient() {
         this.timestamp = Utilities.currentTimeString();
@@ -145,4 +150,26 @@ public class Patient implements Serializable {
         }
         return j;
     }
-}
+
+    static public String getCurrentPatientId(Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(PATIENT_PREFS_FILE, Context.MODE_PRIVATE);
+        return preferences.getString("currentPatient", null);
+    }
+    static public void setCurrentPatientId(Context context, String patientId) {
+        SharedPreferences preferences = context.getSharedPreferences(PATIENT_PREFS_FILE, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        if (patientId != null) {
+            editor.putString("currentPatient", patientId);
+        } else {
+            editor.remove("currentPatient");
+        }
+        editor.commit();
+    }
+    static public Patient loadCurrentPatient(Context c) {
+        String uid = Patient.getCurrentPatientId(c);
+        if (uid == null) return null;
+        PatientDBAdapter db = new PatientDBAdapter(c);
+        Patient p = db.getPatientWithUniqueId(uid);
+        return p;
+    }
+ }
