@@ -249,6 +249,7 @@ public class PatientActivity extends AppCompatActivity {
                     }
                     db.close();
                     mPatient = patient;
+                    Patient.setCurrentPatientId(this, patient.uid);
                 }
                 return true;
             }

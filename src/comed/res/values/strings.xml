@@ -79,5 +79,6 @@
     <string name="confirm_delete_patient">Vous voulez vraiment effacer le patient?</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
+    <string name="new_">New</string>
 
 </resources>

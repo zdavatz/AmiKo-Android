@@ -78,7 +78,7 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
 
     /**
      * Deletes specific record from database
-     * @param patient
+     * @param p
      * @return
      */
     public boolean deleteRecord(Patient p) {
@@ -129,6 +129,28 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
         cursor.close();
         if (Constants.DEBUG)
             Log.d(TAG, q);
+    }
+
+
+    /**
+     * Retrieves specific record
+     * @param uid
+     * @return cursor
+     * @throws SQLException
+     */
+    public Patient getPatientWithUniqueId(String uid) throws SQLException {
+        Cursor cursor = this.getReadableDatabase().query(DATABASE_TABLE,
+                new String[] {KEY_ROWID, KEY_TIMESTAMP, KEY_UID, KEY_FAMILYNAME, KEY_GIVENNAME, KEY_BIRTHDATE, KEY_GENDER,
+                        KEY_WEIGHT_KG, KEY_HEIGHT_CM, KEY_ZIPCODE, KEY_CITY, KEY_COUNTRY, KEY_ADDRESS, KEY_PHONE,
+                        KEY_EMAIL},
+                KEY_UID + " = ?", new String[] {uid}, null, null, KEY_FAMILYNAME + "," + KEY_GIVENNAME);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            Patient patient = new Patient(cursor);
+            cursor.close();
+            return patient;
+        }
+        return null;
     }
 
     /**
