@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ywesee.amiko"
     android:installLocation="auto"
-    android:versionCode="148"
-    android:versionName="1.4.8" >
+    android:versionCode="149"
+    android:versionName="1.4.9" >
 
     <!-- Required to download files from Google Play -->
     <uses-permission android:name="android.permission.INTERNET" />
