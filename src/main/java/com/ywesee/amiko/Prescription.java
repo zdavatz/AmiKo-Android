@@ -20,12 +20,20 @@ public class Prescription {
     public Patient patient;
     public ArrayList<Product> medications;
 
+    public Prescription() {
+    }
+
     public Prescription(JSONObject json) {
         this.hash = json.optString(KEY_AMK_HASH);
         this.placeDate = json.optString(KEY_AMK_PLACE_DATE);
         try {
             this.patient = new Patient(json.getJSONObject(KEY_AMK_PATIENT));
             this.doctor = new Operator(json.getJSONObject(KEY_AMK_OPERATOR));
+            this.medications = new ArrayList<Product>();
+            JSONArray arr = json.getJSONArray(KEY_AMK_MEDICATIONS);;
+            for (int i = 0; i < arr.length(); i++) {
+                this.medications.add(new Product(arr.getJSONObject(i)));
+            }
         } catch (Exception e) {
             Log.w("Amiko.Prescription", e.toString());
         }
