@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -29,6 +30,8 @@ public class PrescriptionActivity extends AppCompatActivity {
     private Operator doctor;
     private Patient patient;
     private ArrayList<Product> products;
+    private File openedFile = null;
+    private Prescription openedPrescription;
 
     private TextView doctorNameText;
     private TextView doctorStreetText;
@@ -52,6 +55,8 @@ public class PrescriptionActivity extends AppCompatActivity {
     private RecyclerView amkRecyclerView;
     private AMKListAdapter mAMKAdapter;
     private RecyclerView.LayoutManager mAMKLayoutManager;
+
+    private DrawerLayout drawerLayout;
 
     static final int REQUEST_PATIENT = 1;
 
@@ -85,6 +90,8 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.saveButton = findViewById(R.id.save_button);
         this.newButton = findViewById(R.id.new_button);
 
+        this.drawerLayout = findViewById(R.id.drawer_layout);
+
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
         medicineRecyclerView.setLayoutManager(mLayoutManager);
@@ -106,6 +113,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             public boolean onLongClick(View v) {
                 int itemPosition = medicineRecyclerView.getChildLayoutPosition(v);
                 final Product product = mRecyclerAdapter.mDataset.get(itemPosition);
+                // TODO: edit / delete product
                 return true;
             }
         };
@@ -130,10 +138,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         };
         amkRecyclerView.setAdapter(mAMKAdapter);
 
-        // TODO: really read from file system
-        mAMKAdapter.mDataset.add("file 1");
-        mAMKAdapter.mDataset.add("file 2");
-        mAMKAdapter.notifyDataSetChanged();
+        reloadAMKFileList();
 
         final Context _this = this;
         patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
@@ -148,11 +153,23 @@ public class PrescriptionActivity extends AppCompatActivity {
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (openedFile != null && openedPrescription != null) {
+                    overwriteOldPrescription();
+                } else {
                     saveNewPrescription();
+                }
+            }
+        });
+
+        newButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openNewPrescription();
             }
         });
 
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
+        this.setPatient(Patient.loadCurrentPatient(this));
         this.reloadMedicinesText();
     }
 
@@ -162,12 +179,22 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void reloadDoctorTexts() {
-        this.doctorNameText.setText(doctor.title + " " + doctor.familyName + " " + doctor.givenName);
-        this.doctorStreetText.setText(doctor.postalAddress);
-        this.doctorZipCityText.setText(doctor.zipCode + " " + doctor.city);
-        this.doctorPhoneText.setText(doctor.phoneNumber);
-        this.doctorEmailText.setText(doctor.emailAddress);
-        this.doctorImageView.setImageBitmap(doctor.getSignatureImage());
+        if (doctor == null) {
+            this.doctorNameText.setText("");
+            this.doctorStreetText.setText("");
+            this.doctorZipCityText.setText("");
+            this.doctorPhoneText.setText("");
+            this.doctorEmailText.setText("");
+            this.doctorImageView.setImageBitmap(null);
+        } else {
+            this.doctorNameText.setText(doctor.title + " " + doctor.familyName + " " + doctor.givenName);
+            this.doctorStreetText.setText(doctor.postalAddress);
+            this.doctorZipCityText.setText(doctor.zipCode + " " + doctor.city);
+            this.doctorPhoneText.setText(doctor.phoneNumber);
+            this.doctorEmailText.setText(doctor.emailAddress);
+            this.doctorImageView.setImageBitmap(doctor.getSignatureImage());
+        }
+
     }
 
     public void setPatient(Patient patient) {
@@ -175,17 +202,21 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.reloadPatientText();
     }
     public void reloadPatientText() {
-        this.patientNameText.setText(patient.familyname + " " + patient.givenname);
-        String genderString = patient.gender == Patient.KEY_AMK_PAT_GENDER_M ? "m"
-                            : patient.gender == Patient.KEY_AMK_PAT_GENDER_F ? "f" : "";
-        this.patientWeightHeightGenderBirthdayText.setText(Integer.toString(patient.weight_kg)+"kg/"+patient.height_cm+"cm " + genderString + " " + patient.birthdate);
-        this.patientStreetText.setText(patient.address);
-        this.patientZipCityCountryText.setText(patient.zipcode + " " + patient.city + " " + patient.country);
+        if (this.patient == null) {
+            this.patientNameText.setText("");
+            this.patientWeightHeightGenderBirthdayText.setText("");
+            this.patientStreetText.setText("");
+            this.patientZipCityCountryText.setText("");
+        } else {
+            this.patientNameText.setText(patient.familyname + " " + patient.givenname);
+            String genderString = patient.gender == Patient.KEY_AMK_PAT_GENDER_M ? "m"
+                    : patient.gender == Patient.KEY_AMK_PAT_GENDER_F ? "f" : "";
+            this.patientWeightHeightGenderBirthdayText.setText(Integer.toString(patient.weight_kg)+"kg/"+patient.height_cm+"cm " + genderString + " " + patient.birthdate);
+            this.patientStreetText.setText(patient.address);
+            this.patientZipCityCountryText.setText(patient.zipcode + " " + patient.city + " " + patient.country);
+        }
     }
 
-    public void addMedicine(Product p) {
-        products.add(p);
-        mRecyclerAdapter.addProduct(p);
     public void openPrescriptionFromFile(File file) {
         Prescription p = PrescriptionUtility.readFromFile(file);
         openedPrescription = p;
@@ -196,10 +227,30 @@ public class PrescriptionActivity extends AppCompatActivity {
         // TODO: show place date
     }
 
+    public void openNewPrescription() {
+        openedFile = null;
+        openedPrescription = null;
+        setPatient(null);
+        setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
+        setProducts(new ArrayList<Product>());
+    }
+
+    public void setProducts(ArrayList<Product> newProducts) {
+        products = newProducts;
+        PrescriptionProductBasket.getShared().products = newProducts;
+        mRecyclerAdapter.mDataset = newProducts;
+        mRecyclerAdapter.notifyDataSetChanged();
         this.reloadMedicinesText();
     }
+
     public void reloadMedicinesText() {
         medicinesText.setText(getString(R.string.search)+"(" + products.size() + ")");
+    }
+
+    public void reloadAMKFileList() {
+        ArrayList<File> amkFiles = PrescriptionUtility.amkFilesForCurrentPatient(this);
+        mAMKAdapter.mDataset = amkFiles;
+        mAMKAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -227,6 +278,9 @@ public class PrescriptionActivity extends AppCompatActivity {
         if (requestCode == REQUEST_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             this.setPatient(p);
+            reloadAMKFileList();
+        }
+    }
 
     Prescription makePrescription(String uniqueId) {
         Prescription p = new Prescription();
@@ -249,7 +303,17 @@ public class PrescriptionActivity extends AppCompatActivity {
         openedFile = savedFile;
         openedPrescription = p;
     }
+    void overwriteOldPrescription() {
+        if (openedPrescription == null || openedFile == null) {
+            saveNewPrescription();
+            return;
         }
+        openedFile.delete();
+        Prescription p = makePrescription(openedPrescription.hash);
+        File savedFile = PrescriptionUtility.savePrescription(this, p);
+        reloadAMKFileList();
+        openedFile = savedFile;
+        openedPrescription = p;
     }
 }
 
