@@ -18,8 +18,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class PrescriptionActivity extends AppCompatActivity {
     // TODO: view for prescription.placeDate
@@ -141,6 +143,13 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         });
 
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                    saveNewPrescription();
+            }
+        });
+
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.reloadMedicinesText();
     }
@@ -206,6 +215,28 @@ public class PrescriptionActivity extends AppCompatActivity {
         if (requestCode == REQUEST_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             this.setPatient(p);
+
+    Prescription makePrescription(String uniqueId) {
+        Prescription p = new Prescription();
+        p.patient = patient;
+        p.doctor = doctor;
+        p.medications = products;
+        if (uniqueId == null) {
+            p.hash = UUID.randomUUID().toString();
+        } else {
+            p.hash = uniqueId;
+        }
+        p.placeDate = doctor.city + " " + PrescriptionUtility.prettyTime();
+        return p;
+    }
+
+    void saveNewPrescription() {
+        Prescription p = makePrescription(null);
+        File savedFile = PrescriptionUtility.savePrescription(this, p);
+        reloadAMKFileList();
+        openedFile = savedFile;
+        openedPrescription = p;
+    }
         }
     }
 }
