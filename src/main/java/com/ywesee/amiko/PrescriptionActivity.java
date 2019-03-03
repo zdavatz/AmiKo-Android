@@ -3,8 +3,10 @@ package com.ywesee.amiko;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.FileProvider;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -47,6 +49,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private TextView medicinesText;
     private Button saveButton;
     private Button newButton;
+    private Button sendButton;
 
     private RecyclerView medicineRecyclerView;
     private MedicineListAdapter mRecyclerAdapter;
@@ -89,6 +92,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
         this.saveButton = findViewById(R.id.save_button);
         this.newButton = findViewById(R.id.new_button);
+        this.sendButton = findViewById(R.id.send_button);
 
         this.drawerLayout = findViewById(R.id.drawer_layout);
 
@@ -160,11 +164,22 @@ public class PrescriptionActivity extends AppCompatActivity {
                 }
             }
         });
-
         newButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 openNewPrescription();
+            }
+        });
+        sendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (openedFile != null && openedPrescription != null) {
+                    overwriteOldPrescription();
+                } else {
+                    saveNewPrescription();
+                }
+                Intent emailIntent = createEmailIntent();
+                startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
             }
         });
 
@@ -314,6 +329,35 @@ public class PrescriptionActivity extends AppCompatActivity {
         reloadAMKFileList();
         openedFile = savedFile;
         openedPrescription = p;
+    }
+
+    Intent createEmailIntent() {
+        Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+        emailIntent.setType("message/rfc822");
+        String emailSubject =
+                getString(R.string.prescription_email_prescription) + " "
+                + openedPrescription.patient.givenname + " "
+                + openedPrescription.patient.familyname + ", "
+                + openedPrescription.patient.birthdate + " "
+                + getString(R.string.prescription_email_from) + " "
+                + openedPrescription.doctor.title + " "
+                + openedPrescription.doctor.givenName + " "
+                + openedPrescription.doctor.familyName;
+
+        String emailBody =
+                getString(R.string.prescription_email_open_with) + "\n\niOS: "
+                + "https://itunes.apple.com/ch/app/generika/id520038123?mt=8"
+                + "\nAndroid: "
+                + "https://play.google.com/store/apps/details?id=org.oddb.generika"
+                + "\n";
+
+        emailIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,emailSubject);
+        emailIntent.putExtra(android.content.Intent.EXTRA_TEXT, emailBody);
+        emailIntent.putExtra(Intent.EXTRA_STREAM,
+                FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".com.ywesee.amiko.provider", openedFile)
+        );
+        emailIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        return emailIntent;
     }
 }
 

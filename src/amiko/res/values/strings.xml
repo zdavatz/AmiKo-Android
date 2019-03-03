@@ -78,6 +78,12 @@
     <string name="confirm_delete_patient">Möchten Sie den Patienten wirklich löschen?</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
-    <string name="new_">New</string>
+    <string name="new_">Neu</string>
+    <string name="send">Senden</string>
+    <string name="send_email">Senden Email</string>
+
+    <string name="prescription_email_prescription">Rezept:</string>
+    <string name="prescription_email_from">von</string>
+    <string name="prescription_email_open_with">Öffnen mit:</string>
 
 </resources>
