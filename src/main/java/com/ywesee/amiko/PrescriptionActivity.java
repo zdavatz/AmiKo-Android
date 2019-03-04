@@ -1,6 +1,7 @@
 package com.ywesee.amiko;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -95,6 +97,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.sendButton = findViewById(R.id.send_button);
 
         this.drawerLayout = findViewById(R.id.drawer_layout);
+        final Context _this = this;
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
@@ -140,11 +143,32 @@ public class PrescriptionActivity extends AppCompatActivity {
                 drawerLayout.closeDrawers();
             }
         };
+        mAMKAdapter.onLongClickListener = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                int itemPosition = medicineRecyclerView.getChildLayoutPosition(v);
+                final File file = mAMKAdapter.mDataset.get(itemPosition);
+                new AlertDialog.Builder(_this)
+                        .setTitle(getString(R.string.confirm_delete_amk) + " " + file.getName())
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                file.delete();
+                                reloadAMKFileList();
+                                if (openedFile == file) {
+                                    openNewPrescription();
+                                }
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.no), null)
+                        .show();
+                return true;
+            }
+        };
         amkRecyclerView.setAdapter(mAMKAdapter);
 
         reloadAMKFileList();
 
-        final Context _this = this;
         patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
@@ -443,6 +467,7 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
 class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
     public List<File> mDataset;
     public View.OnClickListener onClickListener;
+    public View.OnLongClickListener onLongClickListener;
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
@@ -465,6 +490,7 @@ class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
         TextView filenameTextView = new TextView(parent.getContext());
         filenameTextView.setOnClickListener(onClickListener);
         filenameTextView.setWidth(parent.getWidth());
+        filenameTextView.setOnLongClickListener(onLongClickListener);
         ViewHolder vh = new ViewHolder(filenameTextView);
         return vh;
     }

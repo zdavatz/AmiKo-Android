@@ -83,7 +83,7 @@ public class PatientListActivity extends AppCompatActivity {
                         })
                         .setNegativeButton(getString(R.string.no), null)
                         .show();
-                return false;
+                return true;
             }
         };
         mRecyclerView.setAdapter(mAdapter);
