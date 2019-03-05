@@ -86,5 +86,6 @@
     <string name="prescription_email_prescription">Ordon.:</string>
     <string name="prescription_email_from">von</string>
     <string name="prescription_email_open_with">Ouvrir avec:</string>
+    <string name="confirm_delete_amk">Confirm delete</string>
 
 </resources>
