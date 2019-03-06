@@ -132,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
     "Indications", "Posologie", "Précautions", "Interactions", "Grossesse/All.",
     "Conduite", "Effets indésir.", "Surdosage", "Propriétés/Effets", "Cinétique", "Préclinique",
     "Remarques", "Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};
+  static public MainActivity instance = null;
 
   // Main AsyncTask
   private AsyncSearchTask mAsyncSearchTask = null;
@@ -734,6 +735,7 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    MainActivity.instance = this;
 
     try {
       AsyncLoadDBTask loadDBTask = new AsyncLoadDBTask(this);
@@ -1546,6 +1548,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     return true;
+  }
+
+  public void setMedicationsInInteractionBasket(ArrayList<Medication> medications) {
+    mMedInteractionBasket.clearBasket();
+    for (Medication m : medications) {
+      mMedInteractionBasket.addToBasket(m.getTitle(), m);
+    }
+    // Update it
+    mMedInteractionBasket.updateInteractionsHtml();
+    // Get all section titles
+    mMedInteractionBasket.getInteractionsTitles();
+      // Add section title view
+      List<String> section_ids = mMedInteractionBasket.getInteractionTitleIds();
+      List<String> section_titles = mMedInteractionBasket.getInteractionsTitles();
+      // Get reference to listview in DrawerLayout
+      // Implements swiping mechanism!
+    mSectionView = (ListView) findViewById(R.id.section_title_view);
+    // Make it clickable
+    mSectionView.setClickable(true);
+    SectionTitlesAdapter sectionTitles =
+        new SectionTitlesAdapter(this, R.layout.section_item, section_ids, section_titles);
+    mSectionView.setAdapter(sectionTitles);
+    mBottomNavigationView.setSelectedItemId(R.id.bottom_nav_interactions);
   }
 
   /**

@@ -77,4 +77,17 @@ public class Product {
         }
         return j;
     }
+
+    /**
+     * This is not a proper function converting a product to medication,
+     * the result is missing details and should be used only for interactions.
+     */
+    public Medication toMedicationForInteraction() {
+        Medication m = new Medication();
+        m.setRegnrs(this.regnrs);
+        m.setAuth(this.auth);
+        m.setAtcCode(this.atccode); // We only need this one for interactions
+        m.setTitle(this.title);
+        return m;
+    }
 }

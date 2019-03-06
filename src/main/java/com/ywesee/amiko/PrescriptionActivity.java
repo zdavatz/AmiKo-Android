@@ -52,6 +52,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private Button saveButton;
     private Button newButton;
     private Button sendButton;
+    private Button interactionButton;
 
     private RecyclerView medicineRecyclerView;
     private MedicineListAdapter mRecyclerAdapter;
@@ -95,6 +96,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.saveButton = findViewById(R.id.save_button);
         this.newButton = findViewById(R.id.new_button);
         this.sendButton = findViewById(R.id.send_button);
+        this.interactionButton = findViewById(R.id.interaction_button);
 
         this.drawerLayout = findViewById(R.id.drawer_layout);
         final Context _this = this;
@@ -204,6 +206,20 @@ public class PrescriptionActivity extends AppCompatActivity {
                 }
                 Intent emailIntent = createEmailIntent();
                 startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
+            }
+        });
+
+        interactionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity main = MainActivity.instance;
+                if (main == null) return;
+                ArrayList<Medication> ms = new ArrayList<>();
+                for (Product p : products) {
+                    ms.add(p.toMedicationForInteraction());
+                }
+                main.setMedicationsInInteractionBasket(ms);
+                finish();
             }
         });
 
