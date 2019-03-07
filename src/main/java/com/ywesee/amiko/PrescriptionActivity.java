@@ -68,7 +68,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public PrescriptionActivity() {
         super();
-        products = PrescriptionProductBasket.getShared().products;
+        products = new ArrayList<>();
     }
 
     @Override
@@ -225,12 +225,14 @@ public class PrescriptionActivity extends AppCompatActivity {
 
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.setPatient(Patient.loadCurrentPatient(this));
+        this.setProducts(PrescriptionProductBasket.getShared().products);
         this.reloadMedicinesText();
     }
 
     public void setDoctor(Operator doctor) {
         this.doctor = doctor;
         this.reloadDoctorTexts();
+        this.reloadButtons();
     }
 
     public void reloadDoctorTexts() {
@@ -249,12 +251,12 @@ public class PrescriptionActivity extends AppCompatActivity {
             this.doctorEmailText.setText(doctor.emailAddress);
             this.doctorImageView.setImageBitmap(doctor.getSignatureImage());
         }
-
     }
 
     public void setPatient(Patient patient) {
         this.patient = patient;
         this.reloadPatientText();
+        this.reloadButtons();
     }
     public void reloadPatientText() {
         if (this.patient == null) {
@@ -296,6 +298,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         mRecyclerAdapter.mDataset = newProducts;
         mRecyclerAdapter.notifyDataSetChanged();
         this.reloadMedicinesText();
+        this.reloadButtons();
     }
 
     public void reloadMedicinesText() {
@@ -306,6 +309,17 @@ public class PrescriptionActivity extends AppCompatActivity {
         ArrayList<File> amkFiles = PrescriptionUtility.amkFilesForCurrentPatient(this);
         mAMKAdapter.mDataset = amkFiles;
         mAMKAdapter.notifyDataSetChanged();
+    }
+
+    public void reloadButtons() {
+        if (doctor != null && patient != null && products.size() > 0) {
+            saveButton.setEnabled(true);
+            sendButton.setEnabled(true);
+        } else {
+            saveButton.setEnabled(false);
+            sendButton.setEnabled(false);
+        }
+        interactionButton.setEnabled(products.size() > 0);
     }
 
     @Override
