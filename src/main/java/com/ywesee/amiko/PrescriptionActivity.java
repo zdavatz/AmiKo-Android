@@ -52,6 +52,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private Button saveButton;
     private Button newButton;
     private Button sendButton;
+    private Button interactionButton;
 
     private RecyclerView medicineRecyclerView;
     private MedicineListAdapter mRecyclerAdapter;
@@ -67,7 +68,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public PrescriptionActivity() {
         super();
-        products = PrescriptionProductBasket.getShared().products;
+        products = new ArrayList<>();
     }
 
     @Override
@@ -95,6 +96,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.saveButton = findViewById(R.id.save_button);
         this.newButton = findViewById(R.id.new_button);
         this.sendButton = findViewById(R.id.send_button);
+        this.interactionButton = findViewById(R.id.interaction_button);
 
         this.drawerLayout = findViewById(R.id.drawer_layout);
         final Context _this = this;
@@ -207,14 +209,30 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         });
 
+        interactionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity main = MainActivity.instance;
+                if (main == null) return;
+                ArrayList<Medication> ms = new ArrayList<>();
+                for (Product p : products) {
+                    ms.add(p.toMedicationForInteraction());
+                }
+                main.setMedicationsInInteractionBasket(ms);
+                finish();
+            }
+        });
+
         this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         this.setPatient(Patient.loadCurrentPatient(this));
+        this.setProducts(PrescriptionProductBasket.getShared().products);
         this.reloadMedicinesText();
     }
 
     public void setDoctor(Operator doctor) {
         this.doctor = doctor;
         this.reloadDoctorTexts();
+        this.reloadButtons();
     }
 
     public void reloadDoctorTexts() {
@@ -233,12 +251,12 @@ public class PrescriptionActivity extends AppCompatActivity {
             this.doctorEmailText.setText(doctor.emailAddress);
             this.doctorImageView.setImageBitmap(doctor.getSignatureImage());
         }
-
     }
 
     public void setPatient(Patient patient) {
         this.patient = patient;
         this.reloadPatientText();
+        this.reloadButtons();
     }
     public void reloadPatientText() {
         if (this.patient == null) {
@@ -280,6 +298,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         mRecyclerAdapter.mDataset = newProducts;
         mRecyclerAdapter.notifyDataSetChanged();
         this.reloadMedicinesText();
+        this.reloadButtons();
     }
 
     public void reloadMedicinesText() {
@@ -290,6 +309,17 @@ public class PrescriptionActivity extends AppCompatActivity {
         ArrayList<File> amkFiles = PrescriptionUtility.amkFilesForCurrentPatient(this);
         mAMKAdapter.mDataset = amkFiles;
         mAMKAdapter.notifyDataSetChanged();
+    }
+
+    public void reloadButtons() {
+        if (doctor != null && patient != null && products.size() > 0) {
+            saveButton.setEnabled(true);
+            sendButton.setEnabled(true);
+        } else {
+            saveButton.setEnabled(false);
+            sendButton.setEnabled(false);
+        }
+        interactionButton.setEnabled(products.size() > 0);
     }
 
     @Override

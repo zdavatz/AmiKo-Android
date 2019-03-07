@@ -172,19 +172,32 @@
             android:layout_alignParentBottom="true"
             >
             <Button
-                android:id="@+id/save_button"
-                android:layout_width="wrap_content"
-                android:layout_height="60dp"
-                android:text="@string/save"/>
-            <Button
                 android:id="@+id/new_button"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="50dp"
+                android:textSize="14dp"
+                android:minWidth="0dp"
                 android:text="@string/new_"/>
+            <Button
+                android:id="@+id/interaction_button"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:textSize="14dp"
+                android:minWidth="0dp"
+                android:text="@string/interactions_button"/>
+            <Button
+                android:id="@+id/save_button"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:textSize="14dp"
+                android:minWidth="0dp"
+                android:text="@string/save"/>
             <Button
                 android:id="@+id/send_button"
                 android:layout_width="wrap_content"
-                android:layout_height="60dp"
+                android:layout_height="50dp"
+                android:textSize="14dp"
+                android:minWidth="0dp"
                 android:text="@string/send"/>
         </LinearLayout>
 
