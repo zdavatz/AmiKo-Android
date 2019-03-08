@@ -205,7 +205,9 @@ public class PrescriptionActivity extends AppCompatActivity {
                     saveNewPrescription();
                 }
                 Intent emailIntent = createEmailIntent();
-                startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
+                if (emailIntent != null) {
+                    startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
+                }
             }
         });
 
@@ -386,17 +388,22 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     Intent createEmailIntent() {
+        if (openedPrescription == null) {
+            return null;
+        }
         Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
         emailIntent.setType("message/rfc822");
+        Patient p = openedPrescription.patient;
+        Operator d = openedPrescription.doctor;
         String emailSubject =
                 getString(R.string.prescription_email_prescription) + " "
-                + openedPrescription.patient.givenname + " "
-                + openedPrescription.patient.familyname + ", "
-                + openedPrescription.patient.birthdate + " "
+                + (p == null ? "" : p.givenname) + " "
+                + (p == null ? "" : p.familyname) + ", "
+                + (p == null ? "" : p.birthdate) + " "
                 + getString(R.string.prescription_email_from) + " "
-                + openedPrescription.doctor.title + " "
-                + openedPrescription.doctor.givenName + " "
-                + openedPrescription.doctor.familyName;
+                + (d == null ? "" : d.title) + " "
+                + (d == null ? "" : d.givenName) + " "
+                + (d == null ? "" : d.familyName);
 
         String emailBody =
                 getString(R.string.prescription_email_open_with) + "\n\niOS: "
