@@ -54,6 +54,9 @@ public class Operator {
 
     static public Operator loadFromStore(String dirPath) {
         DoctorStore store = new DoctorStore(dirPath);
+        if (!store.exists()) {
+            return null;
+        }
         store.load();
 
         Operator o = new Operator();

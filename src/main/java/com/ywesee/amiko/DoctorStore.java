@@ -31,6 +31,11 @@ public class DoctorStore {
         dir = baseDir;
     }
 
+    public boolean exists() {
+        File f = new File(dir, "doctor.txt");
+        return f.exists() && f.isFile();
+    }
+
     public void load() {
         String targetPath = new File(dir, "doctor.txt").getPath();
         HashMap<String, String> map = new HashMap<String, String>();
