@@ -22,6 +22,7 @@ package com.ywesee.amiko;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -697,6 +698,15 @@ public class MainActivity extends AppCompatActivity {
     setCurrentView(mSuggestView, false);
     // Reset it
     resetView(false);
+
+    Intent intent = getIntent();
+    if (intent != null && intent.getAction() != null) {
+      // Amiko is opened because user wants to open an AMK file
+      Uri data = intent.getData();
+      Intent i = new Intent(this, PrescriptionActivity.class);
+      i.setData(data);
+      startActivity(i);
+    }
   }
 
   private void checkTimeSinceLastUpdate() {

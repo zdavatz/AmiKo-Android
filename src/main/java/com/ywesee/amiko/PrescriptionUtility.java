@@ -1,13 +1,17 @@
 package com.ywesee.amiko;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Base64;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -90,6 +94,35 @@ public class PrescriptionUtility {
 
         }
         return null;
+    }
+
+    public static File readFromResourceUri(Context c, Uri uri) {
+        try {
+            InputStream inputStream = c.getContentResolver().openInputStream(uri);
+            ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+
+            // this is storage overwritten on each iteration with bytes
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+
+            // we need to know how may bytes were read to write them to the byteBuffer
+            int len = 0;
+            while ((len = inputStream.read(buffer)) != -1) {
+                byteBuffer.write(buffer, 0, len);
+            }
+            inputStream.close();
+
+            // and then we can return your byte array.
+            byte[] bytes = byteBuffer.toByteArray();
+            String base64Encoded = new String(bytes, StandardCharsets.UTF_8);
+            String jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
+            JSONObject obj = new JSONObject(jsonString);
+            Prescription p = new Prescription(obj);
+            return savePrescription(c, p);
+            // TODO: Save the patient to patient database
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static ArrayList<File> amkFilesInDirectory(String path) {

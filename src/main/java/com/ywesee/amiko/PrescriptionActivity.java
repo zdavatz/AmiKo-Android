@@ -24,6 +24,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -229,6 +230,12 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.setPatient(Patient.loadCurrentPatient(this));
         this.setProducts(PrescriptionProductBasket.getShared().products);
         this.reloadMedicinesText();
+
+        Intent i = getIntent();
+        if (i.getData() != null) {
+            // wants to open an AMK file from resource uri
+            openPrescriptionFromResourceUri(i.getData());
+        }
     }
 
     public void setDoctor(Operator doctor) {
@@ -284,6 +291,11 @@ public class PrescriptionActivity extends AppCompatActivity {
         setDoctor(p.doctor);
         setProducts(p.medications);
         // TODO: show place date
+    }
+
+    public void openPrescriptionFromResourceUri(Uri uri) {
+        File f = PrescriptionUtility.readFromResourceUri(this, uri);
+        this.openPrescriptionFromFile(f);
     }
 
     public void openNewPrescription() {
