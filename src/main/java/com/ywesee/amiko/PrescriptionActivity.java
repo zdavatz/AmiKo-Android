@@ -294,8 +294,26 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void openPrescriptionFromResourceUri(Uri uri) {
-        File f = PrescriptionUtility.readFromResourceUri(this, uri);
-        this.openPrescriptionFromFile(f);
+        Prescription prescription = PrescriptionUtility.readFromResourceUri(this, uri);
+        Patient p = prescription.patient;
+        if (p != null) {
+            // Import patient if needed
+            PatientDBAdapter db = new PatientDBAdapter(this);
+            Patient existingPatient = db.getPatientWithUniqueId(p.uid);
+            if (existingPatient == null) {
+                db.insertRecord(p);
+            }
+            db.close();
+
+        } else {
+            // Cannot save prescription if there is no patient, but let user to view it
+            openedFile = null;
+            openedPrescription = null;
+            setPatient(prescription.patient);
+            setDoctor(prescription.doctor);
+            setProducts(prescription.medications);
+            reloadPlaceDateText();
+        }
     }
 
     public void openNewPrescription() {

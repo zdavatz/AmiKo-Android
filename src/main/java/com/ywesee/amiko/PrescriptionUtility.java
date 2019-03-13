@@ -96,7 +96,7 @@ public class PrescriptionUtility {
         return null;
     }
 
-    public static File readFromResourceUri(Context c, Uri uri) {
+    public static Prescription readFromResourceUri(Context c, Uri uri) {
         try {
             InputStream inputStream = c.getContentResolver().openInputStream(uri);
             ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
@@ -118,8 +118,7 @@ public class PrescriptionUtility {
             String jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
             JSONObject obj = new JSONObject(jsonString);
             Prescription p = new Prescription(obj);
-            return savePrescription(c, p);
-            // TODO: Save the patient to patient database
+            return p;
         } catch (Exception e) {
             return null;
         }
