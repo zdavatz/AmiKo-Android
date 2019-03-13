@@ -87,7 +87,7 @@
     <string name="prescription_email_open_with">Öffnen mit:</string>
     <string name="confirm_delete_amk">Confirm delete</string>
 
-    <string name="amk_imported">Imported AMK</string>
-    <string name="amk_already_imported">AMK wurde bereits importiert.</string>
+    <string name="amk_imported">Die .amk Datei wurde erfolgreich importiert.</string>
+    <string name="amk_already_imported">Diese .amk Datei wurde bereits importiert.</string>
 
 </resources>
