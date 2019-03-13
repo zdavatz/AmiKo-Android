@@ -86,7 +86,7 @@
     <string name="prescription_email_prescription">Ordon.:</string>
     <string name="prescription_email_from">von</string>
     <string name="prescription_email_open_with">Ouvrir avec:</string>
-    <string name="confirm_delete_amk">Confirm delete</string>
+    <string name="confirm_delete_amk">Êtes-vous sûr de vouloir supprimer ce fichier.amk?</string>
 
     <string name="amk_imported">Le fichier .amk a été importé avec succès.</string>
     <string name="amk_already_imported">Ce fichier .amk a déjà été importé.</string>
