@@ -305,6 +305,37 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
             db.close();
 
+            boolean needToImport = true;
+            File existingPrescriptionFile = null;
+            ArrayList<File> amkFiles = PrescriptionUtility.amkFilesforPatient(this, p);
+            for (File file : amkFiles) {
+                Prescription thisPrescription = PrescriptionUtility.readFromFile(file);
+                if (thisPrescription == null) continue;
+                if (thisPrescription.hash.equals(prescription.hash)) {
+                    needToImport = false;
+                    existingPrescriptionFile = file;
+                    break;
+                }
+            }
+            if (needToImport) {
+                File savedFile = PrescriptionUtility.savePrescription(this, prescription);
+                openedFile = savedFile;
+                openedPrescription = prescription;
+                setPatient(prescription.patient);
+                setDoctor(prescription.doctor);
+                setProducts(prescription.medications);
+                reloadAMKFileList();
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.amk_imported))
+                        .setPositiveButton("OK", null)
+                        .show();
+            } else {
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.amk_already_imported))
+                        .setPositiveButton("OK", null)
+                        .show();
+                openPrescriptionFromFile(existingPrescriptionFile);
+            }
         } else {
             // Cannot save prescription if there is no patient, but let user to view it
             openedFile = null;
