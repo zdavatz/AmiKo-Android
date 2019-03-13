@@ -30,14 +30,13 @@ import java.util.List;
 import java.util.UUID;
 
 public class PrescriptionActivity extends AppCompatActivity {
-    // TODO: view for prescription.placeDate
-
     private Operator doctor;
     private Patient patient;
     private ArrayList<Product> products;
     private File openedFile = null;
     private Prescription openedPrescription;
 
+    private TextView placeDateText;
     private TextView doctorNameText;
     private TextView doctorStreetText;
     private TextView doctorZipCityText;
@@ -79,6 +78,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         setContentView(R.layout.activity_prescription);
         setTitle(R.string.prescription_button);
 
+        this.placeDateText = findViewById(R.id.placedate_text);
         this.doctorNameText = findViewById(R.id.doctor_name_text);
         this.doctorStreetText = findViewById(R.id.doctor_street_text);
         this.doctorZipCityText = findViewById(R.id.doctor_zip_city_text);
@@ -290,7 +290,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         setPatient(p.patient);
         setDoctor(p.doctor);
         setProducts(p.medications);
-        // TODO: show place date
+        reloadPlaceDateText();
     }
 
     public void openPrescriptionFromResourceUri(Uri uri) {
@@ -324,6 +324,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 setPatient(prescription.patient);
                 setDoctor(prescription.doctor);
                 setProducts(prescription.medications);
+                reloadPlaceDateText();
                 reloadAMKFileList();
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.amk_imported))
@@ -353,6 +354,15 @@ public class PrescriptionActivity extends AppCompatActivity {
         setPatient(null);
         setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         setProducts(new ArrayList<Product>());
+        reloadPlaceDateText();
+    }
+
+    public void reloadPlaceDateText() {
+        if (openedPrescription == null) {
+            this.placeDateText.setText("");
+        } else {
+            this.placeDateText.setText(openedPrescription.placeDate);
+        }
     }
 
     public void setProducts(ArrayList<Product> newProducts) {
@@ -424,7 +434,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         } else {
             p.hash = uniqueId;
         }
-        p.placeDate = doctor.city + " " + PrescriptionUtility.prettyTime();
+        p.placeDate = doctor.city + ", " + PrescriptionUtility.prettyTime();
         return p;
     }
 
@@ -434,6 +444,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         reloadAMKFileList();
         openedFile = savedFile;
         openedPrescription = p;
+        reloadPlaceDateText();
     }
     void overwriteOldPrescription() {
         if (openedPrescription == null || openedFile == null) {
@@ -446,6 +457,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         reloadAMKFileList();
         openedFile = savedFile;
         openedPrescription = p;
+        reloadPlaceDateText();
     }
 
     Intent createEmailIntent() {

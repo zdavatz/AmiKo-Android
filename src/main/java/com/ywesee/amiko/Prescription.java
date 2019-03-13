@@ -25,7 +25,7 @@ public class Prescription {
 
     public Prescription(JSONObject json) {
         this.hash = json.optString(KEY_AMK_HASH);
-        this.placeDate = json.optString(KEY_AMK_PLACE_DATE);
+        this.placeDate = json.optString(KEY_AMK_PLACE_DATE, json.optString("date"));
         try {
             this.patient = new Patient(json.getJSONObject(KEY_AMK_PATIENT));
             this.doctor = new Operator(json.getJSONObject(KEY_AMK_OPERATOR));
