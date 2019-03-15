@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -91,12 +92,13 @@ public class PrescriptionUtility {
             JSONObject obj = new JSONObject(jsonString);
             return new Prescription(obj);
         } catch (Exception e) {
-
+            Log.e("PrescriptionUtility", "Cannot parse file json: " + e.toString() + ":" + jsonString);
         }
         return null;
     }
 
     public static Prescription readFromResourceUri(Context c, Uri uri) {
+        String jsonString = "";
         try {
             InputStream inputStream = c.getContentResolver().openInputStream(uri);
             ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
@@ -115,11 +117,12 @@ public class PrescriptionUtility {
             // and then we can return your byte array.
             byte[] bytes = byteBuffer.toByteArray();
             String base64Encoded = new String(bytes, StandardCharsets.UTF_8);
-            String jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
+            jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
             JSONObject obj = new JSONObject(jsonString);
             Prescription p = new Prescription(obj);
             return p;
         } catch (Exception e) {
+            Log.e("PrescriptionUtility", "Cannot read from resource uri: " + e.toString() + ":" + uri.toString() + ":" + jsonString);
             return null;
         }
     }
