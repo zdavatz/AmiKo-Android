@@ -285,6 +285,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public void openPrescriptionFromFile(File file) {
         Prescription p = PrescriptionUtility.readFromFile(file);
+        if (p == null) return;
         openedPrescription = p;
         openedFile = file;
         setPatient(p.patient);
@@ -295,6 +296,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public void openPrescriptionFromResourceUri(Uri uri) {
         Prescription prescription = PrescriptionUtility.readFromResourceUri(this, uri);
+        if (prescription == null) return;
         Patient p = prescription.patient;
         if (p != null) {
             // Import patient if needed
