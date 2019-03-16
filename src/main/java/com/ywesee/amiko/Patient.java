@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Locale;
 
 import static com.ywesee.amiko.PatientDBAdapter.KEY_ADDRESS;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_BIRTHDATE;
@@ -100,7 +101,7 @@ public class Patient implements Serializable {
 
     ContentValues toContentValues() {
         ContentValues values = new ContentValues();
-        this.uid = String.format("%d", this.hashValue());
+        this.uid = this.hashValue();
 
 //        values.put(KEY_ROWID, rowid);
         values.put(KEY_TIMESTAMP, timestamp);
@@ -121,8 +122,8 @@ public class Patient implements Serializable {
         return values;
     }
 
-    public int hashValue() {
-        return String.format("%s.%s.%s", this.familyname, this.givenname, this.birthdate).hashCode();
+    public String hashValue() {
+        return Utilities.foundationHashString(String.format("%s.%s.%s", this.familyname, this.givenname, this.birthdate));
     }
 
     public String stringForDisplay() {

@@ -41,9 +41,6 @@ public class PrescriptionUtility {
         return format.format(new Date());
     }
 
-    public static String placeDate(Prescription p) {
-        return p.doctor.city + " " + PrescriptionUtility.prettyTime();
-    }
     public static File savePrescription(Context c, Prescription p) {
         JSONObject jsonObj = p.toJSON();
         String jsonString = jsonObj.toString();
@@ -164,5 +161,13 @@ public class PrescriptionUtility {
         if (!file.exists()) {
             file.mkdirs();
         }
+    }
+    public static void deletePatientDirectory(Context c, Patient p) {
+        File folder = new File(amkDirectoryForPatient(c, p));
+        if (!folder.exists()) return;
+        for (File file: folder.listFiles()) {
+            file.delete();
+        }
+        folder.delete();
     }
 }

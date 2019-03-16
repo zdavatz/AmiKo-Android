@@ -153,4 +153,55 @@ public class Utilities {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
 		return sdf.format(new Date());
 	}
+
+	public static long foundationHash(String baseString) {
+		char[] chars = baseString.toCharArray();
+		int len = baseString.length();
+
+		long result = len;
+		if (len <= 96)
+		{
+			int to4 = (len & ~3);
+			int end = len;
+			int i = 0;
+			while (i < to4)
+			{
+				result = result * 67503105 + chars[i] * 16974593 + chars[i + 1] * 66049 + chars[i + 2] * 257 + chars[i + 3];
+				i += 4;
+			}
+
+
+			while (i < end)
+				result = result * 257 + chars[i++];
+		}
+		else
+		{
+			int end;
+			int i = 0;
+			end = 29;
+			while (i < end)
+			{
+				result = result * 67503105 + chars[i] * 16974593 + chars[i + 1] * 66049 + chars[i + 2] * 257 + chars[i + 3];
+				i += 4;
+			}
+			int j = ((len / 2) - 16);
+			end = ((len / 2) + 15);
+			while (j < end)
+			{
+				result = result * 67503105 + chars[j] * 16974593 + chars[j + 1] * 66049 + chars[j + 2] * 257 + chars[j + 3];
+				j += 4;
+			}
+			int k = (len - 32);
+			end = (k + 29);
+			while (k < end)
+			{
+				result = result * 67503105 + chars[k] * 16974593 + chars[k + 1] * 66049 + chars[k + 2] * 257 + chars[k + 3];
+				k += 4;
+			}
+		}
+		return (result + (result << (len & 31)));
+	}
+	public static String foundationHashString(String baseString) {
+		return Long.toUnsignedString(foundationHash(baseString));
+	}
 }
