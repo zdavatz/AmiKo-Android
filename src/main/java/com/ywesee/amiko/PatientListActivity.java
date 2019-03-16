@@ -49,6 +49,7 @@ public class PatientListActivity extends AppCompatActivity {
 
         mDBAdapter = new PatientDBAdapter(this);
         mAllPatients = mDBAdapter.getAllRecords();
+        final Context _this = this;
 
         // specify an adapter (see also next example)
         mAdapter = new PatientListAdapter(mAllPatients);
@@ -79,6 +80,7 @@ public class PatientListActivity extends AppCompatActivity {
                                 mAllPatients = ((PatientListAdapter) mAdapter).mDataset = mDBAdapter.getAllRecords();
                                 mAdapter.notifyDataSetChanged();
                                 Patient.setCurrentPatientId(context, null);
+                                PrescriptionUtility.deletePatientDirectory(_this, patient);
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
