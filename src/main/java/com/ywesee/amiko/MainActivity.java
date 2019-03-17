@@ -699,14 +699,7 @@ public class MainActivity extends AppCompatActivity {
     // Reset it
     resetView(false);
 
-    Intent intent = getIntent();
-    if (intent != null && intent.getAction() != null) {
-      // Amiko is opened because user wants to open an AMK file
-      Uri data = intent.getData();
-      Intent i = new Intent(this, PrescriptionActivity.class);
-      i.setData(data);
-      startActivity(i);
-    }
+    handleIntent(getIntent());
   }
 
   private void checkTimeSinceLastUpdate() {
@@ -737,6 +730,13 @@ public class MainActivity extends AppCompatActivity {
     registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     // Check time since last update
     checkTimeSinceLastUpdate();
+  }
+
+  @Override
+  protected void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+    handleIntent(intent);
   }
 
   /**
@@ -853,6 +853,17 @@ public class MainActivity extends AppCompatActivity {
       }
     };
         registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+  }
+
+  public void handleIntent(Intent intent) {
+    if (intent != null && intent.getAction() == Intent.ACTION_VIEW) {
+      // Amiko is opened because user wants to open an AMK file
+      Uri data = intent.getData();
+      if (data == null) return;
+      Intent i = new Intent(this, PrescriptionActivity.class);
+      i.setData(data);
+      startActivity(i);
+    }
   }
 
   /**
