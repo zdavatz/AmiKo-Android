@@ -153,6 +153,22 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
         return null;
     }
 
+    public Patient getPatientWithNamesAndBirthday(String familyname, String givenname, String birthdate) {
+        Cursor cursor = this.getReadableDatabase().query(DATABASE_TABLE,
+                new String[] {KEY_ROWID, KEY_TIMESTAMP, KEY_UID, KEY_FAMILYNAME, KEY_GIVENNAME, KEY_BIRTHDATE, KEY_GENDER,
+                        KEY_WEIGHT_KG, KEY_HEIGHT_CM, KEY_ZIPCODE, KEY_CITY, KEY_COUNTRY, KEY_ADDRESS, KEY_PHONE,
+                        KEY_EMAIL},
+                KEY_FAMILYNAME + " = ? AND " + KEY_GIVENNAME  + " = ? AND " + KEY_BIRTHDATE + " = ? ",
+                new String[] {familyname, givenname, birthdate}, null, null, KEY_FAMILYNAME + "," + KEY_GIVENNAME);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            Patient patient = new Patient(cursor);
+            cursor.close();
+            return patient;
+        }
+        return null;
+    }
+
     /**
      * Retrieves specific record
      * @param rowId

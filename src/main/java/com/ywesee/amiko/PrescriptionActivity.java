@@ -302,8 +302,15 @@ public class PrescriptionActivity extends AppCompatActivity {
             // Import patient if needed
             PatientDBAdapter db = new PatientDBAdapter(this);
             Patient existingPatient = db.getPatientWithUniqueId(p.uid);
+
             if (existingPatient == null) {
-                db.insertRecord(p);
+                // Hash is calculated from familyname, givenname and birthday so it should be the same.
+                // But sometimes amiko on other platforms seems to have a different hash, so here is this,
+                // to query patient with the actual fields just in case.
+                Patient existingPatientWithAnotherHash = db.getPatientWithNamesAndBirthday(p.familyname, p.givenname, p.birthdate);
+                if (existingPatientWithAnotherHash == null) {
+                    db.insertRecord(p);
+                }
             }
             db.close();
 
