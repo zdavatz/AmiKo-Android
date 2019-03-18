@@ -26,6 +26,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -389,6 +390,12 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public void reloadAMKFileList() {
         ArrayList<File> amkFiles = PrescriptionUtility.amkFilesForCurrentPatient(this);
+        amkFiles.sort(new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return -(o1.getName().compareToIgnoreCase(o2.getName()));
+            }
+        });
         mAMKAdapter.mDataset = amkFiles;
         mAMKAdapter.notifyDataSetChanged();
     }
