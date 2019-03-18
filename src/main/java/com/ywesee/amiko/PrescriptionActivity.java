@@ -469,6 +469,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             return;
         }
         openedFile.delete();
+        this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         Prescription p = makePrescription(openedPrescription.hash);
         File savedFile = PrescriptionUtility.savePrescription(this, p);
         reloadAMKFileList();
