@@ -335,7 +335,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 setDoctor(prescription.doctor);
                 setProducts(prescription.medications);
                 reloadPlaceDateText();
-                reloadAMKFileList();
+                Patient.setCurrentPatientId(this, prescription.patient.uid);
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.amk_imported))
                         .setPositiveButton("OK", null)
@@ -347,6 +347,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                         .show();
                 openPrescriptionFromFile(existingPrescriptionFile);
             }
+            reloadAMKFileList();
         } else {
             // Cannot save prescription if there is no patient, but let user to view it
             openedFile = null;
