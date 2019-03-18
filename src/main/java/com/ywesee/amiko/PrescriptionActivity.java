@@ -26,6 +26,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -302,8 +303,15 @@ public class PrescriptionActivity extends AppCompatActivity {
             // Import patient if needed
             PatientDBAdapter db = new PatientDBAdapter(this);
             Patient existingPatient = db.getPatientWithUniqueId(p.uid);
+
             if (existingPatient == null) {
-                db.insertRecord(p);
+                // Hash is calculated from familyname, givenname and birthday so it should be the same.
+                // But sometimes amiko on other platforms seems to have a different hash, so here is this,
+                // to query patient with the actual fields just in case.
+                Patient existingPatientWithAnotherHash = db.getPatientWithNamesAndBirthday(p.familyname, p.givenname, p.birthdate);
+                if (existingPatientWithAnotherHash == null) {
+                    db.insertRecord(p);
+                }
             }
             db.close();
 
@@ -327,7 +335,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 setDoctor(prescription.doctor);
                 setProducts(prescription.medications);
                 reloadPlaceDateText();
-                reloadAMKFileList();
+                Patient.setCurrentPatientId(this, prescription.patient.uid);
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.amk_imported))
                         .setPositiveButton("OK", null)
@@ -339,6 +347,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                         .show();
                 openPrescriptionFromFile(existingPrescriptionFile);
             }
+            reloadAMKFileList();
         } else {
             // Cannot save prescription if there is no patient, but let user to view it
             openedFile = null;
@@ -382,6 +391,12 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     public void reloadAMKFileList() {
         ArrayList<File> amkFiles = PrescriptionUtility.amkFilesForCurrentPatient(this);
+        amkFiles.sort(new Comparator<File>() {
+            @Override
+            public int compare(File o1, File o2) {
+                return -(o1.getName().compareToIgnoreCase(o2.getName()));
+            }
+        });
         mAMKAdapter.mDataset = amkFiles;
         mAMKAdapter.notifyDataSetChanged();
     }
@@ -454,6 +469,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             return;
         }
         openedFile.delete();
+        this.setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         Prescription p = makePrescription(openedPrescription.hash);
         File savedFile = PrescriptionUtility.savePrescription(this, p);
         reloadAMKFileList();

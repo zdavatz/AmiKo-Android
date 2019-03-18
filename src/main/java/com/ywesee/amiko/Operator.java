@@ -55,7 +55,15 @@ public class Operator {
     static public Operator loadFromStore(String dirPath) {
         DoctorStore store = new DoctorStore(dirPath);
         if (!store.exists()) {
-            return null;
+            Operator o = new Operator();
+            o.title = "";
+            o.givenName = "";
+            o.familyName = "";
+            o.postalAddress = "";
+            o.city = "";
+            o.zipCode = "";
+            o.phoneNumber = "";
+            o.emailAddress = "";
         }
         store.load();
 
