@@ -302,16 +302,12 @@ public class PrescriptionActivity extends AppCompatActivity {
         if (p != null) {
             // Import patient if needed
             PatientDBAdapter db = new PatientDBAdapter(this);
-            Patient existingPatient = db.getPatientWithUniqueId(p.uid);
+            // Calculate hash instead of using p.uid because it's possible that the hash
+            // is calculated with another algorithm
+            Patient existingPatient = db.getPatientWithUniqueId(p.hashValue());
 
             if (existingPatient == null) {
-                // Hash is calculated from familyname, givenname and birthday so it should be the same.
-                // But sometimes amiko on other platforms seems to have a different hash, so here is this,
-                // to query patient with the actual fields just in case.
-                Patient existingPatientWithAnotherHash = db.getPatientWithNamesAndBirthday(p.familyname, p.givenname, p.birthdate);
-                if (existingPatientWithAnotherHash == null) {
-                    db.insertRecord(p);
-                }
+                db.insertRecord(p);
             }
             db.close();
 
@@ -335,7 +331,6 @@ public class PrescriptionActivity extends AppCompatActivity {
                 setDoctor(prescription.doctor);
                 setProducts(prescription.medications);
                 reloadPlaceDateText();
-                Patient.setCurrentPatientId(this, prescription.patient.uid);
                 new AlertDialog.Builder(this)
                         .setTitle(getString(R.string.amk_imported))
                         .setPositiveButton("OK", null)
@@ -347,6 +342,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                         .show();
                 openPrescriptionFromFile(existingPrescriptionFile);
             }
+            Patient.setCurrentPatientId(this, prescription.patient.hashValue());
             reloadAMKFileList();
         } else {
             // Cannot save prescription if there is no patient, but let user to view it
