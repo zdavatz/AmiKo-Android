@@ -76,7 +76,7 @@
     <string name="sex_not_selected">Veuillez choisir le sexe</string>
     <string name="please_select_sex">Veuillez choisir le sexe</string>
 
-    <string name="confirm_delete_patient">Vous voulez vraiment effacer le patient?</string>
+    <string name="confirm_delete_patient">Voulez-vous vraiment supprimer le patient et toutes ses ordonnances?</string>
     <string name="yes">Oui</string>
     <string name="no">Non</string>
     <string name="new_">Nouv. ord.</string>

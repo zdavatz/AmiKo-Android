@@ -75,7 +75,7 @@
     <string name="female">f</string>
     <string name="sex_not_selected">Geschlecht wurde nicht gewählt.</string>
     <string name="please_select_sex">Bitte Geschlecht wählen.</string>
-    <string name="confirm_delete_patient">Möchten Sie den Patienten wirklich löschen?</string>
+    <string name="confirm_delete_patient">Möchten Sie den Patienten und alles seine Rezepte wirklich löschen?</string>
     <string name="yes">Ja</string>
     <string name="no">Nein</string>
     <string name="new_">Neu</string>
