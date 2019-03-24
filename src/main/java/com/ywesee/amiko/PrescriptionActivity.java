@@ -159,7 +159,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 file.delete();
                                 reloadAMKFileList();
-                                if (openedFile == file) {
+                                if (openedFile.equals(file)) {
                                     openNewPrescription();
                                 }
                             }
@@ -299,13 +299,14 @@ public class PrescriptionActivity extends AppCompatActivity {
         Prescription prescription = PrescriptionUtility.readFromResourceUri(this, uri);
         if (prescription == null) return;
         Patient p = prescription.patient;
+        // Calculate hash instead of using p.uid because it's possible that the hash
+        // is calculated with another algorithm
+        p.uid = p.hashValue();
         if (p != null) {
             // Import patient if needed
             PatientDBAdapter db = new PatientDBAdapter(this);
-            // Calculate hash instead of using p.uid because it's possible that the hash
-            // is calculated with another algorithm
-            Patient existingPatient = db.getPatientWithUniqueId(p.hashValue());
 
+            Patient existingPatient = db.getPatientWithUniqueId(p.uid);
             if (existingPatient == null) {
                 db.insertRecord(p);
             }
@@ -342,7 +343,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                         .show();
                 openPrescriptionFromFile(existingPrescriptionFile);
             }
-            Patient.setCurrentPatientId(this, prescription.patient.hashValue());
+            Patient.setCurrentPatientId(this, prescription.patient.uid);
             reloadAMKFileList();
         } else {
             // Cannot save prescription if there is no patient, but let user to view it
