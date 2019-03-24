@@ -159,7 +159,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 file.delete();
                                 reloadAMKFileList();
-                                if (openedFile == file) {
+                                if (openedFile.equals(file)) {
                                     openNewPrescription();
                                 }
                             }
