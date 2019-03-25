@@ -1,13 +1,16 @@
 package com.ywesee.amiko;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -101,7 +104,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.interactionButton = findViewById(R.id.interaction_button);
 
         this.drawerLayout = findViewById(R.id.drawer_layout);
-        final Context _this = this;
+        final PrescriptionActivity _this = this;
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
@@ -231,6 +234,17 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.setPatient(Patient.loadCurrentPatient(this));
         this.setProducts(PrescriptionProductBasket.getShared().products);
         this.reloadMedicinesText();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String uid = intent.getStringExtra(PatientListActivity.PATIENT_DELETED_EVENT_UID);
+                if (uid.equals(_this.patient.uid)) {
+                    openNewPrescription();
+                    reloadAMKFileList();
+                }
+            }
+        }, new IntentFilter(PatientListActivity.PATIENT_DELETED_EVENT));
 
         Intent i = getIntent();
         if (i.getData() != null) {

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
@@ -23,6 +24,9 @@ import java.util.List;
 
 
 public class PatientListActivity extends AppCompatActivity {
+    public final static String PATIENT_DELETED_EVENT = "patient-deleted";
+    public final static String PATIENT_DELETED_EVENT_UID = "patient-deleted-uid";
+
     private RecyclerView mRecyclerView;
     private EditText mSearchField;
     private PatientListAdapter mAdapter;
@@ -81,6 +85,10 @@ public class PatientListActivity extends AppCompatActivity {
                                 mAdapter.notifyDataSetChanged();
                                 Patient.setCurrentPatientId(context, null);
                                 PrescriptionUtility.deletePatientDirectory(_this, patient);
+                                LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(context);
+                                Intent intent = new Intent(PATIENT_DELETED_EVENT);
+                                intent.putExtra(PATIENT_DELETED_EVENT_UID, patient.uid);
+                                lbm.sendBroadcast(intent);
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
