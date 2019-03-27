@@ -17,8 +17,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -67,6 +69,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager mAMKLayoutManager;
 
     private DrawerLayout drawerLayout;
+    private GestureDetector detector;
 
     static final int REQUEST_PATIENT = 1;
 
@@ -251,6 +254,54 @@ public class PrescriptionActivity extends AppCompatActivity {
             // wants to open an AMK file from resource uri
             openPrescriptionFromResourceUri(i.getData());
         }
+        setupGestureDetector();
+    }
+
+    private void setupGestureDetector() {
+        GestureDetector.SimpleOnGestureListener simpleOnGestureListener = new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
+                if (event1==null || event2==null) {
+                    return false;
+                }
+                if (event1.getPointerCount()>1 || event2.getPointerCount()>1) {
+                    return false;
+                } else {
+                    try {
+                        // right to left swipe... return to mSuggestView
+                        // float diffX = event1.getX()-event2.getX();
+                        // left to right swipe... return to mSuggestView
+                        float diffX = event2.getX()-event1.getX();
+                        if (diffX>120 && Math.abs(velocityX)>300) {
+                            finish();
+                            return true;
+                        }
+                    } catch (Exception e) {
+                        // Handle exceptions...
+                    }
+                    return false;
+                }
+            }
+        };
+
+        detector = new GestureDetector(this, simpleOnGestureListener);
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (detector != null) {
+            if (detector.onTouchEvent(ev)) {
+                return true;
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        return detector.onTouchEvent(event) || super.onTouchEvent(event);
+    }
+
     }
 
     public void setDoctor(Operator doctor) {
