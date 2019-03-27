@@ -13,7 +13,7 @@
         android:baselineAligned="false"
         >
 
-        <ScrollView
+        <android.support.v4.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_above="@+id/bottom_layout">
@@ -162,7 +162,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-        </ScrollView>
+        </android.support.v4.widget.NestedScrollView>
 
         <LinearLayout
             android:id="@+id/bottom_layout"
