@@ -41,7 +41,7 @@ public class Product {
         }
 
         this.prodName = "";    // TODO
-        this.comment = "";     // TODO
+        this.comment = "";
 
         this.title = medi.getTitle();
         this.auth = medi.getAuth();
