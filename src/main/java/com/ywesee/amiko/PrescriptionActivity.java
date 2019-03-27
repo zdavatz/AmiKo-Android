@@ -17,6 +17,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.InputType;
 import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +25,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -130,7 +132,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             public boolean onLongClick(View v) {
                 int itemPosition = medicineRecyclerView.getChildLayoutPosition(v);
                 final Product product = mRecyclerAdapter.mDataset.get(itemPosition);
-                // TODO: edit / delete product
+                handleLongTapForProduct(product);
                 return true;
             }
         };
@@ -302,6 +304,54 @@ public class PrescriptionActivity extends AppCompatActivity {
         return detector.onTouchEvent(event) || super.onTouchEvent(event);
     }
 
+    public void handleLongTapForProduct(final Product p) {
+        new AlertDialog.Builder(this)
+            .setPositiveButton(getString(R.string.edit_comment), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    showDialogForEditingProductComment(p);
+                }
+            })
+            .setNeutralButton(getString(R.string.delete_product), new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    showDialogForDeletingProduct(p);
+                }
+            })
+            .show();
+    }
+
+    public void showDialogForEditingProductComment(final Product product) {
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        input.setText(product.comment);
+
+        new AlertDialog.Builder(this)
+            .setTitle(getString(R.string.edit_comment))
+            .setView(input)
+            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    product.comment = input.getText().toString();
+                    reloadRecyclerView();
+                }
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+    }
+
+    public void showDialogForDeletingProduct(final Product product) {
+        new AlertDialog.Builder(this)
+            .setTitle(getString(R.string.delete_product))
+            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    products.remove(product);
+                    setProducts(products);
+                }
+            })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
     }
 
     public void setDoctor(Operator doctor) {
@@ -445,6 +495,10 @@ public class PrescriptionActivity extends AppCompatActivity {
         mRecyclerAdapter.notifyDataSetChanged();
         this.reloadMedicinesText();
         this.reloadButtons();
+    }
+
+    public void reloadRecyclerView() {
+        mRecyclerAdapter.notifyDataSetChanged();
     }
 
     public void reloadMedicinesText() {
@@ -625,12 +679,7 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         layout.addView(packageTextView);
         layout.addView(eanCodeTextView);
         layout.addView(commentTextView);
-        layout.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                return false;
-            }
-        });
+        layout.setOnLongClickListener(onLongClickListener);
 
         ViewHolder vh = new ViewHolder(layout, packageTextView, eanCodeTextView, commentTextView);
 
@@ -644,7 +693,6 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         holder.packageTextView.setText(p.packageInfo);
         holder.eanCodeTextView.setText(p.eanCode);
         holder.commentTextView.setText(p.comment);
-        // TODO: need to make this editable
     }
 
     // Return the size of your dataset (invoked by the layout manager)

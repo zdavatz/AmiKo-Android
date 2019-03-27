@@ -82,6 +82,8 @@
     <string name="new_">Nouv. ord.</string>
     <string name="send">Env.</string>
     <string name="send_email">Env. Email</string>
+    <string name="edit_comment">Traiter votre annotation</string>
+    <string name="delete_product">Effacer l’emballage prescrit/annot.</string>
 
     <string name="prescription_email_prescription">Ordon.:</string>
     <string name="prescription_email_from">von</string>
