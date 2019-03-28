@@ -19,6 +19,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.GestureDetector;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -291,7 +292,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (detector != null) {
+        if (detector != null && !drawerLayout.isDrawerVisible(Gravity.RIGHT)) {
             if (detector.onTouchEvent(ev)) {
                 return true;
             }
