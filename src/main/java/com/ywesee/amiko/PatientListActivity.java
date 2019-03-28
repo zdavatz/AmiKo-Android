@@ -3,7 +3,11 @@ package com.ywesee.amiko;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -14,6 +18,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,6 +33,7 @@ import java.util.List;
 public class PatientListActivity extends AppCompatActivity {
     public final static String PATIENT_DELETED_EVENT = "patient-deleted";
     public final static String PATIENT_DELETED_EVENT_UID = "patient-deleted-uid";
+    public final static int CREATE_PATIENT = 0;
 
     private RecyclerView mRecyclerView;
     private EditText mSearchField;
@@ -183,12 +189,47 @@ public class PatientListActivity extends AppCompatActivity {
         mAdapter.notifyDataSetChanged();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        if (getAllowCreation()) {
+            getMenuInflater().inflate(R.menu.prescription_list_actionbar, menu);
+            MenuItem addItem = menu.findItem(R.id.add);
+            Drawable newIcon = (Drawable)addItem .getIcon();
+            newIcon.mutate().setColorFilter(Color.argb(255, 0, 0, 0), PorterDuff.Mode.SRC_IN);
+            addItem.setIcon(newIcon);
+        }
+        return true;
+    }
+
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 finish();
+                break;
+            case R.id.add: {
+                Intent intent = new Intent(this, PatientActivity.class);
+                intent.putExtra("createOnly", true);
+                startActivityForResult(intent, CREATE_PATIENT);
+            }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == CREATE_PATIENT && resultCode == 0 && data != null) {
+            Patient patient = (Patient)data.getSerializableExtra("patient");
+            Intent newData = new Intent();
+            data.putExtra("patient", patient);
+            setResult(0, data);
+            finish();
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    boolean getAllowCreation() {
+        return getIntent().getBooleanExtra("allowCreation", false);
     }
 
     @Override

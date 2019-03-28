@@ -542,6 +542,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.patient_list: {
                 Intent intent = new Intent(this, PatientListActivity.class);
+                intent.putExtra("allowCreation", true);
                 startActivityForResult(intent, REQUEST_PATIENT);
                 return true;
             }
