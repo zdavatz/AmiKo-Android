@@ -160,7 +160,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             public boolean onLongClick(View v) {
                 int itemPosition = medicineRecyclerView.getChildLayoutPosition(v);
                 final File file = mAMKAdapter.mDataset.get(itemPosition);
-                new AlertDialog.Builder(_this)
+                new AlertDialog.Builder(_this, R.style.CustomAlertDialog)
                         .setTitle(getString(R.string.confirm_delete_amk) + " " + file.getName())
                         .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
                             @Override
@@ -325,8 +325,9 @@ public class PrescriptionActivity extends AppCompatActivity {
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         input.setText(product.comment);
+        input.setPadding(50, 30, 8, 22);
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setTitle(getString(R.string.edit_comment))
             .setView(input)
             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
@@ -341,7 +342,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void showDialogForDeletingProduct(final Product product) {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.CustomAlertDialog)
             .setTitle(getString(R.string.delete_product))
             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override

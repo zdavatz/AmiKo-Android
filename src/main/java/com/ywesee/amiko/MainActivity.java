@@ -2138,7 +2138,7 @@ public class MainActivity extends AppCompatActivity {
               final Medication m = mMediDataSource.searchId(med.getId());
               String[] packs = m.packagesFromPackInfo();
               final AtomicInteger choice = new AtomicInteger(0);
-              new AlertDialog.Builder(mContext)
+              new AlertDialog.Builder(mContext, R.style.CustomAlertDialog)
               .setSingleChoiceItems(packs, -1, new DialogInterface.OnClickListener() {
                   @Override
                   public void onClick(DialogInterface dialog, int which) {
