@@ -36,6 +36,6 @@
 
 
     <style name="CustomAlertDialog" parent="android:Theme.Material.Light.Dialog.Alert">
-        <item name="android:textSize">12dp</item>
+        <item name="android:textSize">13dp</item>
     </style>
 </resources>
