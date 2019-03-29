@@ -82,7 +82,7 @@
     <string name="send">Senden</string>
     <string name="send_email">Senden Email</string>
     <string name="edit_comment">Bemerkung bearbeiten</string>
-    <string name="delete_product">Packung/Bemerkung löschen</string>
+    <string name="delete_product">Packung/Bemerkung löschen?</string>
 
     <string name="prescription_email_prescription">Rezept:</string>
     <string name="prescription_email_from">von</string>
