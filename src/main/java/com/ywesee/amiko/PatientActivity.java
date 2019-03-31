@@ -65,6 +65,7 @@ public class PatientActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_patient);
         setTitle(R.string.menu_patients);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         editName = findViewById(R.id.patient_name);
         editSurname = findViewById(R.id.patient_surname);
@@ -132,6 +133,11 @@ public class PatientActivity extends AppCompatActivity {
         });
     }
 
+    boolean getIsCreateOnly() {
+        Intent intent = getIntent();
+        return intent.getBooleanExtra("createOnly", false);
+    }
+
     public void updateUIForPatient() {
         if (mPatient != null) {
             editName.setText(mPatient.givenname);
@@ -181,13 +187,20 @@ public class PatientActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.patient_actionbar, menu);
+        if (getIsCreateOnly()) {
+            getMenuInflater().inflate(R.menu.patient_create_only_actionbar, menu);
+        } else {
+            getMenuInflater().inflate(R.menu.patient_actionbar, menu);
+        }
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
             case R.id.save: {
                 Patient patient;
                 if (mPatient == null) {
@@ -250,6 +263,12 @@ public class PatientActivity extends AppCompatActivity {
                     db.close();
                     mPatient = patient;
                     Patient.setCurrentPatientId(this, patient.uid);
+                    if (getIsCreateOnly()) {
+                        Intent intent = new Intent();
+                        intent.putExtra("patient", patient);
+                        setResult(0, intent);
+                        finish();
+                    }
                 }
                 return true;
             }
