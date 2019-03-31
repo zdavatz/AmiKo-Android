@@ -187,6 +187,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             @Override
             public boolean onLongClick(View v) {
                 Intent intent = new Intent(_this, PatientListActivity.class);
+                intent.putExtra("allowCreation", true);
                 startActivityForResult(intent, REQUEST_PATIENT);
                 return true;
             }
