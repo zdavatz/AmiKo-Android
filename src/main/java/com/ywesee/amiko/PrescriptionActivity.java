@@ -752,6 +752,9 @@ class AMKListAdapter extends RecyclerView.Adapter<AMKListAdapter.ViewHolder> {
         filenameTextView.setOnClickListener(onClickListener);
         filenameTextView.setWidth(parent.getWidth());
         filenameTextView.setOnLongClickListener(onLongClickListener);
+        filenameTextView.setPadding(15, 25, 0, 25);
+        filenameTextView.setTextSize(13);
+
         ViewHolder vh = new ViewHolder(filenameTextView);
         return vh;
     }
