@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -323,14 +324,32 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void showDialogForEditingProductComment(final Product product) {
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        input.setText(product.comment);
-        input.setPadding(50, 30, 8, 22);
+        LinearLayout layout = new LinearLayout(this);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 0, 50, 0);
 
-        new AlertDialog.Builder(this, R.style.CustomAlertDialog)
-            .setTitle(getString(R.string.edit_comment))
-            .setView(input)
+        final EditText input = new EditText(this);
+        input.setSingleLine(false);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        input.setText(product.comment);
+        input.setLines(3);
+        input.setMinLines(3);
+        input.setGravity(Gravity.TOP | Gravity.START);
+        input.setMaxLines(5);
+        input.setTextSize(13);
+        input.setVerticalScrollBarEnabled(true);
+        layout.addView(input);
+
+        TextView title = new TextView(this);
+        title.setText(getString(R.string.edit_comment));
+        title.setPadding(50, 30, 0, 0);
+        title.setTextSize(13);
+        title.setTypeface(null, Typeface.BOLD);
+
+        AlertDialog ad = new AlertDialog.Builder(this, R.style.EditTextAlertDialog)
+            .setCustomTitle(title)
+            .setView(layout)
             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -339,7 +358,8 @@ public class PrescriptionActivity extends AppCompatActivity {
                 }
             })
             .setNegativeButton(android.R.string.cancel, null)
-            .show();
+            .create();
+        ad.show();
     }
 
     public void showDialogForDeletingProduct(final Product product) {
