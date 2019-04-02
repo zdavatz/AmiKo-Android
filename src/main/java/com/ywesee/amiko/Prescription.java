@@ -1,10 +1,12 @@
 package com.ywesee.amiko;
 
+import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Prescription {
@@ -39,6 +41,31 @@ public class Prescription {
         }
     }
 
+    public Prescription(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_HASH)) {
+                this.hash = reader.nextString();
+            } else if (name.equals(KEY_AMK_PLACE_DATE)) {
+                this.placeDate = reader.nextString();
+            } else if (name.equals(KEY_AMK_PATIENT)) {
+                this.patient = new Patient(reader);
+            } else if (name.equals(KEY_AMK_OPERATOR)) {
+                this.doctor = new Operator(reader);
+            } else if (name.equals(KEY_AMK_MEDICATIONS)) {
+                this.medications = new ArrayList<Product>();
+                reader.beginArray();
+                while (reader.hasNext()) {
+                    this.medications.add(new Product(reader));
+                }
+                reader.endArray();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+    }
     public JSONObject toJSON() {
         JSONObject j = new JSONObject();
         try {

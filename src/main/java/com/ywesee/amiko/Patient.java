@@ -4,10 +4,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -97,6 +99,43 @@ public class Patient implements Serializable {
         this.country = json.optString(KEY_AMK_PAT_COUNTRY);
         this.phone = json.optString(KEY_AMK_PAT_PHONE);
         this.email = json.optString(KEY_AMK_PAT_EMAIL);
+    }
+
+    public Patient(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while(reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_PAT_ID)){
+                this.uid = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_NAME)){
+                this.givenname = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_SURNAME)){
+                this.familyname = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_BIRTHDATE)){
+                this.birthdate = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_WEIGHT)){
+                this.weight_kg = reader.nextInt();
+            } else if (name.equals(KEY_AMK_PAT_HEIGHT)){
+                this.height_cm = reader.nextInt();
+            } else if (name.equals(KEY_AMK_PAT_GENDER)){
+                this.gender = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_ADDRESS)){
+                this.address = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_ZIP)){
+                this.zipcode = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_CITY)){
+                this.city = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_COUNTRY)){
+                this.country = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_PHONE)){
+                this.phone = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_EMAIL)){
+                this.email = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
     }
 
     ContentValues toContentValues() {

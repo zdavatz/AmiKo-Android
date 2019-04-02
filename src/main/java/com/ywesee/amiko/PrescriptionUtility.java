@@ -4,6 +4,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Base64;
+import android.util.Base64InputStream;
+import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -12,7 +14,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,63 +69,24 @@ public class PrescriptionUtility {
         return amkFile;
     }
     public static Prescription readFromFile(File file) {
-        int length = (int) file.length();
-        byte[] bytes = new byte[length];
-        FileInputStream in = null;
         try {
-            in = new FileInputStream(file);
-            in.read(bytes);
-        } catch(Exception e) {
-
-        }
-        finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (Exception e) {
-
-            }
-        }
-        String base64Encoded = new String(bytes, StandardCharsets.UTF_8);
-        String jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
-        try {
-            JSONObject obj = new JSONObject(jsonString);
-            return new Prescription(obj);
+            FileInputStream inputStream = new FileInputStream(file);
+            Base64InputStream b64Stream = new Base64InputStream(inputStream, Base64.DEFAULT );
+            JsonReader jsonReader = new JsonReader(new InputStreamReader(b64Stream, "UTF-8"));
+            Prescription p = new Prescription(jsonReader);
+            return p;
         } catch (Exception e) {
-            Log.e("PrescriptionUtility", "Cannot parse file json: " + e.toString() + ":" + jsonString);
+            Log.e("PrescriptionUtility", "Cannot parse file json: " + e.toString() + ":" + e.getLocalizedMessage());
         }
         return null;
     }
 
-    public static Prescription readFromResourceUri(Context c, Uri uri) {
-        String jsonString = "";
-        try {
-            InputStream inputStream = c.getContentResolver().openInputStream(uri);
-            ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-
-            // this is storage overwritten on each iteration with bytes
-            int bufferSize = 1024;
-            byte[] buffer = new byte[bufferSize];
-
-            // we need to know how may bytes were read to write them to the byteBuffer
-            int len = 0;
-            while ((len = inputStream.read(buffer)) != -1) {
-                byteBuffer.write(buffer, 0, len);
-            }
-            inputStream.close();
-
-            // and then we can return your byte array.
-            byte[] bytes = byteBuffer.toByteArray();
-            String base64Encoded = new String(bytes, StandardCharsets.UTF_8);
-            jsonString = new String(Base64.decode(base64Encoded, Base64.DEFAULT), StandardCharsets.UTF_8);
-            JSONObject obj = new JSONObject(jsonString);
-            Prescription p = new Prescription(obj);
-            return p;
-        } catch (Exception e) {
-            Log.e("PrescriptionUtility", "Cannot read from resource uri: " + e.toString() + ":" + uri.toString() + ":" + jsonString);
-            return null;
-        }
+    public static Prescription readFromResourceUri(Context c, Uri uri) throws IOException {
+        InputStream inputStream = c.getContentResolver().openInputStream(uri);
+        Base64InputStream b64Stream = new Base64InputStream(inputStream, Base64.DEFAULT);
+        JsonReader jsonReader = new JsonReader(new InputStreamReader(b64Stream, "UTF-8"));
+        Prescription p = new Prescription(jsonReader);
+        return p;
     }
 
     public static ArrayList<File> amkFilesInDirectory(String path) {

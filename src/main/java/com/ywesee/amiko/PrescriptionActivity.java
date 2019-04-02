@@ -5,10 +5,17 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.print.PrintAttributes;
+import android.print.PrintManager;
+import android.print.pdf.PrintedPdfDocument;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
@@ -33,6 +40,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -169,7 +178,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 file.delete();
                                 reloadAMKFileList();
-                                if (openedFile.equals(file)) {
+                                if (openedFile != null && openedFile.equals(file)) {
                                     openNewPrescription();
                                 }
                             }
@@ -434,8 +443,18 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void openPrescriptionFromResourceUri(Uri uri) {
-        Prescription prescription = PrescriptionUtility.readFromResourceUri(this, uri);
-        if (prescription == null) return;
+        Prescription prescription;
+        try {
+            prescription = PrescriptionUtility.readFromResourceUri(this, uri);
+        } catch (IOException e) {
+            new AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.cannot_open_amk_file))
+                    .setMessage(e.getLocalizedMessage())
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            return;
+        }
+
         Patient p = prescription.patient;
         // Calculate hash instead of using p.uid because it's possible that the hash
         // is calculated with another algorithm

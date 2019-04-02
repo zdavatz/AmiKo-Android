@@ -1,8 +1,11 @@
 package com.ywesee.amiko;
 
+import android.util.JsonReader;
 import android.util.Log;
 
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 public class Product {
     public static final String KEY_AMK_MED_EAN = "eancode";
@@ -59,6 +62,33 @@ public class Product {
         this.auth = obj.optString(KEY_AMK_MED_OWNER);
         this.regnrs = obj.optString(KEY_AMK_MED_REGNRS);
         this.atccode = obj.optString(KEY_AMK_MED_ATC);
+    }
+
+    public Product(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_MED_EAN)) {
+                this.eanCode = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_PACKAGE)) {
+                this.packageInfo = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_PROD_NAME)) {
+                this.prodName = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_COMMENT)) {
+                this.comment = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_TITLE)) {
+                this.title = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_OWNER)) {
+                this.auth = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_REGNRS)) {
+                this.regnrs = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_ATC)) {
+                this.atccode = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
     }
 
     public JSONObject toJSON() {
