@@ -4,10 +4,13 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -99,6 +102,43 @@ public class Patient implements Serializable {
         this.email = json.optString(KEY_AMK_PAT_EMAIL);
     }
 
+    public Patient(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while(reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_PAT_ID)){
+                this.uid = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_NAME)){
+                this.givenname = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_SURNAME)){
+                this.familyname = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_BIRTHDATE)){
+                this.birthdate = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_WEIGHT)){
+                this.weight_kg = reader.nextInt();
+            } else if (name.equals(KEY_AMK_PAT_HEIGHT)){
+                this.height_cm = reader.nextInt();
+            } else if (name.equals(KEY_AMK_PAT_GENDER)){
+                this.gender = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_ADDRESS)){
+                this.address = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_ZIP)){
+                this.zipcode = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_CITY)){
+                this.city = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_COUNTRY)){
+                this.country = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_PHONE)){
+                this.phone = reader.nextString();
+            } else if (name.equals(KEY_AMK_PAT_EMAIL)){
+                this.email = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+    }
+
     ContentValues toContentValues() {
         ContentValues values = new ContentValues();
         this.uid = this.hashValue();
@@ -128,6 +168,24 @@ public class Patient implements Serializable {
 
     public String stringForDisplay() {
         return this.familyname + " " + this.givenname;
+    }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        writer.name(KEY_AMK_PAT_ID).value(this.uid);
+        writer.name(KEY_AMK_PAT_NAME).value(this.givenname);
+        writer.name(KEY_AMK_PAT_SURNAME).value(this.familyname);
+        writer.name(KEY_AMK_PAT_BIRTHDATE).value(this.birthdate);
+        writer.name(KEY_AMK_PAT_WEIGHT).value(Integer.toString(this.weight_kg));
+        writer.name(KEY_AMK_PAT_HEIGHT).value(Integer.toString(this.height_cm));
+        writer.name(KEY_AMK_PAT_GENDER).value(this.gender);
+        writer.name(KEY_AMK_PAT_ADDRESS).value(this.address);
+        writer.name(KEY_AMK_PAT_ZIP).value(this.zipcode);
+        writer.name(KEY_AMK_PAT_CITY).value(this.city);
+        writer.name(KEY_AMK_PAT_COUNTRY).value(this.country);
+        writer.name(KEY_AMK_PAT_PHONE).value(this.phone);
+        writer.name(KEY_AMK_PAT_EMAIL).value(this.email);
+        writer.endObject();
     }
 
     public JSONObject toJSON() {

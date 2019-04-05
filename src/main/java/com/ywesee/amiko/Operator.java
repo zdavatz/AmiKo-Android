@@ -3,11 +3,14 @@ package com.ywesee.amiko;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Base64;
+import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 public class Operator {
     public static final String KEY_AMK_DOC_TITLE = "title";
@@ -50,6 +53,35 @@ public class Operator {
         if (!signatureString.equals("")) {
             this.setSignature(signatureString);
         }
+    }
+
+    public Operator(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_DOC_TITLE)) {
+                this.title = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_SURNAME)) {
+                this.familyName = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_NAME)) {
+                this.givenName = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_ADDRESS)) {
+                this.postalAddress = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_CITY)) {
+                this.city = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_ZIP)) {
+                this.zipCode = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_PHONE)) {
+                this.phoneNumber = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_EMAIL)) {
+                this.emailAddress = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_SIGNATURE)) {
+                this.setSignature(reader.nextString());
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
     }
 
     static public Operator loadFromStore(String dirPath) {
@@ -107,6 +139,28 @@ public class Operator {
 
     public String getSignature() {
         return this.signature;
+    }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        if (this.title == null) {
+            writer.name(KEY_AMK_DOC_TITLE).value("");
+        } else {
+            writer.name(KEY_AMK_DOC_TITLE).value(this.title);
+        }
+        writer.name(KEY_AMK_DOC_NAME).value(this.givenName);
+        writer.name(KEY_AMK_DOC_SURNAME).value(this.familyName);
+        writer.name(KEY_AMK_DOC_ADDRESS).value(this.postalAddress);
+        writer.name(KEY_AMK_DOC_CITY).value(this.city);
+        writer.name(KEY_AMK_DOC_ZIP).value(this.zipCode);
+        writer.name(KEY_AMK_DOC_PHONE).value(this.phoneNumber);
+        writer.name(KEY_AMK_DOC_EMAIL).value(this.emailAddress);
+        if (this.signature != null) {
+            writer.name(KEY_AMK_DOC_SIGNATURE).value(this.signature);
+        } else {
+            writer.name(KEY_AMK_DOC_SIGNATURE).value("");
+        }
+        writer.endObject();
     }
 
     public JSONObject toJSON() {

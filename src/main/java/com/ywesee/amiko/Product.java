@@ -1,8 +1,12 @@
 package com.ywesee.amiko;
 
+import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
+
+import java.io.IOException;
 
 public class Product {
     public static final String KEY_AMK_MED_EAN = "eancode";
@@ -61,6 +65,33 @@ public class Product {
         this.atccode = obj.optString(KEY_AMK_MED_ATC);
     }
 
+    public Product(JsonReader reader) throws IOException {
+        reader.beginObject();
+        while (reader.hasNext()) {
+            String name = reader.nextName();
+            if (name.equals(KEY_AMK_MED_EAN)) {
+                this.eanCode = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_PACKAGE)) {
+                this.packageInfo = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_PROD_NAME)) {
+                this.prodName = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_COMMENT)) {
+                this.comment = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_TITLE)) {
+                this.title = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_OWNER)) {
+                this.auth = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_REGNRS)) {
+                this.regnrs = reader.nextString();
+            } else if (name.equals(KEY_AMK_MED_ATC)) {
+                this.atccode = reader.nextString();
+            } else {
+                reader.skipValue();
+            }
+        }
+        reader.endObject();
+    }
+
     public JSONObject toJSON() {
         JSONObject j = new JSONObject();
         try {
@@ -76,6 +107,19 @@ public class Product {
             Log.w("Amiko.Product", e.toString());
         }
         return j;
+    }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        writer.name(KEY_AMK_MED_EAN).value(this.eanCode);
+        writer.name(KEY_AMK_MED_PACKAGE).value(this.packageInfo);
+        writer.name(KEY_AMK_MED_PROD_NAME).value(this.prodName);
+        writer.name(KEY_AMK_MED_COMMENT).value(this.comment);
+        writer.name(KEY_AMK_MED_TITLE).value(this.title);
+        writer.name(KEY_AMK_MED_OWNER).value(this.auth);
+        writer.name(KEY_AMK_MED_REGNRS).value(this.regnrs);
+        writer.name(KEY_AMK_MED_ATC).value(this.atccode);
+        writer.endObject();
     }
 
     /**
