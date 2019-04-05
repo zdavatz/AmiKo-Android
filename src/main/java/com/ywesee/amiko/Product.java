@@ -1,6 +1,7 @@
 package com.ywesee.amiko;
 
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -106,6 +107,19 @@ public class Product {
             Log.w("Amiko.Product", e.toString());
         }
         return j;
+    }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        writer.name(KEY_AMK_MED_EAN).value(this.eanCode);
+        writer.name(KEY_AMK_MED_PACKAGE).value(this.packageInfo);
+        writer.name(KEY_AMK_MED_PROD_NAME).value(this.prodName);
+        writer.name(KEY_AMK_MED_COMMENT).value(this.comment);
+        writer.name(KEY_AMK_MED_TITLE).value(this.title);
+        writer.name(KEY_AMK_MED_OWNER).value(this.auth);
+        writer.name(KEY_AMK_MED_REGNRS).value(this.regnrs);
+        writer.name(KEY_AMK_MED_ATC).value(this.atccode);
+        writer.endObject();
     }
 
     /**

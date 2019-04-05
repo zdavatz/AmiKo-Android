@@ -81,6 +81,7 @@
     <string name="new_">Neu</string>
     <string name="send">Senden</string>
     <string name="send_email">Senden Email</string>
+    <string name="print_label">Etikette drucken</string>
     <string name="edit_comment">Bemerkung bearbeiten</string>
     <string name="delete_product">Packung/Bemerkung löschen?</string>
 
@@ -91,5 +92,6 @@
 
     <string name="amk_imported">Die .amk Datei wurde erfolgreich importiert.</string>
     <string name="amk_already_imported">Diese .amk Datei wurde bereits importiert.</string>
+    <string name="cannot_open_amk_file">Cannot open AMK file</string>
 
 </resources>

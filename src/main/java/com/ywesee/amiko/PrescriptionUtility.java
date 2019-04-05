@@ -5,7 +5,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Base64;
 import android.util.Base64InputStream;
+import android.util.Base64OutputStream;
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -17,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -46,9 +49,6 @@ public class PrescriptionUtility {
     }
 
     public static File savePrescription(Context c, Prescription p) {
-        JSONObject jsonObj = p.toJSON();
-        String jsonString = jsonObj.toString();
-        String base64 = Base64.encodeToString(jsonString.getBytes(StandardCharsets.UTF_8), Base64.DEFAULT);
         String filename = "RZ_" + PrescriptionUtility.currentTime().replace(":", "").replace(".", "") + ".amk";
         File amkFile = new File(
             PrescriptionUtility.amkDirectoryForPatient(c, p.patient),
@@ -58,7 +58,10 @@ public class PrescriptionUtility {
         FileOutputStream stream = null;
         try {
             stream = new FileOutputStream(amkFile);
-            stream.write(base64.getBytes());
+            Base64OutputStream b64Output = new Base64OutputStream(stream, Base64.NO_WRAP);
+            JsonWriter writer = new JsonWriter(new OutputStreamWriter(b64Output, "UTF-8"));
+            p.writeJSON(writer);
+            writer.close();
         } catch(Exception e) {
 
         } finally {

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -167,6 +168,24 @@ public class Patient implements Serializable {
 
     public String stringForDisplay() {
         return this.familyname + " " + this.givenname;
+    }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        writer.name(KEY_AMK_PAT_ID).value(this.uid);
+        writer.name(KEY_AMK_PAT_NAME).value(this.givenname);
+        writer.name(KEY_AMK_PAT_SURNAME).value(this.familyname);
+        writer.name(KEY_AMK_PAT_BIRTHDATE).value(this.birthdate);
+        writer.name(KEY_AMK_PAT_WEIGHT).value(Integer.toString(this.weight_kg));
+        writer.name(KEY_AMK_PAT_HEIGHT).value(Integer.toString(this.height_cm));
+        writer.name(KEY_AMK_PAT_GENDER).value(this.gender);
+        writer.name(KEY_AMK_PAT_ADDRESS).value(this.address);
+        writer.name(KEY_AMK_PAT_ZIP).value(this.zipcode);
+        writer.name(KEY_AMK_PAT_CITY).value(this.city);
+        writer.name(KEY_AMK_PAT_COUNTRY).value(this.country);
+        writer.name(KEY_AMK_PAT_PHONE).value(this.phone);
+        writer.name(KEY_AMK_PAT_EMAIL).value(this.email);
+        writer.endObject();
     }
 
     public JSONObject toJSON() {

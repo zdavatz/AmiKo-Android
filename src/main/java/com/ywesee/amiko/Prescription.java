@@ -1,6 +1,7 @@
 package com.ywesee.amiko;
 
 import android.util.JsonReader;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -66,6 +67,28 @@ public class Prescription {
         }
         reader.endObject();
     }
+
+    public void writeJSON(JsonWriter writer) throws IOException {
+        writer.beginObject();
+        writer.name(KEY_AMK_HASH).value(this.hash);
+        writer.name(KEY_AMK_PLACE_DATE).value(this.placeDate);
+
+        writer.name(KEY_AMK_PATIENT);
+        this.patient.writeJSON(writer);
+
+        writer.name(KEY_AMK_OPERATOR);
+        this.doctor.writeJSON(writer);
+
+        writer.name(KEY_AMK_MEDICATIONS);
+        writer.beginArray();
+        for (Product p : this.medications) {
+            p.writeJSON(writer);
+        }
+        writer.endArray();
+
+        writer.endObject();
+    }
+
     public JSONObject toJSON() {
         JSONObject j = new JSONObject();
         try {
