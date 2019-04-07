@@ -84,6 +84,8 @@
     <string name="print_label">Etikette drucken</string>
     <string name="edit_comment">Bemerkung bearbeiten</string>
     <string name="delete_product">Packung/Bemerkung löschen?</string>
+    <string name="page">Seite</string>
+    <string name="save_as_pdf">Save as PDF</string>
 
     <string name="prescription_email_prescription">Rezept:</string>
     <string name="prescription_email_from">von</string>

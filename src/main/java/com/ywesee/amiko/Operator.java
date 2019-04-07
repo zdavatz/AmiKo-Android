@@ -2,6 +2,10 @@ package com.ywesee.amiko;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.util.Base64;
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -11,6 +15,10 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import static com.ywesee.amiko.DoctorActivity.MIN_SIGNATURE_HEIGHT;
+import static com.ywesee.amiko.DoctorActivity.MIN_SIGNATURE_WIDTH;
+import static java.lang.Math.min;
 
 public class Operator {
     public static final String KEY_AMK_DOC_TITLE = "title";
@@ -139,6 +147,47 @@ public class Operator {
 
     public String getSignature() {
         return this.signature;
+    }
+
+    public Bitmap getSignatureThumbnailForPrinting() {
+        Rect rect = new Rect(0, 0, MIN_SIGNATURE_WIDTH, MIN_SIGNATURE_HEIGHT);
+        Bitmap bm = this.getSignatureImage();
+        if (bm == null) return null;
+        Bitmap baseBitmap = Bitmap.createBitmap(rect.width(), rect.height(), bm.getConfig());
+
+        Canvas canvas = new Canvas(baseBitmap );
+
+        Paint bg = new Paint();
+        bg.setColor(Color.rgb(245, 245, 245));
+        canvas.drawRect(rect, bg);
+
+        // resize
+        float widthRatio = rect.width() / (bm.getWidth() / 1.0f);
+        float heightRatio = rect.height() / (bm.getHeight() / 1.0f);
+        float ratio = min(widthRatio, heightRatio);
+
+        int width = (int)(bm.getWidth() * ratio);
+        int height = (int)(bm.getHeight() * ratio);
+
+        Bitmap scaled = Bitmap.createScaledBitmap(bm, width, height, false);
+        canvas.drawBitmap(scaled,
+                (rect.width() - width) / 2.0f,
+                (rect.height() - height) / 2.0f,
+                null);
+
+        return baseBitmap;
+    }
+
+    public String getStringForPrescriptionPrinting() {
+        StringBuilder sb = new StringBuilder();
+        if (this.title != null && !this.title.equals("")) {
+            sb.append(this.title).append(" ");
+        }
+        sb.append(this.givenName).append(" ").append(this.familyName).append("\n");
+        sb.append(this.postalAddress).append("\n");
+        sb.append(this.zipCode).append(" ").append(city).append("\n");
+        sb.append(this.emailAddress);
+        return sb.toString();
     }
 
     public void writeJSON(JsonWriter writer) throws IOException {

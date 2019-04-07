@@ -5,17 +5,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.print.PrintAttributes;
 import android.print.PrintManager;
-import android.print.pdf.PrintedPdfDocument;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
@@ -40,9 +35,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -226,10 +219,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                 } else {
                     saveNewPrescription();
                 }
-                Intent emailIntent = createEmailIntent();
-                if (emailIntent != null) {
-                    startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
-                }
+                showDiaogForSharing(_this.openedPrescription);
             }
         });
 
@@ -384,6 +374,54 @@ public class PrescriptionActivity extends AppCompatActivity {
             })
             .setNegativeButton(android.R.string.cancel, null)
             .show();
+    }
+
+    public void showDiaogForSharing(final Prescription prescription) {
+        final PrescriptionActivity _this = this;
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 0, 50, 0);
+
+        final AlertDialog ad = new AlertDialog.Builder(this).setView(layout).create();
+
+        Button pdfButton = new Button(this);
+        pdfButton.setText(getString(R.string.save_as_pdf));
+        pdfButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String filename = PrescriptionUtility.currentFilenameWithExtension("pdf");
+                File f = PrescriptionPrintingUtility.generatePDF(_this, _this.openedPrescription, filename);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Uri outputFileUri = FileProvider.getUriForFile(_this, _this.getApplicationContext().getPackageName() + ".com.ywesee.amiko.provider", f);
+                intent.setDataAndType(outputFileUri, "application/pdf");
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                Intent in = Intent.createChooser(intent, "Open File");
+                startActivity(in);
+                ad.dismiss();
+                f.deleteOnExit();
+            }
+        });
+
+        Button emailButton = new Button(this);
+        emailButton.setText(getString(R.string.send_email));
+        emailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent emailIntent = createEmailIntent();
+                if (emailIntent != null) {
+                    startActivity(Intent.createChooser(emailIntent, getString(R.string.send_email)));
+                }
+                ad.dismiss();
+            }
+        });
+
+        layout.addView(pdfButton);
+        layout.addView(emailButton);
+
+        ad.show();
     }
 
     public void setDoctor(Operator doctor) {

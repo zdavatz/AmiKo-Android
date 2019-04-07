@@ -1,6 +1,5 @@
 package com.ywesee.amiko;
 
-import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Base64;
@@ -10,9 +9,6 @@ import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,15 +16,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.concurrent.ExecutionException;
 
 public class PrescriptionUtility {
     public static String amkDirectory(Context context) {
         return new File(context.getFilesDir(), "amk").getAbsolutePath();
+    }
+    public static String pdfDirectory(Context context) {
+        return new File(context.getCacheDir(), "pdf").getAbsolutePath();
     }
     public static String amkDirectoryForPatient(Context context, Patient p) {
         if (p == null) {
@@ -48,8 +45,12 @@ public class PrescriptionUtility {
         return format.format(new Date());
     }
 
+    public static String currentFilenameWithExtension(String extension) {
+        return "RZ_" + PrescriptionUtility.currentTime().replace(":", "").replace(".", "") + "." + extension;
+    }
+
     public static File savePrescription(Context c, Prescription p) {
-        String filename = "RZ_" + PrescriptionUtility.currentTime().replace(":", "").replace(".", "") + ".amk";
+        String filename = currentFilenameWithExtension("amk");
         File amkFile = new File(
             PrescriptionUtility.amkDirectoryForPatient(c, p.patient),
             filename

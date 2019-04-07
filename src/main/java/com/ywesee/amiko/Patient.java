@@ -170,6 +170,14 @@ public class Patient implements Serializable {
         return this.familyname + " " + this.givenname;
     }
 
+    public String getStringForPrescriptionPrinting() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.givenname).append(" ").append(this.familyname).append("\n");
+        sb.append(this.address).append("\n");
+        sb.append(this.zipcode).append(" ").append(this.city).append("\n");
+        return sb.toString();
+    }
+
     public void writeJSON(JsonWriter writer) throws IOException {
         writer.beginObject();
         writer.name(KEY_AMK_PAT_ID).value(this.uid);
