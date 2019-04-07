@@ -85,6 +85,8 @@
     <string name="print_label">Imprimer l\'étiquette</string>
     <string name="edit_comment">Traiter votre annotation</string>
     <string name="delete_product">Effacer l\'emballage prescrit/annotation?</string>
+    <string name="page">Page</string>
+    <string name="save_as_pdf">Save as PDF</string>
 
     <string name="prescription_email_prescription">Ordon.:</string>
     <string name="prescription_email_from">von</string>

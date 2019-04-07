@@ -24,6 +24,9 @@ public class PrescriptionUtility {
     public static String amkDirectory(Context context) {
         return new File(context.getFilesDir(), "amk").getAbsolutePath();
     }
+    public static String pdfDirectory(Context context) {
+        return new File(context.getCacheDir(), "pdf").getAbsolutePath();
+    }
     public static String amkDirectoryForPatient(Context context, Patient p) {
         if (p == null) {
             return PrescriptionUtility.amkDirectory(context);
@@ -42,8 +45,12 @@ public class PrescriptionUtility {
         return format.format(new Date());
     }
 
+    public static String currentFilenameWithExtension(String extension) {
+        return "RZ_" + PrescriptionUtility.currentTime().replace(":", "").replace(".", "") + "." + extension;
+    }
+
     public static File savePrescription(Context c, Prescription p) {
-        String filename = "RZ_" + PrescriptionUtility.currentTime().replace(":", "").replace(".", "") + ".amk";
+        String filename = currentFilenameWithExtension("amk");
         File amkFile = new File(
             PrescriptionUtility.amkDirectoryForPatient(c, p.patient),
             filename
