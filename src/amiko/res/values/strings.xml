@@ -86,6 +86,7 @@
     <string name="delete_product">Packung/Bemerkung löschen?</string>
     <string name="page">Seite</string>
     <string name="save_as_pdf">Als PDF speichern</string>
+    <string name="born">born</string>
 
     <string name="prescription_email_prescription">Rezept:</string>
     <string name="prescription_email_from">von</string>

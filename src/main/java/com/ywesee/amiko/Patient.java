@@ -178,6 +178,12 @@ public class Patient implements Serializable {
         return sb.toString();
     }
 
+    public String getStringForLabelPrinting(Context c) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(this.givenname).append(" ").append(this.familyname).append(", ").append(c.getString(R.string.born)).append(" ").append(this.birthdate);
+        return sb.toString();
+    }
+
     public void writeJSON(JsonWriter writer) throws IOException {
         writer.beginObject();
         writer.name(KEY_AMK_PAT_ID).value(this.uid);

@@ -190,6 +190,17 @@ public class Operator {
         return sb.toString();
     }
 
+    public String getStringForLabelPrinting() {
+        StringBuilder sb = new StringBuilder();
+        if (this.title != null && !this.title.equals("")) {
+            sb.append(this.title).append(" ");
+        }
+        sb.append(this.givenName).append(" ");
+        sb.append(this.familyName).append(" - ");
+        sb.append(this.zipCode).append(" ");
+        return sb.toString();
+    }
+
     public void writeJSON(JsonWriter writer) throws IOException {
         writer.beginObject();
         if (this.title == null) {

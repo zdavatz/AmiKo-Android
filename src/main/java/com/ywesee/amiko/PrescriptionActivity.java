@@ -307,20 +307,62 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void handleLongTapForProduct(final Product p) {
-        new AlertDialog.Builder(this)
-            .setPositiveButton(getString(R.string.edit_comment), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    showDialogForEditingProductComment(p);
-                }
-            })
-            .setNeutralButton(getString(R.string.delete_product), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    showDialogForDeletingProduct(p);
-                }
-            })
-            .show();
+        LinearLayout layout = new LinearLayout(this);
+        layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(50, 0, 50, 0);
+
+        final AlertDialog ad = new AlertDialog.Builder(this).setView(layout).create();
+
+        Button printButton = new Button(this);
+        printButton.setText(getString(R.string.print_label));
+        printButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                printProduct(p);
+                ad.dismiss();
+            }
+        });
+
+        Button commentButton = new Button(this);
+        commentButton.setText(getString(R.string.edit_comment));
+        commentButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialogForEditingProductComment(p);
+                ad.dismiss();
+            }
+        });
+
+        Button deleteProductButton = new Button(this);
+        deleteProductButton.setText(getString(R.string.delete_product));
+        deleteProductButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showDialogForDeletingProduct(p);
+                ad.dismiss();
+            }
+        });
+
+        layout.addView(printButton);
+        layout.addView(commentButton);
+        layout.addView(deleteProductButton);
+
+        ad.show();
+    }
+
+    public void printProduct(Product p) {
+        PrintManager printManager = (PrintManager)getSystemService(Context.PRINT_SERVICE);
+        // Set job name, which will be displayed in the print queue
+        String jobName = getString(R.string.app_name) + " Document - " + p.prodName;
+
+        // Start a print job, passing in a PrintDocumentAdapter implementation
+        // to handle the generation of a print document
+        PrintAttributes myAttributes = new PrintAttributes.Builder()
+                .setMediaSize(new PrintAttributes.MediaSize("dymo", "Custom", 89, 36))
+                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
+                .build();
+        printManager.print(jobName, new ProductPrintDocumentAdapter(this, p, this.doctor, this.patient), myAttributes);
     }
 
     public void showDialogForEditingProductComment(final Product product) {
