@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ywesee.amiko"
     android:installLocation="auto"
-    android:versionCode="166"
-    android:versionName="1.6.6" >
+    android:versionCode="167"
+    android:versionName="1.6.7" >
 
     <!-- Required to download files from Google Play -->
     <uses-permission android:name="android.permission.INTERNET" />
