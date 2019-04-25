@@ -78,6 +78,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private GestureDetector detector;
 
     static final int REQUEST_PATIENT = 1;
+    static final int PRINT_PRODUCT = 2;
 
     public PrescriptionActivity() {
         super();
@@ -352,17 +353,10 @@ public class PrescriptionActivity extends AppCompatActivity {
     }
 
     public void printProduct(Product p) {
-        PrintManager printManager = (PrintManager)getSystemService(Context.PRINT_SERVICE);
-        // Set job name, which will be displayed in the print queue
-        String jobName = getString(R.string.app_name) + " Document - " + p.prodName;
-
-        // Start a print job, passing in a PrintDocumentAdapter implementation
-        // to handle the generation of a print document
-        PrintAttributes myAttributes = new PrintAttributes.Builder()
-                .setMediaSize(new PrintAttributes.MediaSize("dymo", "Custom", 89, 36))
-                .setMinMargins(PrintAttributes.Margins.NO_MARGINS)
-                .build();
-        printManager.print(jobName, new ProductPrintDocumentAdapter(this, p, this.doctor, this.patient), myAttributes);
+        Intent intent = new Intent(this, ProductPrintingActivity.class);
+        intent.putExtra("patient", this.patient);
+        intent.putExtra("product", p);
+        startActivityForResult(intent, PRINT_PRODUCT);
     }
 
     public void showDialogForEditingProductComment(final Product product) {

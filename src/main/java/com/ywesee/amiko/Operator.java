@@ -15,12 +15,13 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 
 import static com.ywesee.amiko.DoctorActivity.MIN_SIGNATURE_HEIGHT;
 import static com.ywesee.amiko.DoctorActivity.MIN_SIGNATURE_WIDTH;
 import static java.lang.Math.min;
 
-public class Operator {
+public class Operator implements Serializable {
     public static final String KEY_AMK_DOC_TITLE = "title";
     public static final String KEY_AMK_DOC_NAME = "given_name";
     public static final String KEY_AMK_DOC_SURNAME = "family_name";

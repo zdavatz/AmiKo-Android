@@ -7,8 +7,9 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public class Product {
+public class Product implements Serializable {
     public static final String KEY_AMK_MED_EAN = "eancode";
     public static final String KEY_AMK_MED_PACKAGE = "package";
     public static final String KEY_AMK_MED_PROD_NAME = "product_name";

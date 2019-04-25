@@ -98,4 +98,10 @@
     <string name="amk_already_imported">Ce fichier .amk a déjà été importé.</string>
     <string name="cannot_open_amk_file">Cannot open AMK file</string>
 
+    <string name="choose_a_printer">Choose a printer</string>
+    <string name="printing">Printing</string>
+    <string name="connecting">Connecting</string>
+    <string name="cannot_connect_error">Cannot connect, error:</string>
+    <string name="no_printer_found">No printer found</string>
+
 </resources>

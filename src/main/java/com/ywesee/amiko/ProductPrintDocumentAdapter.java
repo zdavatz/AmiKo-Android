@@ -64,7 +64,6 @@ public class ProductPrintDocumentAdapter extends PrintDocumentAdapter {
     public void onWrite(PageRange[] pages, ParcelFileDescriptor destination, CancellationSignal cancellationSignal, WriteResultCallback callback) {
         PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(252, 102, 1).create();
         PdfDocument.Page page = pdfDocument.startPage(pageInfo);
-                //.startPage(0);
 
         // check for cancellation
         if (cancellationSignal.isCanceled()) {
