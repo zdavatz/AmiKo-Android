@@ -42,6 +42,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class PrescriptionActivity extends AppCompatActivity {
+
+    // This is a temp variable for passing prescription between activities.
+    // The assigned prescription will be opened as external file.
+    static Prescription openingPrescription;
+
     private Operator doctor;
     private Patient patient;
     private ArrayList<Product> products;
@@ -254,10 +259,15 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         }, new IntentFilter(PatientListActivity.PATIENT_DELETED_EVENT));
 
+        if (PrescriptionActivity.openingPrescription != null) {
+            openPrescriptionFromExternalSource(PrescriptionActivity.openingPrescription);
+            PrescriptionActivity.openingPrescription = null;
+        }
         Intent i = getIntent();
-        if (i.getData() != null) {
+        Prescription p = (Prescription)i.getSerializableExtra("prescription");
+        if (p instanceof Prescription) {
             // wants to open an AMK file from resource uri
-            openPrescriptionFromResourceUri(i.getData());
+            openPrescriptionFromExternalSource(p);
         }
         setupGestureDetector();
     }
@@ -516,19 +526,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         reloadPlaceDateText();
     }
 
-    public void openPrescriptionFromResourceUri(Uri uri) {
-        Prescription prescription;
-        try {
-            prescription = PrescriptionUtility.readFromResourceUri(this, uri);
-        } catch (IOException e) {
-            new AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.cannot_open_amk_file))
-                    .setMessage(e.getLocalizedMessage())
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
-            return;
-        }
-
+    public void openPrescriptionFromExternalSource(Prescription prescription) {
         Patient p = prescription.patient;
         // Calculate hash instead of using p.uid because it's possible that the hash
         // is calculated with another algorithm

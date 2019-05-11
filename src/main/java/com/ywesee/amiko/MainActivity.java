@@ -860,9 +860,19 @@ public class MainActivity extends AppCompatActivity {
       // Amiko is opened because user wants to open an AMK file
       Uri data = intent.getData();
       if (data == null) return;
-      Intent i = new Intent(this, PrescriptionActivity.class);
-      i.setData(data);
-      startActivity(i);
+      try {
+          Prescription prescription = PrescriptionUtility.readFromResourceUri(this, data);
+          PrescriptionActivity.openingPrescription = prescription;
+          Intent i = new Intent(this, PrescriptionActivity.class);
+          startActivity(i);
+      } catch (Exception e) {
+          new android.support.v7.app.AlertDialog.Builder(this)
+                  .setTitle(getString(R.string.cannot_open_amk_file))
+                  .setMessage(e.getLocalizedMessage())
+                  .setPositiveButton(android.R.string.ok, null)
+                  .show();
+          return;
+      }
     }
   }
 
