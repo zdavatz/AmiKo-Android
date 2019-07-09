@@ -22,7 +22,6 @@ package com.ywesee.amiko;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,13 +74,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.design.widget.BottomNavigationView;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
 import android.text.Editable;
 import android.text.Selection;
 import android.text.SpannableStringBuilder;
@@ -115,6 +115,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.tabs.TabLayout;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -866,7 +869,7 @@ public class MainActivity extends AppCompatActivity {
           Intent i = new Intent(this, PrescriptionActivity.class);
           startActivity(i);
       } catch (Exception e) {
-          new android.support.v7.app.AlertDialog.Builder(this)
+          new AlertDialog.Builder(this)
                   .setTitle(getString(R.string.cannot_open_amk_file))
                   .setMessage(e.getLocalizedMessage())
                   .setPositiveButton(android.R.string.ok, null)
@@ -2102,7 +2105,7 @@ public class MainActivity extends AppCompatActivity {
             // Add NavigationDrawer, get handle to DrawerLayout
             mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
               // Set a custom shadow that overlays the main content when the drawer opens
-              mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, Gravity.START);
+              mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
               // Close any open drawers
             if (mDrawerLayout != null)
               mDrawerLayout.closeDrawers();

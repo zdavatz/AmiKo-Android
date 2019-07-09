@@ -9,17 +9,17 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.print.PrintAttributes;
-import android.print.PrintManager;
-import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.text.InputType;
 import android.view.GestureDetector;
 import android.view.Gravity;
@@ -34,8 +34,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.vision.barcode.Barcode;
+import com.ywesee.amiko.barcodereader.BarcodeScannerActivity;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -84,6 +86,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     static final int REQUEST_PATIENT = 1;
     static final int PRINT_PRODUCT = 2;
+    static final int REQUEST_BARCODE = 3;
 
     public PrescriptionActivity() {
         super();
