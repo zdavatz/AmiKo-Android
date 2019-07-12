@@ -194,6 +194,15 @@ public class PrescriptionActivity extends AppCompatActivity {
 
         reloadAMKFileList();
 
+        medicinesText.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(_this, BarcodeScannerActivity.class);
+                startActivityForResult(intent, REQUEST_BARCODE);
+                return true;
+            }
+        });
+
         patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
