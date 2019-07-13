@@ -1,6 +1,8 @@
 package com.ywesee.amiko.barcodereader;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -20,6 +22,7 @@ import com.google.android.gms.vision.barcode.BarcodeDetector;
 import com.ywesee.amiko.R;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class BarcodeScannerActivity extends AppCompatActivity {
     static final String TAG = "Barcode-reader";
@@ -40,7 +43,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         cameraView = findViewById(R.id.camera_view);
         BarcodeDetector barcodeDetector =
                 new BarcodeDetector.Builder(this)
-                        .setBarcodeFormats(Barcode.EAN_13 | Barcode.DATA_MATRIX)//QR_CODE)
+                        .setBarcodeFormats(Barcode.EAN_13 | Barcode.DATA_MATRIX)
                         .build();
 
         cameraSource = new CameraSource
@@ -74,12 +77,44 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             public void receiveDetections(Detector.Detections<Barcode> detections) {
 
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
-
-                if (barcodes.size() != 0) {
-                    Log.d("BARCODE", barcodes.toString());
+                final ArrayList<String> ean13 = new ArrayList<>();
+                final ArrayList<GS1Extractor.Result> dataMatrices = new ArrayList<>();
+                GS1Extractor extractor = new GS1Extractor();
+                for(int i = 0; i < barcodes.size(); i++) {
+                    int key = barcodes.keyAt(i);
+                    Barcode barcode = barcodes.get(key);
+                    String value = barcode.rawValue;
+                    if (barcode.format == Barcode.EAN_13) {
+                        ean13.add(value);
+                    } else if (barcode.format == Barcode.DATA_MATRIX) {
+                        GS1Extractor.Result result = extractor.extract(value);
+                        if (result != null) {
+                            dataMatrices.add(result);
+                        }
+                    }
+                }
+                if (ean13.size() + dataMatrices.size() > 0) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            cameraSource.stop();
+                            Intent data = new Intent();
+                            data.putExtra("ean13", ean13);
+                            data.putExtra("dataMatrix", dataMatrices);
+                            setResult(0, data);
+                            finish();
+                        }
+                    });
                 }
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cameraSource.stop();
+        cameraSource.release();
     }
 
     void startCamera() {
