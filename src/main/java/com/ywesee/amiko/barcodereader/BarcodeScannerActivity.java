@@ -10,7 +10,9 @@ import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.widget.FrameLayout;
 
+import com.google.android.gms.common.images.Size;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
@@ -25,7 +27,6 @@ public class BarcodeScannerActivity extends AppCompatActivity {
 
     SurfaceView cameraView;
     CameraSource cameraSource;
-//    GraphicOverlay<BarcodeGraphic> mGraphicOverlay;
 
     public BarcodeScannerActivity() {
     }
@@ -33,6 +34,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle(R.string.scan_barcode);
         setContentView(R.layout.activity_barcode);
 
         cameraView = findViewById(R.id.camera_view);
@@ -44,7 +46,6 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         cameraSource = new CameraSource
                 .Builder(this, barcodeDetector)
                 .setAutoFocusEnabled(true)
-                .setRequestedPreviewSize(480, 640)
                 .build();
 
         cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
@@ -90,6 +91,7 @@ public class BarcodeScannerActivity extends AppCompatActivity {
         } else {
             try {
                 cameraSource.start(cameraView.getHolder());
+                relayout();
             } catch (IOException ie) {
                 Log.e("CAMERA SOURCE", ie.getMessage());
             }
@@ -103,5 +105,21 @@ public class BarcodeScannerActivity extends AppCompatActivity {
             return;
         }
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    public void relayout() {
+        Size size = cameraSource.getPreviewSize();
+        int width = size.getHeight();
+        int height = size.getWidth();
+        FrameLayout layout = findViewById(R.id.root);
+        int containerWidth = layout.getWidth();
+        int containerHeight = layout.getHeight();
+        float ratio = Math.max(containerWidth / (float)width, containerHeight / (float)height);
+        int targetWidth = (int)(width * ratio);
+        int targetHeight = (int)(height * ratio);
+        FrameLayout.LayoutParams p = new FrameLayout.LayoutParams(targetWidth, targetHeight);
+        p.leftMargin = (containerWidth - targetWidth) / 2;
+        p.topMargin = (containerHeight - targetHeight) / 2;
+        cameraView.setLayoutParams(p);
     }
 }
