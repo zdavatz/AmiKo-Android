@@ -19,6 +19,7 @@
     <!-- For reading photo from user library, for doctor's signature -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"  android:required="false" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="android.permission.CAMERA"/>
     <!-- For importing patient from address book -->
     <uses-permission android:name="android.permission.READ_CONTACTS"  android:required="false" />
 
@@ -30,10 +31,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:largeHeap="true" >
+        android:largeHeap="true">
 
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.com.ywesee.amiko.provider"
             android:exported="false"
             android:grantUriPermissions="true">
@@ -124,6 +125,15 @@
         </activity>
 
         <activity android:name=".ProductPrintingActivity" android:alwaysRetainTaskState="true">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.ywesee.amiko.PrescriptionActivity" />
+        </activity>
+
+        <activity android:name=".barcodereader.BarcodeScannerActivity"
+            android:alwaysRetainTaskState="true"
+            android:screenOrientation="portrait"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.PrescriptionActivity" />

@@ -204,4 +204,8 @@ public class Utilities {
 	public static String foundationHashString(String baseString) {
 		return Long.toUnsignedString(foundationHash(baseString));
 	}
+
+	public static boolean isCharacterNumber(char c) {
+		return c >= '0' && c <= '9';
+	}
 }
