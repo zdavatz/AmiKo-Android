@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
   // Main AsyncTask
   private AsyncSearchTask mAsyncSearchTask = null;
   // SQLite database adapter
-  private DBAdapter mMediDataSource;
+  public DBAdapter mMediDataSource;
   // List of medications returned by SQLite query
   private List<Medication> mMedis = null;
   // Index of most recently clicked medication

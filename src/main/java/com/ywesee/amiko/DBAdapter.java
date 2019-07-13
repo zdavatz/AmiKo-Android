@@ -500,6 +500,20 @@ public class DBAdapter {
 
 	/**
 	 * Retrieves database entry based on id
+	 * @param ean
+	 * @return database entry
+	 */
+	public List<Medication> searchPackages(String ean) {
+		List<Medication> medis = new ArrayList<Medication>();
+
+		String query = "select " + SHORT_TABLE + " from " + DATABASE_TABLE + " where "
+                + KEY_PACKAGES + " like " + "'%" + ean + "%'";
+		searchQuery(query, medis);
+		return medis;
+	}
+
+	/**
+	 * Retrieves database entry based on id
 	 * @param rowId
 	 * @return database entry
 	 */

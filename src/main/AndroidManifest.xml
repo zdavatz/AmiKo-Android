@@ -130,7 +130,10 @@
                 android:value="com.ywesee.amiko.PrescriptionActivity" />
         </activity>
 
-        <activity android:name=".barcodereader.BarcodeScannerActivity" android:alwaysRetainTaskState="true">
+        <activity android:name=".barcodereader.BarcodeScannerActivity"
+            android:alwaysRetainTaskState="true"
+            android:screenOrientation="portrait"
+            >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.PrescriptionActivity" />

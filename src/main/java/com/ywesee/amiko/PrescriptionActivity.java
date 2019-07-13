@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.InputType;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.Menu;
@@ -34,14 +35,19 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.vision.barcode.Barcode;
 import com.ywesee.amiko.barcodereader.BarcodeScannerActivity;
+import com.ywesee.amiko.barcodereader.GS1Extractor;
+
+import org.json.JSONObject;
 
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+
+import static com.ywesee.amiko.Product.*;
 
 public class PrescriptionActivity extends AppCompatActivity {
 
@@ -676,11 +682,73 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+
         if (requestCode == REQUEST_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             this.setPatient(p);
             reloadAMKFileList();
+        } else if (requestCode == REQUEST_BARCODE && resultCode == 0 && data != null) {
+            ArrayList<String> ean13s = (ArrayList<String>)data.getSerializableExtra("ean13");
+            ArrayList<GS1Extractor.Result> dataMatrices = (ArrayList<GS1Extractor.Result>)data.getSerializableExtra("dataMatrix");
+
+            ArrayList<String> allEan13s = new ArrayList<>(ean13s);
+            for (GS1Extractor.Result r: dataMatrices) {
+                allEan13s.add(r.gtin);
+            }
+            if (allEan13s.size() == 0) {
+                return;
+            }
+            handleScannedEans(allEan13s);
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
+    void handleScannedEans(List<String> eans) {
+        // Follow iOS's implementation of only using the first barcode
+        String ean = eans.get(0);
+
+        String dbTitle = null, dbAuth = null, dbAtc = null, dbRegnrs = null, dbPackInfo = null, dbPackages = null;
+        String packageInfo = null; // 1st line in table infoView
+        String eancode = null; // 2nd line in table infoView
+
+        List<Medication> medications = MainActivity.instance.mMediDataSource.searchPackages(ean);
+        boolean found = false;
+        for (Medication m: medications) {
+            dbTitle = m.getTitle();
+            dbAuth = m.getAuth();
+            dbAtc = m.getAtcCode();
+            dbRegnrs = m.getRegnrs();
+            dbPackInfo = m.getPackInfo();
+            dbPackages = m.getPackages();
+            String[] packInfoArray = dbPackInfo.split("\n");
+            String[] packArray = dbPackages.split("\n");
+            for (int i = 0; i < packArray.length; i++) {
+                String[] p = packArray[i].split("\\|");
+                if (p.length < INDEX_EAN_CODE_IN_PACK) break;
+                eancode = p[INDEX_EAN_CODE_IN_PACK];
+                if (eancode.equals(ean)) {
+                    found = true;
+                    if (packInfoArray.length > i) {
+                        packageInfo = packInfoArray[i];
+                    }
+                    break;
+                }
+            }
+        }
+        if (found) {
+            try {
+                JSONObject obj = new JSONObject();
+                obj.put(KEY_AMK_MED_PACKAGE, packageInfo);
+                obj.put(KEY_AMK_MED_EAN, eancode);
+                obj.put(KEY_AMK_MED_TITLE, dbTitle);
+                obj.put(KEY_AMK_MED_OWNER, dbAuth);
+                obj.put(KEY_AMK_MED_REGNRS, dbRegnrs);
+                obj.put(KEY_AMK_MED_ATC, dbAtc);
+                Product p = new Product(obj);
+                PrescriptionProductBasket.getShared().products.add(p);
+                setProducts(PrescriptionProductBasket.getShared().products);
+            } catch (Exception e) { /* ignore */ }
         }
     }
 
@@ -777,11 +845,6 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
     // Provide a suitable constructor (depends on the kind of dataset)
     public MedicineListAdapter() {
         mDataset = new ArrayList<Product>();
-    }
-
-    public void addProduct(Product p) {
-        mDataset.add(p);
-        this.notifyDataSetChanged();
     }
 
     // Create new views (invoked by the layout manager)
