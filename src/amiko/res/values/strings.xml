@@ -103,5 +103,6 @@
     <string name="cannot_connect_error">Cannot connect, error:</string>
     <string name="no_printer_found">No printer found</string>
     <string name="scan_barcode">Scan Barcode</string>
+    <string name="scan_smartcard">Scan card</string>
 
 </resources>

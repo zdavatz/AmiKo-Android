@@ -139,6 +139,12 @@
                 android:value="com.ywesee.amiko.PrescriptionActivity" />
         </activity>
 
+        <activity android:name=".SmartcardActivity"
+            android:alwaysRetainTaskState="true"
+            android:screenOrientation="portrait"
+            >
+        </activity>
+
     </application>
 
 </manifest>
