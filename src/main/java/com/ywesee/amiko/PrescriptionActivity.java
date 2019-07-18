@@ -90,9 +90,12 @@ public class PrescriptionActivity extends AppCompatActivity {
     private DrawerLayout drawerLayout;
     private GestureDetector detector;
 
+    static final String TAG = "Prescription";
     static final int REQUEST_PATIENT = 1;
     static final int PRINT_PRODUCT = 2;
     static final int REQUEST_BARCODE = 3;
+    static final int REQUEST_SMARTCARD = 4;
+    static final int CREATE_PATIENT = 5;
 
     public PrescriptionActivity() {
         super();
@@ -208,6 +211,17 @@ public class PrescriptionActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        View.OnLongClickListener smartcardLongPress = new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                Intent intent = new Intent(_this, SmartcardActivity.class);
+                startActivityForResult(intent, REQUEST_SMARTCARD);
+                return true;
+            }
+        };
+        this.patientStreetText.setOnLongClickListener(smartcardLongPress);
+        this.patientZipCityCountryText.setOnLongClickListener(smartcardLongPress);
 
         patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -699,6 +713,29 @@ public class PrescriptionActivity extends AppCompatActivity {
                 return;
             }
             handleScannedEans(allEan13s);
+        } else if (requestCode == REQUEST_SMARTCARD && resultCode == 0 && data != null) {
+            SmartcardScanResult r = (SmartcardScanResult)data.getSerializableExtra("result");
+            PatientDBAdapter db = new PatientDBAdapter(this);
+            Patient p = null;
+            try {
+                p = r.findExistingPatient(db);
+            } catch (Exception e){
+                Log.e(TAG, e.toString());
+            }
+            finally {
+                db.close();
+            }
+            if (p != null) {
+                setPatient(p);
+            } else {
+                Intent intent = new Intent(this, PatientActivity.class);
+                intent.putExtra("createOnly", true);
+                intent.putExtra("card_scan_result", r);
+                startActivityForResult(intent, CREATE_PATIENT);
+            }
+        } else if (requestCode == CREATE_PATIENT && resultCode == 0 && data != null) {
+            Patient p = (Patient)data.getSerializableExtra("patient");
+            setPatient(p);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
