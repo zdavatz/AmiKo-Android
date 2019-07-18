@@ -33,6 +33,10 @@
         android:theme="@style/AppTheme"
         android:largeHeap="true">
 
+        <meta-data
+            android:name="com.google.android.gms.vision.DEPENDENCIES"
+            android:value="barcode,text" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.com.ywesee.amiko.provider"
