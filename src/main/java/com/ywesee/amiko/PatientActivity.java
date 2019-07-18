@@ -134,11 +134,21 @@ public class PatientActivity extends AppCompatActivity {
             @Override
             public void onDrawerStateChanged(int i) {}
         });
+
+        SmartcardScanResult r = getPrefillFromScanResult();
+        if (r != null) {
+            updateUIForSmartcardScanResult(r);
+        }
     }
 
     boolean getIsCreateOnly() {
         Intent intent = getIntent();
         return intent.getBooleanExtra("createOnly", false);
+    }
+
+    SmartcardScanResult getPrefillFromScanResult() {
+        Intent intent = getIntent();
+        return (SmartcardScanResult)intent.getSerializableExtra("card_scan_result");
     }
 
     public void updateUIForPatient() {
@@ -184,6 +194,21 @@ public class PatientActivity extends AppCompatActivity {
             editHeight.setText("");
             editPhone.setText("");
             editEmail.setText("");
+        }
+    }
+
+    void updateUIForSmartcardScanResult(SmartcardScanResult r) {
+        editName.setText(r.givenName);
+        editSurname.setText(r.familyName);
+        editBirthday.setText(r.birthDate);
+        if (r.gender == null) {
+            editSex.clearCheck();
+        } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_M)) {
+            editSex.check(R.id.patient_sex_male);
+        } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_F)) {
+            editSex.check(R.id.patient_sex_female);
+        } else {
+            editSex.clearCheck();
         }
     }
 
@@ -318,18 +343,7 @@ public class PatientActivity extends AppCompatActivity {
             mPatient = p;
             updateUIForPatient();
             if (p == null) {
-                editName.setText(r.givenName);
-                editSurname.setText(r.familyName);
-                editBirthday.setText(r.birthDate);
-                if (r.gender == null) {
-                    editSex.clearCheck();
-                } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_M)) {
-                    editSex.check(R.id.patient_sex_male);
-                } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_F)) {
-                    editSex.check(R.id.patient_sex_female);
-                } else {
-                    editSex.clearCheck();
-                }
+                updateUIForSmartcardScanResult(r);
             }
         }
     }
