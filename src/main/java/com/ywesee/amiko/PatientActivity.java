@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,9 +36,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class PatientActivity extends AppCompatActivity {
-
+    static final String TAG = "PatientActivity";
     static final int REQUEST_PATIENT = 1;
     static final int REQUEST_CONTACTS_PERMISSON = 2;
+    static final int REQUEST_SMARTCARD = 3;
 
     private Patient mPatient;
 
@@ -132,11 +134,21 @@ public class PatientActivity extends AppCompatActivity {
             @Override
             public void onDrawerStateChanged(int i) {}
         });
+
+        SmartcardScanResult r = getPrefillFromScanResult();
+        if (r != null) {
+            updateUIForSmartcardScanResult(r);
+        }
     }
 
     boolean getIsCreateOnly() {
         Intent intent = getIntent();
         return intent.getBooleanExtra("createOnly", false);
+    }
+
+    SmartcardScanResult getPrefillFromScanResult() {
+        Intent intent = getIntent();
+        return (SmartcardScanResult)intent.getSerializableExtra("card_scan_result");
     }
 
     public void updateUIForPatient() {
@@ -182,6 +194,21 @@ public class PatientActivity extends AppCompatActivity {
             editHeight.setText("");
             editPhone.setText("");
             editEmail.setText("");
+        }
+    }
+
+    void updateUIForSmartcardScanResult(SmartcardScanResult r) {
+        editName.setText(r.givenName);
+        editSurname.setText(r.familyName);
+        editBirthday.setText(r.birthDate);
+        if (r.gender == null) {
+            editSex.clearCheck();
+        } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_M)) {
+            editSex.check(R.id.patient_sex_male);
+        } else if (r.gender.equals(Patient.KEY_AMK_PAT_GENDER_F)) {
+            editSex.check(R.id.patient_sex_female);
+        } else {
+            editSex.clearCheck();
         }
     }
 
@@ -283,6 +310,13 @@ public class PatientActivity extends AppCompatActivity {
                 updateUIForPatient();
                 return true;
             }
+            case R.id.scan_card: {
+                Intent intent = new Intent(this, SmartcardActivity.class);
+                startActivityForResult(intent, REQUEST_SMARTCARD);
+                return true;
+            }
+            default:
+                break;
         }
         return false;
     }
@@ -294,6 +328,23 @@ public class PatientActivity extends AppCompatActivity {
             Patient p = (Patient)data.getSerializableExtra("patient");
             mPatient = p;
             updateUIForPatient();
+        } else if (requestCode == REQUEST_SMARTCARD && resultCode == 0 && data != null) {
+            SmartcardScanResult r = (SmartcardScanResult)data.getSerializableExtra("result");
+            PatientDBAdapter db = new PatientDBAdapter(this);
+            Patient p = null;
+            try {
+                p = r.findExistingPatient(db);
+            } catch (Exception e){
+                Log.e(TAG, e.toString());
+            }
+            finally {
+                db.close();
+            }
+            mPatient = p;
+            updateUIForPatient();
+            if (p == null) {
+                updateUIForSmartcardScanResult(r);
+            }
         }
     }
 

@@ -2,7 +2,6 @@ package com.ywesee.amiko.barcodereader;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;

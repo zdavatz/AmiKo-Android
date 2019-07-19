@@ -15,4 +15,11 @@
         android:layout_alignParentLeft="true"
         android:id="@+id/camera_view"/>
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:id="@+id/image_view"
+        />
+
 </FrameLayout>
