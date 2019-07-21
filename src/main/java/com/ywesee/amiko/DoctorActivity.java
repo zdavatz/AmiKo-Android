@@ -30,6 +30,7 @@ public class DoctorActivity extends AppCompatActivity {
     static final int REQUEST_IMAGE_CAPTURE = 1;
     static final int REQUEST_IMAGE_LIBRARY = 2;
     static final int REQUEST_CODE_ASK_PERMISSIONS = 3;
+    static final int REQUEST_CAMERA = 4;
 
     static final int MIN_SIGNATURE_HEIGHT = 45;
     static final int MIN_SIGNATURE_WIDTH = 90;
@@ -63,13 +64,22 @@ public class DoctorActivity extends AppCompatActivity {
         editEmail = findViewById(R.id.doctor_email);
         imageView = findViewById(R.id.imageView);
 
+        final DoctorActivity _this = this;
         Button selfieButton = findViewById(R.id.button_selfie);
         selfieButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+
+                int hasPermission = checkSelfPermission(android.Manifest.permission.CAMERA);
+                if (hasPermission != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(_this,
+                            new String[]{android.Manifest.permission.CAMERA},
+                            REQUEST_CAMERA);
+                } else {
+                    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                    }
                 }
             }
         });
@@ -197,7 +207,6 @@ public class DoctorActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_ASK_PERMISSIONS) {
             for (int i = 0; i < permissions.length; i++) {
                 if (permissions[i].equals(android.Manifest.permission.READ_EXTERNAL_STORAGE) && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
@@ -205,6 +214,15 @@ public class DoctorActivity extends AppCompatActivity {
                     return;
                 }
             }
+        } else if (requestCode == REQUEST_CAMERA) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                }
+            }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
