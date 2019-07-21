@@ -715,6 +715,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
             if (p != null) {
                 setPatient(p);
+                Patient.setCurrentPatientId(this, p.uid);
             } else {
                 Intent intent = new Intent(this, PatientActivity.class);
                 intent.putExtra("createOnly", true);
@@ -724,6 +725,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         } else if (requestCode == CREATE_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             setPatient(p);
+            Patient.setCurrentPatientId(this, p.uid);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
