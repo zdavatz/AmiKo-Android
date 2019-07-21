@@ -212,23 +212,11 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         });
 
-        View.OnLongClickListener smartcardLongPress = new View.OnLongClickListener() {
+        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 Intent intent = new Intent(_this, SmartcardActivity.class);
                 startActivityForResult(intent, REQUEST_SMARTCARD);
-                return true;
-            }
-        };
-        this.patientStreetText.setOnLongClickListener(smartcardLongPress);
-        this.patientZipCityCountryText.setOnLongClickListener(smartcardLongPress);
-
-        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Intent intent = new Intent(_this, PatientListActivity.class);
-                intent.putExtra("allowCreation", true);
-                startActivityForResult(intent, REQUEST_PATIENT);
                 return true;
             }
         });
@@ -727,6 +715,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
             if (p != null) {
                 setPatient(p);
+                Patient.setCurrentPatientId(this, p.uid);
             } else {
                 Intent intent = new Intent(this, PatientActivity.class);
                 intent.putExtra("createOnly", true);
@@ -736,6 +725,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         } else if (requestCode == CREATE_PATIENT && resultCode == 0 && data != null) {
             Patient p = (Patient)data.getSerializableExtra("patient");
             setPatient(p);
+            Patient.setCurrentPatientId(this, p.uid);
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
