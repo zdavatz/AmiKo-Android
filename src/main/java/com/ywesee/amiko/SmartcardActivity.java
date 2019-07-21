@@ -34,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import android.util.SparseArray;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -257,6 +258,17 @@ public class SmartcardActivity extends AppCompatActivity {
         super.onDestroy();
         cameraSource.stop();
         cameraSource.release();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        item.getItemId();
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     void startCamera() {
