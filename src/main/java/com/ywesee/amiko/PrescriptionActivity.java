@@ -212,23 +212,11 @@ public class PrescriptionActivity extends AppCompatActivity {
             }
         });
 
-        View.OnLongClickListener smartcardLongPress = new View.OnLongClickListener() {
+        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 Intent intent = new Intent(_this, SmartcardActivity.class);
                 startActivityForResult(intent, REQUEST_SMARTCARD);
-                return true;
-            }
-        };
-        this.patientStreetText.setOnLongClickListener(smartcardLongPress);
-        this.patientZipCityCountryText.setOnLongClickListener(smartcardLongPress);
-
-        patientLayout.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                Intent intent = new Intent(_this, PatientListActivity.class);
-                intent.putExtra("allowCreation", true);
-                startActivityForResult(intent, REQUEST_PATIENT);
                 return true;
             }
         });
