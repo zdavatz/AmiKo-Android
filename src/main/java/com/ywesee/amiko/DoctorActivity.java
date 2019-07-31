@@ -51,6 +51,7 @@ public class DoctorActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_doctor);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         store = new DoctorStore(this.getFilesDir().toString());
 
@@ -133,6 +134,9 @@ public class DoctorActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
             case R.id.save: {
                 boolean errored = false;
                 store.title = editTitle.getText().toString();

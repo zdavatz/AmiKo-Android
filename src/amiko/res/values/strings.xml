@@ -62,6 +62,7 @@
     <string name="weight_kg">Gewicht (kg)</string>
     <string name="height_cm">Grösse (cm)</string>
 
+    <string name="add_doctor">Bitte Arztadresse hinzufügen.</string>
     <string name="save">Speichern</string>
     <string name="patient_list">Patienten</string>
     <string name="new_patient">Neuer Patient/in</string>

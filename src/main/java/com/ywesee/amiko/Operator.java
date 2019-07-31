@@ -96,18 +96,13 @@ public class Operator implements Serializable {
     static public Operator loadFromStore(String dirPath) {
         DoctorStore store = new DoctorStore(dirPath);
         if (!store.exists()) {
-            Operator o = new Operator();
-            o.title = "";
-            o.givenName = "";
-            o.familyName = "";
-            o.postalAddress = "";
-            o.city = "";
-            o.zipCode = "";
-            o.phoneNumber = "";
-            o.emailAddress = "";
+            return null;
         }
         store.load();
 
+        if (store.name == null || store.surname == null) {
+            return null;
+        }
         Operator o = new Operator();
         o.title = store.title;
         o.givenName = store.name;

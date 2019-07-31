@@ -84,6 +84,13 @@
                             android:layout_height="wrap_content"
                             android:text=""
                             android:textColor="@color/black" />
+                        <Button
+                            android:id="@+id/fix_doctor_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14dp"
+                            android:minWidth="0dp"
+                            android:text="@string/add_doctor"/>
 
                     </LinearLayout>
 
