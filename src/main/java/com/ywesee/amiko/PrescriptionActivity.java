@@ -68,6 +68,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     private TextView doctorPhoneText;
     private TextView doctorEmailText;
     private ImageView doctorImageView;
+    private Button doctorFixButton;
     private LinearLayout patientLayout;
     private TextView patientNameText;
     private TextView patientWeightHeightGenderBirthdayText;
@@ -96,6 +97,7 @@ public class PrescriptionActivity extends AppCompatActivity {
     static final int REQUEST_BARCODE = 3;
     static final int REQUEST_SMARTCARD = 4;
     static final int CREATE_PATIENT = 5;
+    static final int CREATE_DOCTOR = 6;
 
     public PrescriptionActivity() {
         super();
@@ -116,6 +118,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         this.doctorPhoneText = findViewById(R.id.doctor_phone_text);
         this.doctorEmailText = findViewById(R.id.doctor_email_text);
         this.doctorImageView = findViewById(R.id.doctor_image_view);
+        this.doctorFixButton = findViewById(R.id.fix_doctor_button);
         this.patientLayout = findViewById(R.id.patient_layout);
         this.patientNameText = findViewById(R.id.patient_name_text);
         this.patientWeightHeightGenderBirthdayText = findViewById(R.id.patient_weight_height_gender_birthday_text);
@@ -202,6 +205,14 @@ public class PrescriptionActivity extends AppCompatActivity {
         amkRecyclerView.setAdapter(mAMKAdapter);
 
         reloadAMKFileList();
+
+        doctorFixButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(_this, DoctorActivity.class);
+                startActivityForResult(intent, CREATE_DOCTOR);
+            }
+        });
 
         medicinesText.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -659,6 +670,11 @@ public class PrescriptionActivity extends AppCompatActivity {
             saveButton.setEnabled(false);
             sendButton.setEnabled(false);
         }
+        if (this.doctor == null) {
+            this.doctorFixButton.setVisibility(View.VISIBLE);
+        } else {
+            this.doctorFixButton.setVisibility(View.GONE);
+        }
         interactionButton.setEnabled(products.size() > 0);
     }
 
@@ -726,6 +742,8 @@ public class PrescriptionActivity extends AppCompatActivity {
             Patient p = (Patient)data.getSerializableExtra("patient");
             setPatient(p);
             Patient.setCurrentPatientId(this, p.uid);
+        } else if (requestCode == CREATE_DOCTOR) {
+            setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }

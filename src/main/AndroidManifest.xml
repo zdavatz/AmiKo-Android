@@ -105,9 +105,6 @@
         </activity>
 
         <activity android:name=".DoctorActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.ywesee.amiko.MainActivity" />
         </activity>
 
         <activity android:name=".PatientActivity"
