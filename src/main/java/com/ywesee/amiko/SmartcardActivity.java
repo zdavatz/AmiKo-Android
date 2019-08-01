@@ -72,6 +72,9 @@ public class SmartcardActivity extends AppCompatActivity {
     SparseArray<TextBlock> currentDetectedTexts;
     Frame.Metadata currentDetectedMetadata;
 
+    Text detectedNameText;
+    Text detectedBirthdaySexText;
+
     public SmartcardActivity() {
     }
 
@@ -112,7 +115,10 @@ public class SmartcardActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 int action = event.getAction();
                 if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP) {
-                    processCurrentFrame();
+                    // processCurrentFrame();
+                    if (detectedNameText != null && detectedBirthdaySexText != null) {
+                        submitCurrentDetectedText();
+                    }
                 }
                 return true;
             }
@@ -157,12 +163,9 @@ public class SmartcardActivity extends AppCompatActivity {
             int key = textBlocks.keyAt(i);
             TextBlock t = textBlocks.get(key);
             if (Rect.intersects(rect, t.getBoundingBox()) || rect.contains(t.getBoundingBox())) {
-
-                Log.d("text", t.getValue());
                 List<? extends Text> texts = t.getComponents();
                 for (Text text : texts) {
                     textsInCard.add(text);
-                    Log.d("text", text.toString());
                 }
             }
         }
@@ -178,6 +181,15 @@ public class SmartcardActivity extends AppCompatActivity {
                 lowerLeftTexts.add(t);
             }
         }
+
+        ArrayList<Text> filteredText = new ArrayList<>();
+        for (Text t : textsInCard) {
+            if (!t.getValue().toLowerCase().startsWith("name, vorname") &&
+                !t.getValue().toLowerCase().startsWith("karten-nr")) {
+                filteredText.add(t);
+            }
+        }
+
         ArrayList<Text> goodBoxes = analyzeVisionBoxes(lowerLeftTexts);
         // We expect to have
         //  goodBoxes[0] FamilyName, GivenName
@@ -188,13 +200,39 @@ public class SmartcardActivity extends AppCompatActivity {
             Log.w(TAG, "Wrong number of field");
             return;
         }
-        String name = goodBoxes.get(0).getValue().replace('.', ',');
+
+        detectedNameText = goodBoxes.get(0);
+        detectedBirthdaySexText = goodBoxes.get(2);
+
+        String name = detectedNameText.getValue().replace('.', ',');
         String[] nameArray = name.split(",");
-        String[] dateArray = goodBoxes.get(2).getValue().split(" ");
+        String[] dateArray = detectedBirthdaySexText.getValue().split(" ");
         if (nameArray.length < 2 || dateArray.length < 2) {
             Log.w(TAG, "Cannot parse name / date");
             return;
         }
+
+        detectedNameText = goodBoxes.get(0);
+        detectedBirthdaySexText = goodBoxes.get(2);
+
+        runOnUiThread(new Runnable() {
+              @Override
+              public void run() {
+                  relayout();
+              }
+          });
+        // TODO: remove after some time?
+    }
+
+    void submitCurrentDetectedText() {
+        String name = detectedNameText.getValue().replace('.', ',');
+        String[] nameArray = name.split(",");
+        String[] dateArray = detectedBirthdaySexText.getValue().split(" ");
+        if (nameArray.length < 2 || dateArray.length < 2) {
+            Log.w(TAG, "Cannot parse name / date");
+            return;
+        }
+
         String givenName = nameArray[1].trim();
         if (givenName.endsWith("-")) {
             givenName = givenName.substring(0, givenName.length() - 1);
@@ -323,8 +361,8 @@ public class SmartcardActivity extends AppCompatActivity {
             cardX = (containerWidth-cardW) / 2.0f; // Center horizontally for drawing
         }
 
-        Bitmap cardBitmap = Bitmap.createBitmap(containerWidth, containerHeight, Bitmap.Config.ARGB_8888, true);
-        Canvas canvas = new Canvas(cardBitmap);
+        Bitmap bitmap = Bitmap.createBitmap(containerWidth, containerHeight, Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(bitmap);
         Paint paint = new Paint();
         paint.setColor(Color.rgb(20, 240, 30));
         paint.setStrokeWidth(5);
@@ -346,10 +384,48 @@ public class SmartcardActivity extends AppCompatActivity {
         inner.inset(dx, dy);
         canvas.drawRoundRect(
             inner,
-            5, // rx
-            5, // ry
+            10, // rx
+            10, // ry
             paint);
 
-        imageView.setImageBitmap(cardBitmap);
+        if (detectedNameText != null) {
+            RectF rect = cameraRectToViewRect(detectedNameText.getBoundingBox());
+
+            Paint paint1 = new Paint();
+            paint1.setColor(Color.rgb(20, 30, 240));
+            paint1.setStrokeWidth(2);
+            paint1.setStyle(Paint.Style.STROKE);
+            canvas.drawRoundRect(
+                rect,
+                2, // rx
+                2, // ry
+                paint1);
+        }
+        if (detectedBirthdaySexText != null) {
+            RectF rect = cameraRectToViewRect(detectedBirthdaySexText.getBoundingBox());
+
+            Paint paint1 = new Paint();
+            paint1.setColor(Color.rgb(20, 30, 240));
+            paint1.setStrokeWidth(2);
+            paint1.setStyle(Paint.Style.STROKE);
+            canvas.drawRoundRect(
+                rect,
+                2, // rx
+                2, // ry
+                paint1);
+        }
+
+        imageView.setImageBitmap(bitmap);
+    }
+
+    RectF cameraRectToViewRect(Rect cameraRect) {
+        Frame.Metadata metadata = currentDetectedMetadata;
+        FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) cameraView.getLayoutParams();
+        if (currentDetectedMetadata == null) return null;
+        float left = cameraRect.left * ((float)params.width / (float)metadata.getWidth()) + (float) params.leftMargin;
+        float right = cameraRect.right * ((float)params.width / (float)metadata.getWidth()) + (float) params.leftMargin;
+        float top = cameraRect.top * ((float)params.height / (float)metadata.getHeight()) + (float) params.topMargin;
+        float bottom = cameraRect.bottom * ((float)params.height / (float)metadata.getHeight()) + (float) params.topMargin;
+        return new RectF(left, top, right, bottom);
     }
 }
