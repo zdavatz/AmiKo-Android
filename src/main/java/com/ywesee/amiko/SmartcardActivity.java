@@ -74,6 +74,8 @@ public class SmartcardActivity extends AppCompatActivity {
 
     Text detectedNameText;
     Text detectedBirthdaySexText;
+    ArrayList<Text> okTexts;
+    ArrayList<Text> notOkTexts;
 
     public SmartcardActivity() {
     }
@@ -133,7 +135,6 @@ public class SmartcardActivity extends AppCompatActivity {
                 currentDetectedMetadata = detections.getFrameMetadata();
                 currentDetectedTexts = detections.getDetectedItems();
                 final SparseArray<TextBlock> textBlocks = detections.getDetectedItems();
-                if (textBlocks.size() == 0) return;
                 processCurrentFrame();
             }
         });
@@ -158,15 +159,18 @@ public class SmartcardActivity extends AppCompatActivity {
                 (int) cropRight,
                 (int) cropBottom);
 
-        ArrayList<Text> textsInCard = new ArrayList<>();
+        ArrayList<Text> allTexts = new ArrayList<>();
         for (int i = 0; i < textBlocks.size(); i++) {
             int key = textBlocks.keyAt(i);
             TextBlock t = textBlocks.get(key);
+            List<? extends Text> texts = t.getComponents();
+            allTexts.addAll(texts);
+        }
+
+        ArrayList<Text> textsInCard = new ArrayList<>();
+        for (Text t : allTexts) {
             if (Rect.intersects(rect, t.getBoundingBox()) || rect.contains(t.getBoundingBox())) {
-                List<? extends Text> texts = t.getComponents();
-                for (Text text : texts) {
-                    textsInCard.add(text);
-                }
+                textsInCard.add(t);
             }
         }
 
@@ -177,51 +181,90 @@ public class SmartcardActivity extends AppCompatActivity {
 
             // Discards text in the top area of the card
             // Discard text in the right area of the card
-            if (yPercentage > 0.5 && xPercentage < 0.3) {
+            if (yPercentage >= 0.5 && xPercentage <= 0.2) {
                 lowerLeftTexts.add(t);
             }
         }
 
         ArrayList<Text> filteredText = new ArrayList<>();
-        for (Text t : textsInCard) {
-            if (!t.getValue().toLowerCase().startsWith("name, vorname") &&
-                !t.getValue().toLowerCase().startsWith("karten-nr")) {
+        for (Text t : lowerLeftTexts) {
+            if (!t.getValue().toLowerCase().startsWith("name,") &&
+                !t.getValue().toLowerCase().contains("vorname") &&
+                !t.getValue().toLowerCase().startsWith("karten") &&
+                !t.getValue().toLowerCase().startsWith("geburtsdatum")
+            ) {
                 filteredText.add(t);
             }
         }
-
-        ArrayList<Text> goodBoxes = analyzeVisionBoxes(lowerLeftTexts);
+        ArrayList<Text> goodBoxes = analyzeVisionBoxes(filteredText);
         // We expect to have
         //  goodBoxes[0] FamilyName, GivenName
         //  goodBoxes[1] CardNumber (unused)
         //  goodBoxes[2] Birthday Sex
+
+        okTexts = new ArrayList<>();
+        notOkTexts = new ArrayList<>();
+        for (Text t : allTexts) {
+            if (goodBoxes.contains(t)) {
+                okTexts.add(t);
+            } else {
+                notOkTexts.add(t);
+            }
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                relayout();
+            }
+        });
 
         if (goodBoxes.size() != NUNBER_OF_FIELD_IN_CARD) {
             Log.w(TAG, "Wrong number of field");
             return;
         }
 
-        detectedNameText = goodBoxes.get(0);
-        detectedBirthdaySexText = goodBoxes.get(2);
+        Text firstBox = goodBoxes.get(0);
 
-        String name = detectedNameText.getValue().replace('.', ',');
-        String[] nameArray = name.split(",");
-        String[] dateArray = detectedBirthdaySexText.getValue().split(" ");
-        if (nameArray.length < 2 || dateArray.length < 2) {
-            Log.w(TAG, "Cannot parse name / date");
+        if (Utilities.isCharacterNumber(firstBox.getValue().charAt(0))) {
+            Log.w(TAG, "Name cannot start with number");
             return;
         }
 
-        detectedNameText = goodBoxes.get(0);
-        detectedBirthdaySexText = goodBoxes.get(2);
+        String name = firstBox.getValue().replace('.', ',');
+        String[] nameArray = name.split(",");
+        if (nameArray.length < 2) {
+            Log.w(TAG, "Cannot parse name");
+            return;
+        }
 
-        runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  relayout();
-              }
-          });
+        String[] dateArray = tryBirthdayAndSex(goodBoxes.get(1));
+
+        if (dateArray != null) {
+            detectedBirthdaySexText = goodBoxes.get(1);
+        } else {
+            dateArray = tryBirthdayAndSex(goodBoxes.get(2));
+            if (dateArray != null) {
+                detectedBirthdaySexText = goodBoxes.get(2);
+            } else {
+                return;
+            }
+        }
+
+        detectedNameText = firstBox;
+
         // TODO: remove after some time?
+    }
+
+    String[] tryBirthdayAndSex(Text input) {
+        String[] dateArray = input.getValue().split(" ");
+        if (dateArray.length < 2) {
+            return null;
+        }
+        if (dateArray[1].equals("F") || dateArray[1].equals("M")) {
+            return dateArray;
+        }
+        return null;
     }
 
     void submitCurrentDetectedText() {
@@ -395,11 +438,13 @@ public class SmartcardActivity extends AppCompatActivity {
             paint1.setColor(Color.rgb(20, 30, 240));
             paint1.setStrokeWidth(2);
             paint1.setStyle(Paint.Style.STROKE);
+            paint1.setTextSize(20);
             canvas.drawRoundRect(
                 rect,
                 2, // rx
                 2, // ry
                 paint1);
+            canvas.drawText(detectedNameText.getValue(), rect.left, rect.top, paint1);
         }
         if (detectedBirthdaySexText != null) {
             RectF rect = cameraRectToViewRect(detectedBirthdaySexText.getBoundingBox());
@@ -408,11 +453,13 @@ public class SmartcardActivity extends AppCompatActivity {
             paint1.setColor(Color.rgb(20, 30, 240));
             paint1.setStrokeWidth(2);
             paint1.setStyle(Paint.Style.STROKE);
+            paint1.setTextSize(20);
             canvas.drawRoundRect(
                 rect,
                 2, // rx
                 2, // ry
                 paint1);
+            canvas.drawText(detectedBirthdaySexText.getValue(), rect.left, rect.top, paint1);
         }
 
         imageView.setImageBitmap(bitmap);
