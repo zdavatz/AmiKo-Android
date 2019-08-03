@@ -226,6 +226,11 @@ public class SmartcardActivity extends AppCompatActivity {
 
         Text firstBox = goodBoxes.get(0);
 
+        if (Utilities.isCharacterNumber(firstBox.getValue().charAt(0))) {
+            Log.w(TAG, "Name cannot start with number");
+            return;
+        }
+
         String name = firstBox.getValue().replace('.', ',');
         String[] nameArray = name.split(",");
         if (nameArray.length < 2) {
