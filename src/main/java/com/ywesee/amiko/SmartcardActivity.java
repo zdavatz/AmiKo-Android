@@ -177,20 +177,22 @@ public class SmartcardActivity extends AppCompatActivity {
 
             // Discards text in the top area of the card
             // Discard text in the right area of the card
-            if (yPercentage > 0.5 && xPercentage < 0.3) {
+            if (yPercentage >= 0.5 && xPercentage <= 0.2) {
                 lowerLeftTexts.add(t);
             }
         }
 
         ArrayList<Text> filteredText = new ArrayList<>();
-        for (Text t : textsInCard) {
-            if (!t.getValue().toLowerCase().startsWith("name, vorname") &&
-                !t.getValue().toLowerCase().startsWith("karten-nr")) {
+        for (Text t : lowerLeftTexts) {
+            if (!t.getValue().toLowerCase().startsWith("name,") &&
+                !t.getValue().toLowerCase().contains("vorname") &&
+                !t.getValue().toLowerCase().startsWith("karten") &&
+                !t.getValue().toLowerCase().startsWith("geburtsdatum")
+            ) {
                 filteredText.add(t);
             }
         }
-
-        ArrayList<Text> goodBoxes = analyzeVisionBoxes(lowerLeftTexts);
+        ArrayList<Text> goodBoxes = analyzeVisionBoxes(filteredText);
         // We expect to have
         //  goodBoxes[0] FamilyName, GivenName
         //  goodBoxes[1] CardNumber (unused)
