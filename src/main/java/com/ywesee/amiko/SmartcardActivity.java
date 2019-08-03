@@ -433,11 +433,13 @@ public class SmartcardActivity extends AppCompatActivity {
             paint1.setColor(Color.rgb(20, 30, 240));
             paint1.setStrokeWidth(2);
             paint1.setStyle(Paint.Style.STROKE);
+            paint1.setTextSize(20);
             canvas.drawRoundRect(
                 rect,
                 2, // rx
                 2, // ry
                 paint1);
+            canvas.drawText(detectedNameText.getValue(), rect.left, rect.top, paint1);
         }
         if (detectedBirthdaySexText != null) {
             RectF rect = cameraRectToViewRect(detectedBirthdaySexText.getBoundingBox());
@@ -446,11 +448,13 @@ public class SmartcardActivity extends AppCompatActivity {
             paint1.setColor(Color.rgb(20, 30, 240));
             paint1.setStrokeWidth(2);
             paint1.setStyle(Paint.Style.STROKE);
+            paint1.setTextSize(20);
             canvas.drawRoundRect(
                 rect,
                 2, // rx
                 2, // ry
                 paint1);
+            canvas.drawText(detectedBirthdaySexText.getValue(), rect.left, rect.top, paint1);
         }
 
         imageView.setImageBitmap(bitmap);
