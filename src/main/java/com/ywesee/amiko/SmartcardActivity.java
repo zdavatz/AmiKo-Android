@@ -74,6 +74,8 @@ public class SmartcardActivity extends AppCompatActivity {
 
     Text detectedNameText;
     Text detectedBirthdaySexText;
+    ArrayList<Text> okTexts;
+    ArrayList<Text> notOkTexts;
 
     public SmartcardActivity() {
     }
@@ -133,7 +135,6 @@ public class SmartcardActivity extends AppCompatActivity {
                 currentDetectedMetadata = detections.getFrameMetadata();
                 currentDetectedTexts = detections.getDetectedItems();
                 final SparseArray<TextBlock> textBlocks = detections.getDetectedItems();
-                if (textBlocks.size() == 0) return;
                 processCurrentFrame();
             }
         });
@@ -158,15 +159,18 @@ public class SmartcardActivity extends AppCompatActivity {
                 (int) cropRight,
                 (int) cropBottom);
 
-        ArrayList<Text> textsInCard = new ArrayList<>();
+        ArrayList<Text> allTexts = new ArrayList<>();
         for (int i = 0; i < textBlocks.size(); i++) {
             int key = textBlocks.keyAt(i);
             TextBlock t = textBlocks.get(key);
+            List<? extends Text> texts = t.getComponents();
+            allTexts.addAll(texts);
+        }
+
+        ArrayList<Text> textsInCard = new ArrayList<>();
+        for (Text t : allTexts) {
             if (Rect.intersects(rect, t.getBoundingBox()) || rect.contains(t.getBoundingBox())) {
-                List<? extends Text> texts = t.getComponents();
-                for (Text text : texts) {
-                    textsInCard.add(text);
-                }
+                textsInCard.add(t);
             }
         }
 
@@ -198,32 +202,64 @@ public class SmartcardActivity extends AppCompatActivity {
         //  goodBoxes[1] CardNumber (unused)
         //  goodBoxes[2] Birthday Sex
 
+        okTexts = new ArrayList<>();
+        notOkTexts = new ArrayList<>();
+        for (Text t : allTexts) {
+            if (goodBoxes.contains(t)) {
+                okTexts.add(t);
+            } else {
+                notOkTexts.add(t);
+            }
+        }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                relayout();
+            }
+        });
+
         if (goodBoxes.size() != NUNBER_OF_FIELD_IN_CARD) {
             Log.w(TAG, "Wrong number of field");
             return;
         }
 
-        detectedNameText = goodBoxes.get(0);
-        detectedBirthdaySexText = goodBoxes.get(2);
+        Text firstBox = goodBoxes.get(0);
 
-        String name = detectedNameText.getValue().replace('.', ',');
+        String name = firstBox.getValue().replace('.', ',');
         String[] nameArray = name.split(",");
-        String[] dateArray = detectedBirthdaySexText.getValue().split(" ");
-        if (nameArray.length < 2 || dateArray.length < 2) {
-            Log.w(TAG, "Cannot parse name / date");
+        if (nameArray.length < 2) {
+            Log.w(TAG, "Cannot parse name");
             return;
         }
 
-        detectedNameText = goodBoxes.get(0);
-        detectedBirthdaySexText = goodBoxes.get(2);
+        String[] dateArray = tryBirthdayAndSex(goodBoxes.get(1));
 
-        runOnUiThread(new Runnable() {
-              @Override
-              public void run() {
-                  relayout();
-              }
-          });
+        if (dateArray != null) {
+            detectedBirthdaySexText = goodBoxes.get(1);
+        } else {
+            dateArray = tryBirthdayAndSex(goodBoxes.get(2));
+            if (dateArray != null) {
+                detectedBirthdaySexText = goodBoxes.get(2);
+            } else {
+                return;
+            }
+        }
+
+        detectedNameText = firstBox;
+
         // TODO: remove after some time?
+    }
+
+    String[] tryBirthdayAndSex(Text input) {
+        String[] dateArray = input.getValue().split(" ");
+        if (dateArray.length < 2) {
+            return null;
+        }
+        if (dateArray[1].equals("F") || dateArray[1].equals("M")) {
+            return dateArray;
+        }
+        return null;
     }
 
     void submitCurrentDetectedText() {
