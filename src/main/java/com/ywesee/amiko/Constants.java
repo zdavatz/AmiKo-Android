@@ -142,4 +142,13 @@ public class Constants {
 	public static String appPatientDatabase() {
 		return "patients.db";
 	}
+
+	public static String appFullTextSearchDatabase() {
+		if (appLanguage().equals("de"))
+			return "amiko_frequency_de.db";
+		else if (appLanguage().equals("fr"))
+			return "amiko_frequency_de.db";
+		else
+			return "amiko_frequency_fr.db";
+	}
 }
