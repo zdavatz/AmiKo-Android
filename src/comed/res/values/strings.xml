@@ -41,7 +41,8 @@
     <string name="tab_name_3">Pr.Act./ATC</string>
     <string name="tab_name_4">N° Enreg</string>
     <string name="tab_name_5">Thérapie</string>
-    <string name="full_text_search">la notice Infopro</string>
+    <string name="tab_name_6">RPT</string>
+    <string name="search_in_fachinfo">la notice Infopro</string>
     <string name="report_search">A propos</string>
     <string name="interactions_search">interactions</string>
 

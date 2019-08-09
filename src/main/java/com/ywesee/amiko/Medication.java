@@ -219,19 +219,19 @@ public class Medication {
 
 	public String shortTitle(String longTitle) {
 		String t = longTitle.toLowerCase();
-		if (Constants.appLanguage() == "de") {
+		if (Constants.appLanguage().equals("de") ) {
 			for (int i=0; i<19; i++) {
 				if (i >= SectionTitle_DE.length) continue;
 				String compareString = SectionTitle_DE[i].toLowerCase();
-				if (t.indexOf(compareString) != -1) {
+				if (t.contains(compareString)) {
 					return SectionTitle_DE[i];
 				}
 			}
-		} else if (Constants.appLanguage() == "fr") {
+		} else if (Constants.appLanguage().equals("fr")) {
 			for (int i=0; i<19; i++) {
 				if (i >= SectionTitle_FR.length) continue;
 				String compareString = SectionTitle_FR[i].toLowerCase();
-				if (t.indexOf(compareString) != -1) {
+				if (t.contains(compareString)) {
 					return SectionTitle_FR[i];
 				}
 			}

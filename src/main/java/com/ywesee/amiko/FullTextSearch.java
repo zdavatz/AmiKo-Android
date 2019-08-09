@@ -45,7 +45,7 @@ class FullTextSearch {
             mListOfArticles.sort(new Comparator<Medication>() {
                 @Override
                 public int compare(Medication o1, Medication o2) {
-                    return o1.getTitle().compareTo​(o2.getTitle());
+                    return o1.getTitle().compareTo(o2.getTitle());
                 }
             });
         }
@@ -77,23 +77,25 @@ class FullTextSearch {
                 if (mDict.containsKey(r)) {
                     ArrayList<String> chapters = mDict.get(r);
                     for (String c : chapters) {
-                        if (!indexToTitlesDict.containsKey(c)) continue;
-                        String cStr = indexToTitlesDict.get(c);
-                        String anchor = "section" + c;
-                        int intValue = 0;
-                        try {
-                            intValue = Integer.parseInt(c);
-                        }catch (Exception e){}
-                        if (intValue > 100)
-                            anchor = "Section" + c;
-                        int count = 0;
-                        if (chaptersCountDict.containsKey(cStr)) {
-                            count = chaptersCountDict.get(cStr).intValue();
-                        }
-                        chaptersCountDict.put(cStr, count + 1);
-                        if (filter.length() == 0 || filter.equals(cStr)) {
-                            contentChapters += "<span style=\"font-size:0.75em; color:#0088BB\"> <a onclick=\"displayFachinfo('" + m.getRegnrs() + "','" + anchor + "')\">" + cStr + "</a></span><br>";
-                            filtered = false;
+                        if (indexToTitlesDict.containsKey(c)) {
+                            String cStr = indexToTitlesDict.get(c);
+                            String anchor = "section" + c;
+                            int intValue = 0;
+                            try {
+                                intValue = Integer.parseInt(c);
+                            } catch (Exception e) {
+                            }
+                            if (intValue > 100)
+                                anchor = "Section" + c;
+                            int count = 0;
+                            if (chaptersCountDict.containsKey(cStr)) {
+                                count = chaptersCountDict.get(cStr).intValue();
+                            }
+                            chaptersCountDict.put(cStr, count + 1);
+                            if (filter.length() == 0 || filter.equals(cStr)) {
+                                contentChapters += "<span style=\"font-size:0.75em; color:#0088BB\"> <a onclick=\"displayFachinfo('" + m.getRegnrs() + "','" + anchor + "')\">" + cStr + "</a></span><br>";
+                                filtered = false;
+                            }
                         }
                     }
                 }
