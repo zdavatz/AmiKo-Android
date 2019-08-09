@@ -52,6 +52,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	private static String TAG = "DataBaseHelper";	// Tag for LogCat window
 
 	private static String mMainDBName = "";
+	private static String mFullTextDBName = "";
 	private static String mReportName = "";
 	private static String mInteractionsName = "";
 	private static String mAppDataDir = "";
@@ -61,16 +62,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 	private final Context mContext;
 
-    /**
-     * Constructor
-     * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
-     * @param context
-     */
+		/**
+		 * Constructor
+		 * Takes and keeps a reference of the passed context in order to access to the application assets and resources.
+		 * @param context
+		 */
 	public DataBaseHelper(Context context) {
 		super(context, Constants.appDatabase(), null, Constants.DB_VERSION);
 		this.mContext = context;
 		// Initialize all databases and related files
 		mMainDBName = Constants.appDatabase();
+		mFullTextDBName = Constants.appFullTextSearchDatabase();
 		mReportName = Constants.appReportFile();
 		mInteractionsName = Constants.appInteractionsFile();
 		// Initialize persistant storage where databases will go
@@ -105,24 +107,26 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mObserver.update(null, args);
 	}
 
-    /**
-     * Check if file already exist to avoid re-copying it each time when application starts.
-     * @return true if it exists, false if it doesn't
-     */
+		/**
+		 * Check if file already exist to avoid re-copying it each time when application starts.
+		 * @return true if it exists, false if it doesn't
+		 */
 	private boolean checkFileExistsAtPath(String fileName, String path) {
 		File dbFile = new File(path + fileName);
 		return dbFile.exists();
 	}
 
 	public boolean checkAllFilesExists() {
-		return (checkFileExistsAtPath(mMainDBName, mAppDataDir) &&
+		return checkFileExistsAtPath(mMainDBName, mAppDataDir) &&
+				checkFileExistsAtPath(mFullTextDBName, mAppDataDir) &&
 				checkFileExistsAtPath(mReportName, mAppDataDir) &&
-				checkFileExistsAtPath(mInteractionsName, mAppDataDir));
+				checkFileExistsAtPath(mInteractionsName, mAppDataDir)
+				;
 	}
 
 	/**
-     * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
-     */
+		 * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
+		 */
 	public void copyFilesFromNonPersistentFolder() throws Exception {
 		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
 			/*
@@ -132,6 +136,15 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			// Copy SQLite database from external storage
 			try {
 				copyFileFromAssetsToPath(mMainDBName, mAppDataDir);
+				if (Constants.DEBUG)
+					Log.d(TAG, "createDataBase(): database created");
+			} catch (IOException e) {
+				throw new Exception("Error copying database!");
+			}
+		}
+		if (!checkFileExistsAtPath(mFullTextDBName, mAppDataDir)) {
+			try {
+				copyFileFromAssetsToPath(mFullTextDBName, mAppDataDir);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
@@ -188,8 +201,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 
 	/**
-     * Copies file from local assets-folder to system folder (persistant storage),
-     * from where it can be accessed and handled. This is done by transferring bytestream.
+		 * Copies file from local assets-folder to system folder (persistant storage),
+		 * from where it can be accessed and handled. This is done by transferring bytestream.
 	 * @param srcFile
 	 * @param dstPath
 	 */
@@ -326,7 +339,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		this.close();
 		*/
 		try {
-        	if (fileSize<0) {
+			if (fileSize<0) {
 				fileSize = Constants.SQLITE_DB_SIZE;
 			}
 			String dbPath = mAppDataDir + mMainDBName;
@@ -343,8 +356,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 */
 	public void overwriteInteractionsFile(String srcFile, int fileSize) throws Exception {
 		try {
-        	if (fileSize<0)
-        		fileSize = Constants.INTERACTIONS_FILE_SIZE;
+					if (fileSize<0)
+						fileSize = Constants.INTERACTIONS_FILE_SIZE;
 			// Copy database from src to dst and unzip it!
 			copyFileFromSrcToPath(srcFile, mAppDataDir + mInteractionsName, fileSize, true);
 			if (Constants.DEBUG)
@@ -392,8 +405,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		db.disableWriteAheadLogging();
 		/*
 		try {
-	        db.execSQL("DROP TABLE IF EXISTS amikodb;");
-	        db.execSQL("CREATE TABLE amikodb (title, auth, atc, substances, style, content);");
+					db.execSQL("DROP TABLE IF EXISTS amikodb;");
+					db.execSQL("CREATE TABLE amikodb (title, auth, atc, substances, style, content);");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -402,7 +415,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
 	/**
 	 * Called if database version is decreased
- 	   Note: override on downgrade, default will throw exception, which is bad.
+		 Note: override on downgrade, default will throw exception, which is bad.
 	 */
 	@Override
 	public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
@@ -425,8 +438,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				copyFileFromAssetsToPath(mDBName, mDBPath + mDBName);
 			} catch (IOException e) {
 				throw new Exception("Error upgrading database from version " + oldVersion + " to version " + newVersion);
-		    }
-		    */
+				}
+				*/
 		}
 	}
 }

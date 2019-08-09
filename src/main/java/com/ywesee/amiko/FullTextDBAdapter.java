@@ -1,5 +1,6 @@
 package com.ywesee.amiko;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Environment;
 import android.util.Log;
 
 public class FullTextDBAdapter extends SQLiteOpenHelper {
@@ -17,6 +19,7 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
     private static final String TAG = "FullTextDBAdapter"; // Tag for LogCat window
 
     private final Context mContext;
+    private boolean databaseIsOpened = false;
 
     public static final String KEY_ROWID = "id";
     public static final String KEY_KEYWORD = "keyword";
@@ -35,8 +38,20 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
         mContext = context;
     }
 
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+        databaseIsOpened = true;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        super.onOpen(db);
+    }
+
     public void close() {
         super.close();
+        databaseIsOpened = false;
     }
 
     @Override
@@ -44,16 +59,34 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
 
     }
 
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        super.onOpen(db);
-        db.disableWriteAheadLogging();
+    void create() {
+        try {
+            if (databaseIsOpened) {
+                this.close();
+                overwriteSQLiteDB();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.toString() + " Unable to create database");
+        }
     }
 
     /**
-     * @param q: search query
-     * @param m: list of medications returned by query
+     * Overwrites old database
+     * @throws IOException
      */
+    public void overwriteSQLiteDB() throws Exception {
+        try {
+            String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                    + "/" + Constants.appZippedDatabase();
+            // copies and overwrites (if necessary) while unzipping (if necessary)
+            DataBaseHelper helper = new DataBaseHelper(mContext);
+            helper.overwriteSQLiteDataBase(zippedFile, DBAdapter.getSizeZippedFile(zippedFile));
+        } catch (Exception e) {
+            Log.e(TAG, e.toString() + " Unable to overwrite database");
+            throw new Exception("Unable to overwrite database");
+        }
+    }
+
     public ArrayList<Entry> searchKeyword(String searchTerm) {
         // Execute DB raw query
         Cursor cursor = this.getReadableDatabase().rawQuery(
