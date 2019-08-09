@@ -91,7 +91,7 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
         // Execute DB raw query
         Cursor cursor = this.getReadableDatabase().rawQuery(
             "SELECT " + KEY_ROWID + "," + KEY_KEYWORD + "," + KEY_REGNR +  " FROM " + DATABASE_TABLE + " WHERE " + KEY_KEYWORD + " LIKE ?" ,
-            new String[]{"%" + searchTerm + "%"});
+            new String[]{searchTerm + "%"});
 
         // Iterate through cursor to extract required info
         ArrayList<Entry> results = new ArrayList<>();
