@@ -1542,6 +1542,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
+        mExpertInfoView.setFinishLoadingObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                mExpertInfoView.setFinishLoadingObserver(null);
+                mSearch.setText(keyword);
+                findAll(keyword, mWebView);
+            }
+        });
+
+
         // Add NavigationDrawer, get handle to DrawerLayout
         mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
         // Set a custom shadow that overlays the main content when the drawer opens
