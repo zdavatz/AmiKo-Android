@@ -56,19 +56,17 @@ class FullTextSearch {
         for (Medication m : mListOfArticles) {
             boolean filtered = true;
             String contentStyle;
+            String firstLetter = m.getTitle().substring(0, 1).toUpperCase();
 
             // TODO: is the styles available on android?
-            // TODO: copied from mac, id seems strange
             if (rows % 2 == 0)
-                contentStyle = "<li style=\"background-color:var(--background-color-gray);\" id=\"{firstLetter}\">";
+                contentStyle = "<li style=\"background-color:var(--background-color-gray);\" id=\"" + firstLetter + "\">";
             else
-                contentStyle = "<li style=\"background-color:transparent;\" id=\"{firstLetter}\">";
-
-            String contentTitle =
-                "<a onclick=\"displayFachinfo('" + m.getRegnrs() + "','{anchor}')\"><span style=\"font-size:0.8em\"><b>" + m.getTitle() + "</b></span></a> <span style=\"font-size:0.7em\"> | " + m.getAuth() + "</span><br>";
+                contentStyle = "<li style=\"background-color:transparent;\" id=\"" + firstLetter + "\">";
 
             String contentChapters = "";
             String regnrs[] = m.getRegnrs().split(",");
+            String anchor = "";
 
             HashMap<String, String> indexToTitlesDict = m.indexToTitlesDict();    // id -> chapter title
             // List of chapters
@@ -79,7 +77,7 @@ class FullTextSearch {
                     for (String c : chapters) {
                         if (indexToTitlesDict.containsKey(c)) {
                             String cStr = indexToTitlesDict.get(c);
-                            String anchor = "section" + c;
+                            anchor = "section" + c;
                             int intValue = 0;
                             try {
                                 intValue = Integer.parseInt(c);
@@ -93,13 +91,16 @@ class FullTextSearch {
                             }
                             chaptersCountDict.put(cStr, count + 1);
                             if (filter.length() == 0 || filter.equals(cStr)) {
-                                contentChapters += "<span style=\"font-size:0.75em; color:#0088BB\"> <a onclick=\"displayFachinfo('" + m.getRegnrs() + "','" + anchor + "')\">" + cStr + "</a></span><br>";
+                                contentChapters += "<span style=\"font-size:0.75em; color:#0088BB\"> <a onclick=\"jsInterface.navigationToFachInfo('" + m.getRegnrs() + "','" + anchor + "')\">" + cStr + "</a></span><br>";
                                 filtered = false;
                             }
                         }
                     }
                 }
             }
+            String contentTitle =
+                "<a onclick=\"jsInterface.navigationToFachInfo('" + m.getRegnrs() + "','" + anchor + "')\"><span style=\"font-size:0.8em\"><b>" + m.getTitle() + "</b></span></a> <span style=\"font-size:0.7em\"> | " + m.getAuth() + "</span><br>";
+
             if (!filtered) {
                 htmlStr += contentStyle + contentTitle + contentChapters + "</li>";
                 rows++;
