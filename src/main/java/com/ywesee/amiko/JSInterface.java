@@ -26,21 +26,22 @@ import android.webkit.JavascriptInterface;
 import android.widget.Toast;
 
 public class JSInterface {
-	
-	private int mSearchHits = 0;	
+
+	private int mSearchHits = 0;
 	Context mContext;
 	Observer mObserver;
+	Observer mFachInfoObserver;
 
 	JSInterface(Context c) {
 		mContext = c;
 	}
-	
+
 	public void addObserver(Observer observer) {
 		mObserver = observer;
 	}
-	
+
 	// Annotation as of API 17 (08.Dec.2013)
-	@JavascriptInterface		
+	@JavascriptInterface
 	public String showToast(String toast) {
 		Toast.makeText(mContext, toast, Toast.LENGTH_SHORT).show();
 		return toast;
@@ -52,17 +53,37 @@ public class JSInterface {
 		// notify observer
 		mObserver.update(null, msg);
 	}
-	
+
 	@JavascriptInterface
 	public void receiveValueFromJS(int searchHits) {
 		mSearchHits = searchHits;
-	}	
-	
+	}
+
+	public void setFachInfoObserver(Observer fachInfoObserver) {
+		mFachInfoObserver = fachInfoObserver;
+	}
+
+	@JavascriptInterface
+	public void navigationToFachInfo(String regnr, String anchor) {
+		if (mFachInfoObserver == null) return;
+		mFachInfoObserver.update(null, new FachInfoTarget(regnr, anchor));
+	}
+
 	public int getSearchHits() {
 		return mSearchHits;
 	}
-	
+
 	public int highlightKeyword(String key) {
 		return key.length();
+	}
+
+	public class FachInfoTarget {
+		public String regnr;
+		public String anchor;
+
+		public FachInfoTarget(String regnr, String anchor) {
+			this.regnr = regnr;
+			this.anchor = anchor;
+		}
 	}
 }

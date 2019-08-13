@@ -481,6 +481,13 @@ public class DBAdapter {
 		return medis;
 	}
 
+	public Medication searchFullRegnr(String regnr) {
+		ArrayList<String> r = new ArrayList<>();
+		r.add(regnr);
+		List<Medication> result = this.searchRegnrsFromList(r);
+		return result.get(0);
+	}
+
 	public List<Medication> searchRegnrsFromList(List<String> listOfRegnrs) {
 		if (listOfRegnrs.size() == 0) {
 			return new ArrayList<>();

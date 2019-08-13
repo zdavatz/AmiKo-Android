@@ -165,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView mSectionView = null;
     // Webview used to display "Fachinformation" and the "med interaction basket"
     private WebView mWebView;
+    private ExpertInfoView mExpertInfoView;
     // Cascading style sheet
     private String mCSS_str = null;
 
@@ -635,7 +636,7 @@ public class MainActivity extends AppCompatActivity {
         setupBottomNavigationViewListener();
 
         // Define and load webview
-        ExpertInfoView mExpertInfoView = new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
+        mExpertInfoView = new ExpertInfoView(this, (WebView) findViewById(R.id.fach_info_view));
         mExpertInfoView.adjustZoom();
 
         mWebView = mExpertInfoView.getWebView();
@@ -675,6 +676,19 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
+            }
+        });
+        jsinterface.setFachInfoObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                final JSInterface.FachInfoTarget target = (JSInterface.FachInfoTarget)arg;
+                final Medication m = mMediDataSource.searchFullRegnr(target.regnr);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showMedicationDetail(m, target.anchor);
+                    }
+                });
             }
         });
 
@@ -1497,6 +1511,62 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    public void showMedicationDetail(Medication m) {
+        showMedicationDetail(m, null);
+    }
+
+    public void showMedicationDetail(Medication m, String anchor) {
+        showMedicationDetail(m, anchor, mSearchQuery);
+    }
+
+    public void showMedicationDetail(Medication m, String anchor, final String keyword) {
+        if (mSearch!=null) {
+            if (mSearch.length()>0)
+                mSearch.getText().clear();
+            mSearch.setHint(getString(R.string.search) + " " + getString(R.string.search_in_fachinfo));
+        }
+        mHtmlString = createHtml(mCSS_str, m.getContent());
+
+        if (mWebView!=null) {
+            // Checks the orientation of the screen
+            Configuration mConfig = this.getResources().getConfiguration();
+            if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
+                mWebView.getSettings().setTextZoom(125);
+            } else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
+                mWebView.getSettings().setTextZoom(175);
+            }
+        }
+
+        if (anchor != null) {
+            mHtmlString += "<script>document.getElementById('"+ anchor + "').scrollIntoView(true);</script>";
+        }
+
+        mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
+        // Add NavigationDrawer, get handle to DrawerLayout
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
+        // Set a custom shadow that overlays the main content when the drawer opens
+        mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+        // Close any open drawers
+        if (mDrawerLayout != null)
+            mDrawerLayout.closeDrawers();
+
+        // Add section title view
+        String[] id_items = m.getSectionIds().split(",");
+        List<String> section_ids = Arrays.asList(id_items);
+        String[] title_items = m.getSectionTitles().split(";");
+        List<String> section_titles = Arrays.asList(title_items);
+
+        // Get reference to listview in DrawerLayout
+        // Implements swiping mechanism!
+        mSectionView = (ListView) findViewById(R.id.section_title_view);
+        // Make it clickable
+        mSectionView.setClickable(true);
+
+        SectionTitlesAdapter sectionTitles =
+                new SectionTitlesAdapter(this, R.layout.section_item, section_ids, section_titles);
+        mSectionView.setAdapter(sectionTitles);
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -2116,49 +2186,7 @@ public class MainActivity extends AppCompatActivity {
 
                         if (m!=null && mSearchInteractions==false) {
                             // Reset and change search hint
-                            if (mSearch!=null) {
-                                if (mSearch.length()>0)
-                                    mSearch.getText().clear();
-                                mSearch.setHint(getString(R.string.search) + " " + getString(R.string.search_in_fachinfo));
-                            }
-                            // mHtmlString = createHtml(m.getStyle(), m.getContent());
-                            mHtmlString = createHtml(mCSS_str, m.getContent());
-
-                            if (mWebView!=null) {
-                                // Checks the orientation of the screen
-                                Configuration mConfig = mContext.getResources().getConfiguration();
-                                if (mConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
-                                    mWebView.getSettings().setTextZoom(125);
-                                } else if (mConfig.orientation==Configuration.ORIENTATION_PORTRAIT) {
-                                    mWebView.getSettings().setTextZoom(175);
-                                }
-                            }
-
-                            mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
-
-                            // Add NavigationDrawer, get handle to DrawerLayout
-                            mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
-                            // Set a custom shadow that overlays the main content when the drawer opens
-                            mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
-                            // Close any open drawers
-                            if (mDrawerLayout != null)
-                                mDrawerLayout.closeDrawers();
-
-                            // Add section title view
-                            String[] id_items = m.getSectionIds().split(",");
-                            List<String> section_ids = Arrays.asList(id_items);
-                            String[] title_items = m.getSectionTitles().split(";");
-                            List<String> section_titles = Arrays.asList(title_items);
-
-                            // Get reference to listview in DrawerLayout
-                            // Implements swiping mechanism!
-                            mSectionView = (ListView) findViewById(R.id.section_title_view);
-                            // Make it clickable
-                            mSectionView.setClickable(true);
-
-                            SectionTitlesAdapter sectionTitles =
-                                    new SectionTitlesAdapter(mContext, R.layout.section_item, section_ids, section_titles);
-                            mSectionView.setAdapter(sectionTitles);
+                            showMedicationDetail(m);
                         } else {
                             // Update interaction basket
                             updateInteractionBasket();
@@ -2185,7 +2213,7 @@ public class MainActivity extends AppCompatActivity {
                         String fullTextContentStr = fts.table(new ArrayList(listOfArticles), dict, "");
 
                         mHtmlString = createHtml(mCSS_str, fullTextContentStr);
-
+                        mWebView.getSettings().setTextZoom(350);
                         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
                     }
                 }
