@@ -103,6 +103,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			args.add(1);
 		else if (fileName.startsWith("drug_interactions_csv"))
 			args.add(2);
+		else if (fileName.startsWith("amiko_frequency"))
+			args.add(3);
 
 		mObserver.update(null, args);
 	}
@@ -343,6 +345,24 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				fileSize = Constants.SQLITE_DB_SIZE;
 			}
 			String dbPath = mAppDataDir + mMainDBName;
+			// Copy database from src to dest db
+			copyFileFromSrcToPath(srcFile, dbPath, fileSize, true);
+			Log.d(TAG, "overwriteDataBase(): old database overwritten");
+		} catch (IOException e) {
+			throw new Exception("Error overwriting database: " + e);
+		}
+	}
+
+	public void overwriteFullTextSQLiteDataBase(String srcFile, int fileSize) throws Exception {
+		/*
+		this.getReadableDatabase();
+		this.close();
+		*/
+		try {
+			if (fileSize<0) {
+				fileSize = Constants.SQLITE_DB_SIZE;
+			}
+			String dbPath = mAppDataDir + mFullTextDBName;
 			// Copy database from src to dest db
 			copyFileFromSrcToPath(srcFile, dbPath, fileSize, true);
 			Log.d(TAG, "overwriteDataBase(): old database overwritten");

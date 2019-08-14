@@ -59,34 +59,6 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
 
     }
 
-    void create() {
-        try {
-            if (databaseIsOpened) {
-                this.close();
-                overwriteSQLiteDB();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, e.toString() + " Unable to create database");
-        }
-    }
-
-    /**
-     * Overwrites old database
-     * @throws IOException
-     */
-    public void overwriteSQLiteDB() throws Exception {
-        try {
-            String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                    + "/" + Constants.appZippedDatabase();
-            // copies and overwrites (if necessary) while unzipping (if necessary)
-            DataBaseHelper helper = new DataBaseHelper(mContext);
-            helper.overwriteSQLiteDataBase(zippedFile, DBAdapter.getSizeZippedFile(zippedFile));
-        } catch (Exception e) {
-            Log.e(TAG, e.toString() + " Unable to overwrite database");
-            throw new Exception("Unable to overwrite database");
-        }
-    }
-
     public ArrayList<Entry> searchKeyword(String searchTerm) {
         // Execute DB raw query
         Cursor cursor = this.getReadableDatabase().rawQuery(

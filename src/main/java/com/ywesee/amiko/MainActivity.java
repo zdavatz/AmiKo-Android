@@ -1228,8 +1228,8 @@ public class MainActivity extends AppCompatActivity {
                 // Creates database, interactions, and report file
                 // or overwrites them if they already exists
                 Log.d(TAG, "AsyncUpdateDBTask: Updating database");
+                mFullTextSearchDB.close();
                 mMediDataSource.create();
-                mFullTextSearchDB.create();
                 Log.d(TAG, "AsyncUpdateDBTask: Updated database");
             } catch(Exception e) {
                 Log.d(TAG, "Unable to update database!");
@@ -1254,6 +1254,8 @@ public class MainActivity extends AppCompatActivity {
                         progressBar.setMessage("Initializing SQLite database...");
                     else if (fileType==2)
                         progressBar.setMessage("Initializing drug interactions...");
+                    else if (fileType==3)
+                        progressBar.setMessage("Initializing full text database...");
                 }
                 int percentCompleted = progress[0];
                 progressBar.setProgress(percentCompleted);
@@ -1547,7 +1549,6 @@ public class MainActivity extends AppCompatActivity {
             public void update(Observable o, Object arg) {
                 mExpertInfoView.setFinishLoadingObserver(null);
                 mSearch.setText(keyword);
-                findAll(keyword, mWebView);
             }
         });
 
@@ -1786,7 +1787,7 @@ public class MainActivity extends AppCompatActivity {
         if (networkInfo!=null && networkInfo.isConnected()) {
             // File URIs
             Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
-            Uri fullTextDatabaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appFullTextSearchDatabase());
+            Uri fullTextDatabaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedFullTextDatabase());
             Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
             Uri interactionsUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedInteractionsFile());
             // NOTE: the default download destination is a shared volume where the system might delete your file if
@@ -1821,13 +1822,13 @@ public class MainActivity extends AppCompatActivity {
             requestDatabase.setDestinationInExternalPublicDir(main_expansion_file_path, Constants.appZippedDatabase());
             */
             requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
-            requestFullTextDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appFullTextSearchDatabase());
+            requestFullTextDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedFullTextDatabase());
             requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
             requestInteractions.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedInteractionsFile());
             // Check if file exist on non persistent store. If yes, delete it.
             if (Utilities.isExternalStorageReadable() && Utilities.isExternalStorageWritable()) {
                 Utilities.deleteFile(Constants.appZippedDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-                Utilities.deleteFile(Constants.appFullTextSearchDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+                Utilities.deleteFile(Constants.appZippedFullTextDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
                 Utilities.deleteFile(Constants.appReportFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
                 Utilities.deleteFile(Constants.appZippedInteractionsFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
             }
@@ -2223,7 +2224,6 @@ public class MainActivity extends AppCompatActivity {
                         String fullTextContentStr = fts.table(new ArrayList(listOfArticles), dict, "");
 
                         mHtmlString = createHtml(mCSS_str, fullTextContentStr);
-                        mWebView.getSettings().setTextZoom(350);
                         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
                     }
                 }
