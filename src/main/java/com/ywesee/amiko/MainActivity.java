@@ -2287,8 +2287,14 @@ public class MainActivity extends AppCompatActivity {
             + "</head><body>" + content_str + "</body></html>";
     */
 
-        String html_str = "<html><head>"
-                + "<style type=\"text/css\">" + style_str + "</style>"
+        String html_str = "<html><head>";
+
+        if (mActionName.equals(getString(R.string.tab_name_6))) {
+            html_str += "<meta name=\"viewport\" content=\"width=device-width\">";
+        }
+
+        html_str +=
+                "<style type=\"text/css\">" + style_str + "</style>"
                 + "</head><body>" + content_str + "</body></html>";
 
         return html_str;
