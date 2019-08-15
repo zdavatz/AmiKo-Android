@@ -171,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Hashset containing registration numbers of favorite medications
     private HashSet<String> mFavoriteMedsSet = null;
+    private HashSet<String> mFavoriteFullTextMedsSet = null;
     // Reference to favorites' datastore
     private FavoriteStore mFavoriteData = null;
     // This is the currently used database
@@ -781,8 +782,8 @@ public class MainActivity extends AppCompatActivity {
         */
         mFavoriteData = new FavoriteStore(this.getFilesDir().toString());
         // Load hashset containing registration numbers from persistent data store
-        mFavoriteMedsSet = new HashSet<String>();
         mFavoriteMedsSet = mFavoriteData.load();
+        mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();
 
         // Initialize preferences
         SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
@@ -1483,8 +1484,16 @@ public class MainActivity extends AppCompatActivity {
             List<ListEntry> favMedis = new ArrayList<ListEntry>();
             // Loop through all found results
             for (ListEntry entry : results) {
-                if (mFavoriteMedsSet.contains(entry.getRegnrs()))
-                    favMedis.add(entry);
+                if (mActionName.equals(getString(R.string.tab_name_6))) {
+                    // full text search
+                    if (mFavoriteFullTextMedsSet.contains(entry.getHash())) {
+                        favMedis.add(entry);
+                    }
+                } else {
+                    if (mFavoriteMedsSet.contains(entry.getRegnrs())) {
+                        favMedis.add(entry);
+                    }
+                }
             }
             // Filtered results
             results = favMedis;
@@ -1909,6 +1918,10 @@ public class MainActivity extends AppCompatActivity {
         public String getTitle() {
             return this.medication != null ? this.medication.getTitle() : this.fullTextEntry.keyword;
         }
+
+        public String getHash() {
+            return this.fullTextEntry != null ? this.fullTextEntry.hash : null;
+        }
     }
 
     /**
@@ -2143,7 +2156,14 @@ public class MainActivity extends AppCompatActivity {
             // Get reference to favorite's star
             final ImageView favorite_star = (ImageView) mView.findViewById(R.id.mfavorite);
             // Retrieve information from hash set
-            if (mFavoriteMedsSet.contains(entry.getRegnrs())) {
+            boolean isFaved = false;
+            if (mActionName.equals(getString(R.string.tab_name_6))) {
+                isFaved = mFavoriteFullTextMedsSet.contains(entry.getHash());
+            } else {
+                isFaved = mFavoriteMedsSet.contains(entry.getRegnrs());
+            }
+
+            if (isFaved) {
                 favorite_star.setImageResource(R.drawable.star_small_ye);
                 favorite_star.setVisibility(View.VISIBLE);
             } else {
@@ -2154,18 +2174,24 @@ public class MainActivity extends AppCompatActivity {
             favorite_star.setOnClickListener( new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    String regnrs = null;
-                    if (med != null){
-                        regnrs = med.getRegnrs();
-                    } else if (fullTextEntry != null) {
-                        regnrs = fullTextEntry.regnrs;
+                    if (mActionName.equals(getString(R.string.tab_name_6))) {
+                        // full text search
+                        String hash = entry.getHash();
+                        // Update star
+                        if (mFavoriteFullTextMedsSet.contains(hash))
+                            mFavoriteFullTextMedsSet.remove(hash);
+                        else
+                            mFavoriteFullTextMedsSet.add(hash);
+                        mFavoriteData.saveFullText(mFavoriteFullTextMedsSet);
+                    } else {
+                        String regnrs = entry.getRegnrs();
+                        // Update star
+                        if (mFavoriteMedsSet.contains(regnrs))
+                            mFavoriteMedsSet.remove(regnrs);
+                        else
+                            mFavoriteMedsSet.add(regnrs);
+                        mFavoriteData.save(mFavoriteMedsSet);
                     }
-                    // Update star
-                    if (mFavoriteMedsSet.contains(regnrs))
-                        mFavoriteMedsSet.remove(regnrs);
-                    else
-                        mFavoriteMedsSet.add(regnrs);
-                    mFavoriteData.save(mFavoriteMedsSet);
                     // Refreshes the listview
                     notifyDataSetChanged();
                 }

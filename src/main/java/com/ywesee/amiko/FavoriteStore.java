@@ -28,33 +28,49 @@ import java.io.ObjectOutputStream;
 import java.util.HashSet;
 
 public class FavoriteStore {
-	
+
 	private String m_dir = "";
-	
+
 	public FavoriteStore(String dir) {
 		m_dir = dir;
-       	File app_data_folder = new File(dir);
-       	if (!app_data_folder.exists()) {
-       		app_data_folder.mkdirs();		
-       		System.out.println("Created application data folder in " + app_data_folder);
-       	} else
-       		System.out.println("Found application data folder is in " + app_data_folder);
-       	// Check if favorites.txt exists, otherwise create file
+		File app_data_folder = new File(dir);
+		if (!app_data_folder.exists()) {
+			app_data_folder.mkdirs();
+			System.out.println("Created application data folder in " + app_data_folder);
+		} else
+			System.out.println("Found application data folder is in " + app_data_folder);
+		// Check if favorites.txt exists, otherwise create file
 		File wfile = new File(dir + "\\favorites.txt");
 		try {
 			if (!wfile.exists()) {
 				wfile.getParentFile().mkdirs();
 				wfile.createNewFile();
-			}	
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public HashSet<String> load() {
+		return this.load("favorites.txt");
+	}
+
+	public void save(HashSet<String> hs) {
+		this.save("favorites.txt", hs);
+	}
+
+	public HashSet<String> loadFullText() {
+		return this.load("favorites-full-text.txt");
+	}
+
+	public void saveFullText(HashSet<String> hs) {
+		this.save("favorites-full-text.txt", hs);
+	}
+
+	public HashSet<String> load(String path) {
 		HashSet<String> hs = new HashSet<String>();
 		try {
-			FileInputStream file_in = new FileInputStream(m_dir + "\\favorites.txt");
+			FileInputStream file_in = new FileInputStream(m_dir + "/" + path);
 			// Make sure there is something to read...
 			if (file_in.available()>0) {
 				ObjectInputStream in = new ObjectInputStream(file_in);
@@ -69,15 +85,15 @@ public class FavoriteStore {
 		}
 		return hs;
 	}
-	
-	public void save(HashSet<String> hs) {
+
+	public void save(String path, HashSet<String> hs) {
 		try {
-			FileOutputStream file_out = new FileOutputStream(m_dir + "\\favorites.txt");
-	        ObjectOutputStream out = new ObjectOutputStream(file_out);
-	        out.writeObject(hs);
-	        out.close();
-	        file_out.close();
-	        // System.out.println("Serialized data is saved in " + m_dir);
+			FileOutputStream file_out = new FileOutputStream(m_dir + "/" + path);
+			ObjectOutputStream out = new ObjectOutputStream(file_out);
+			out.writeObject(hs);
+			out.close();
+			file_out.close();
+			// System.out.println("Serialized data is saved in " + m_dir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
