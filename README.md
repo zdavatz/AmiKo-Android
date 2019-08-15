@@ -19,13 +19,17 @@ https://developer.android.com/studio/
 #### 3. Database
 databases are in
 
-`src/amiko/assets/` form here: http://pillbox.oddb.org/amiko_db_full_idx_de.zip (AmiKo, DE)  
+`src/amiko/assets/` form here: http://pillbox.oddb.org/amiko_db_full_idx_de.zip (AmiKo, DE)
 `src/comed/assets/` from here: http://pillbox.oddb.org/amiko_db_full_idx_fr.zip (CoMed, FR)
+
+##### 3.1 Full text search database
+`src/amiko/assets/` form here: http://pillbox.oddb.org/amiko_frequency_de.zip (AmiKo, DE)
+`src/comed/assets/` from here: http://pillbox.oddb.org/amiko_frequency_fr.zip (CoMed, FR)
 
 #### 4. Report File
 report files are in
 
-`src/amiko/assets/` from here: http://pillbox.oddb.org/amiko_report_de.html (AmiKo, DE)  
+`src/amiko/assets/` from here: http://pillbox.oddb.org/amiko_report_de.html (AmiKo, DE)
 `src/comed/assets/` from here: http://pillbox.oddb.org/amiko_report_fr.html (CoMed, FR)
 
 #### 5. Constants.java

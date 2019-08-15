@@ -108,7 +108,7 @@ public class DBAdapter {
 	/**
 	 *
 	 */
-	public int getSizeZippedFile(String zipFile) {
+	public static int getSizeZippedFile(String zipFile) {
 		ZipEntry ze = null;
 		try {
 			// Utilities.chmod(zipFile, 755);
@@ -127,7 +127,7 @@ public class DBAdapter {
 	/**
 	 *
 	 */
-	public int getSizeZippedSQLiteDatabaseFile() {
+	public static int getSizeZippedSQLiteDatabaseFile() {
 		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 				+ "/" + Constants.appZippedDatabase() );
 	}
@@ -135,7 +135,7 @@ public class DBAdapter {
 	/**
 	 *
 	 */
-	public int getSizeZippedInteractionsFile() {
+	public static int getSizeZippedInteractionsFile() {
 		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
 				+ "/" + Constants.appZippedInteractionsFile() );
 	}
@@ -196,6 +196,7 @@ public class DBAdapter {
 			} else {
 				this.closeSQLiteDB();
 				overwriteSQLiteDB();
+				overwriteFullTextSQLiteDB();
 				this.openSQLiteDB();
 				overwriteInteractionsFile();
 			}
@@ -215,6 +216,22 @@ public class DBAdapter {
 					+ "/" + Constants.appZippedDatabase();
 			// copies and overwrites (if necessary) while unzipping (if necessary)
 			mDbHelper.overwriteSQLiteDataBase(zippedFile, getSizeZippedFile(zippedFile));
+		} catch (Exception e) {
+			Log.e(TAG, e.toString() + " Unable to overwrite database");
+			throw new Exception("Unable to overwrite database");
+		}
+	}
+
+	/**
+	 * Overwrites old database
+	 * @throws IOException
+	 */
+	public void overwriteFullTextSQLiteDB() throws Exception {
+		try {
+			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+					+ "/" + Constants.appZippedFullTextDatabase();
+			// copies and overwrites (if necessary) while unzipping (if necessary)
+			mDbHelper.overwriteFullTextSQLiteDataBase(zippedFile, DBAdapter.getSizeZippedFile(zippedFile));
 		} catch (Exception e) {
 			Log.e(TAG, e.toString() + " Unable to overwrite database");
 			throw new Exception("Unable to overwrite database");
@@ -378,6 +395,23 @@ public class DBAdapter {
 			Log.d(TAG, q);
 	}
 
+	public void searchLongQuery(String q, List<Medication> m) {
+		// Execute DB raw query
+		Cursor mCursor = mDb.rawQuery(q, null);
+
+		// Iterate through cursor to extract required info
+		mCursor.moveToFirst();
+		while (!mCursor.isAfterLast()) {
+			Medication medi = cursorToMedi(mCursor);
+			m.add(medi);
+			mCursor.moveToNext();
+		}
+		// Make sure to close the cursor
+		mCursor.close();
+		if (Constants.DEBUG)
+			Log.d(TAG, q);
+	}
+
 	/**
 	 * Executes search query on column "title"
 	 * @param title
@@ -460,6 +494,37 @@ public class DBAdapter {
 				+ KEY_REGNRS + " like " + "'%, " + regnr + "%' or "
 				+ KEY_REGNRS + " like " + "'" + regnr + "%'";
 		searchQuery(query, medis);
+
+		return medis;
+	}
+
+	public Medication searchFullRegnr(String regnr) {
+		ArrayList<String> r = new ArrayList<>();
+		r.add(regnr);
+		List<Medication> result = this.searchRegnrsFromList(r);
+		return result.get(0);
+	}
+
+	public List<Medication> searchRegnrsFromList(List<String> listOfRegnrs) {
+		if (listOfRegnrs.size() == 0) {
+			return new ArrayList<>();
+		}
+
+		List<Medication> medis = new ArrayList<Medication>();
+		String conditionString = "";
+		for (String regnr : listOfRegnrs) {
+			if (conditionString.length() > 0) {
+				conditionString += " or ";
+			}
+			conditionString += KEY_REGNRS + " like '%, " + regnr + "%' or ";
+			conditionString += KEY_REGNRS + " like '" + regnr + "%' ";
+		}
+		String columns = String.join(", ", new String[] {KEY_ROWID, KEY_TITLE, KEY_AUTH, KEY_ATCCODE, KEY_SUBSTANCES, KEY_REGNRS,
+				KEY_ATCCLASS, KEY_THERAPY, KEY_APPLICATION, KEY_INDICATIONS, KEY_CUSTOMER_ID,
+				KEY_PACK_INFO, KEY_PACKAGES, KEY_ADDINFO, KEY_IDS, KEY_SECTIONS, KEY_CONTENT, KEY_STYLE});
+
+		String query = "select " + columns + " from " + DATABASE_TABLE + " where " + conditionString;
+		searchLongQuery(query, medis);
 
 		return medis;
 	}

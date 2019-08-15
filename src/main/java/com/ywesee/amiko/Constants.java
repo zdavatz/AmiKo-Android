@@ -102,6 +102,15 @@ public class Constants {
 			return "amiko_db_full_idx_de.zip";
 	}
 
+	public static String appZippedFullTextDatabase() {
+		if (appLanguage().equals("de"))
+			return "amiko_frequency_de.db.zip";
+		else if (appLanguage().equals("fr"))
+			return "amiko_frequency_fr.db.zip";
+		else
+			return "amiko_frequency_de.db.zip";
+	}
+
 	/**
 	 * Returns the name of the report file
 	 * @return
@@ -141,5 +150,14 @@ public class Constants {
 
 	public static String appPatientDatabase() {
 		return "patients.db";
+	}
+
+	public static String appFullTextSearchDatabase() {
+		if (appLanguage().equals("de"))
+			return "amiko_frequency_de.db";
+		else if (appLanguage().equals("fr"))
+			return "amiko_frequency_de.db";
+		else
+			return "amiko_frequency_fr.db";
 	}
 }

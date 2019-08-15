@@ -10,11 +10,14 @@ import android.webkit.WebSettings.LayoutAlgorithm;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.util.Observer;
+
 public class ExpertInfoView {
 	
 	private WebView mWebView = null;
 	private JSInterface mJSInterface = null;
 	private Context mContext = null;
+	Observer mFinishLoadingObserver;
 	
 	public ExpertInfoView(Context context, WebView webView) {
 		mWebView = webView;
@@ -22,7 +25,7 @@ public class ExpertInfoView {
 
 		// Override web client to open all links in same webview
 		// mWebView.setWebChromeClient(new WebChromeClient());
-		mWebView.setWebViewClient(new MyWebViewClient());
+		mWebView.setWebViewClient(new MyWebViewClient(this));
 				
 		mWebView.setInitialScale(1);
 		mWebView.setPadding(0, 0, 0, 0);		
@@ -69,7 +72,11 @@ public class ExpertInfoView {
 	public JSInterface getJSInterface() {
 		return mJSInterface;
 	}
-	
+
+	public void setFinishLoadingObserver(Observer o) {
+		this.mFinishLoadingObserver = o;
+	}
+
 	/**
 	 * Customizes web view client to open links from your own site in the same web view otherwise
 	 * just open the default browser activity with the URL
@@ -77,6 +84,11 @@ public class ExpertInfoView {
 	 * 
 	 */
 	private class MyWebViewClient extends WebViewClient {
+		ExpertInfoView parent;
+
+		public MyWebViewClient(ExpertInfoView parent) {
+			this.parent = parent;
+		}
 				
 	    @Override
 	    public boolean shouldOverrideUrlLoading(WebView view, String url) {
@@ -93,7 +105,10 @@ public class ExpertInfoView {
 	    
 	    @Override
 	    public void onPageFinished(WebView view, String url) {
-	    	super.onPageFinished(view, url);
+			super.onPageFinished(view, url);
+	    	if (this.parent != null && this.parent.mFinishLoadingObserver != null) {
+	    		this.parent.mFinishLoadingObserver.update(null, url);
+			}
 	    }
 	}
 }

@@ -19,6 +19,8 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import java.util.HashMap;
+
 public class Medication {
 
 	private long id;
@@ -39,6 +41,14 @@ public class Medication {
 	private String content;
 	private String style_str;
 	private String packages;
+
+	static String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen", "Indikationen", "Dosierung/Anwendung",
+		"Vorsichtsmassnahmen", "Interaktionen", "Schwangerschaft", "Fahrtüchtigkeit", "Unerwünschte Wirk.", "Überdosierung", "Eig./Wirkung",
+		"Kinetik", "Präklinik", "Sonstige Hinweise", "Zulassungsnummer", "Packungen", "Inhaberin", "Stand der Information"};
+
+	static String[] SectionTitle_FR = {"Composition", "Forme galénique", "Contre-indications", "Indications", "Posologie", "Précautions",
+		"Interactions", "Grossesse/All.", "Conduite", "Effets indésir.", "Surdosage", "Propriétés/Effets", "Cinétique", "Préclinique", "Remarques",
+		"Numéro d'autorisation", "Présentation", "Titulaire", "Mise à jour"};
 
 	public long getId() {
 		return this.id;
@@ -193,6 +203,59 @@ public class Medication {
 	public String[] packagesFromPackInfo() {
 		return this.getPackInfo().split("\n");
 	}
+
+	public String[] listOfSectionIds() {
+		return this.getSectionIds().split(",");
+	}
+
+	public String[] listOfSectionTitles() {
+		String titles[] = sectionTitles.split(";");
+		int n = titles.length;
+		for (int i=0; i<n; ++i) {
+			titles[i] = this.shortTitle(titles[i]);
+		}
+		return titles;
+	}
+
+	public String shortTitle(String longTitle) {
+		String t = longTitle.toLowerCase();
+		if (Constants.appLanguage().equals("de") ) {
+			for (int i=0; i<19; i++) {
+				if (i >= SectionTitle_DE.length) continue;
+				String compareString = SectionTitle_DE[i].toLowerCase();
+				if (t.contains(compareString)) {
+					return SectionTitle_DE[i];
+				}
+			}
+		} else if (Constants.appLanguage().equals("fr")) {
+			for (int i=0; i<19; i++) {
+				if (i >= SectionTitle_FR.length) continue;
+				String compareString = SectionTitle_FR[i].toLowerCase();
+				if (t.contains(compareString)) {
+					return SectionTitle_FR[i];
+				}
+			}
+		}
+		return longTitle;
+	}
+
+	public HashMap<String, String> indexToTitlesDict() {
+		HashMap<String, String> dict = new HashMap<>();
+
+		String ids[] = this.listOfSectionIds();
+		String titles[] = this.listOfSectionTitles();
+
+		int n1 = ids.length;
+		int n2 = titles.length;
+		int n = n1 < n2 ? n1 : n2;
+		for (int i=0; i<n; ++i) {
+			String id = ids[i];
+			id = id.replace("section", "");
+			id = id.replace("Section", "");
+			if (id.length()>0) {
+				dict.put(id, this.shortTitle(titles[i]));
+			}
+		}
+		return dict;
+	}
 }
-
-

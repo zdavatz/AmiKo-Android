@@ -41,7 +41,8 @@
     <string name="tab_name_3">Wirk./ATC</string>
     <string name="tab_name_4">Reg.Nr.</string>
     <string name="tab_name_5">Therapie</string>
-    <string name="full_text_search">in Fachinfo</string>
+    <string name="tab_name_6">VTS</string>
+    <string name="search_in_fachinfo">in Fachinfo</string>
     <string name="report_search">in Error Report</string>
     <string name="interactions_search">in Interaktionen</string>
 
