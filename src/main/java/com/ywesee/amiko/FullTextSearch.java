@@ -26,8 +26,8 @@ import java.util.HashMap;
 class FullTextSearch {
     public ArrayList<String> listOfSectionIds;
     public ArrayList<String> listOfSectionTitles;
-    private ArrayList<Medication> mListOfArticles;
-    private HashMap<String, ArrayList<String>> mDict;
+    public ArrayList<Medication> mListOfArticles;
+    public HashMap<String, ArrayList<String>> mDict;
 
     public String table(
         ArrayList<Medication> listOfArticles,
@@ -58,9 +58,8 @@ class FullTextSearch {
             String contentStyle;
             String firstLetter = m.getTitle().substring(0, 1).toUpperCase();
 
-            // TODO: is the styles available on android?
             if (rows % 2 == 0)
-                contentStyle = "<li style=\"background-color:var(--background-color-gray);\" id=\"" + firstLetter + "\">";
+                contentStyle = "<li style=\"background-color:whitesmoke;\" id=\"" + firstLetter + "\">";
             else
                 contentStyle = "<li style=\"background-color:transparent;\" id=\"" + firstLetter + "\">";
 
