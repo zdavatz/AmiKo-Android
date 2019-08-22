@@ -505,12 +505,12 @@ public class DBAdapter {
 		return result.get(0);
 	}
 
-	public List<Medication> searchRegnrsFromList(List<String> listOfRegnrs) {
+	public ArrayList<Medication> searchRegnrsFromList(List<String> listOfRegnrs) {
 		if (listOfRegnrs.size() == 0) {
 			return new ArrayList<>();
 		}
 
-		List<Medication> medis = new ArrayList<Medication>();
+		ArrayList<Medication> medis = new ArrayList<Medication>();
 		String conditionString = "";
 		for (String regnr : listOfRegnrs) {
 			if (conditionString.length() > 0) {

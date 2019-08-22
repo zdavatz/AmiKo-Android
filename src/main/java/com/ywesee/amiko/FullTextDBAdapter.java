@@ -104,6 +104,12 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
             this.setRegnrs(cursor.getString(2));
         }
 
+        public Entry(HashMap<String, String>map) {
+            this.hash = map.get("hash");
+            this.keyword = map.get("keyword");
+            this.setRegnrs(map.get("regnrs"));
+        }
+
         void setRegnrs(String input) {
             this.regnrs = input;
             HashMap<String, ArrayList<String>> hashmap = new HashMap<>();
@@ -142,6 +148,14 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
 
         int numHits() {
             return regChaptersDict.size();
+        }
+
+        public HashMap<String, String> toDict() {
+            HashMap<String, String> map = new HashMap<String, String>();
+            map.put("hash", this.hash);
+            map.put("keyword", this.keyword);
+            map.put("regnrs", this.regnrs);
+            return map;
         }
     }
 }
