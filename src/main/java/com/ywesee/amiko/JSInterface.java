@@ -30,7 +30,7 @@ public class JSInterface {
 	private int mSearchHits = 0;
 	Context mContext;
 	Observer mObserver;
-	Observer mFachInfoObserver;
+	// Observer mFachInfoObserver;
 
 	JSInterface(Context c) {
 		mContext = c;
@@ -59,15 +59,9 @@ public class JSInterface {
 		mSearchHits = searchHits;
 	}
 
-	public void setFachInfoObserver(Observer fachInfoObserver) {
-		mFachInfoObserver = fachInfoObserver;
-	}
-
-	@JavascriptInterface
-	public void navigationToFachInfo(String regnr, String anchor) {
-		if (mFachInfoObserver == null) return;
-		mFachInfoObserver.update(null, new FachInfoTarget(regnr, anchor));
-	}
+	// public void setFachInfoObserver(Observer fachInfoObserver) {
+	// 	mFachInfoObserver = fachInfoObserver;
+	// }
 
 	public int getSearchHits() {
 		return mSearchHits;
@@ -75,15 +69,5 @@ public class JSInterface {
 
 	public int highlightKeyword(String key) {
 		return key.length();
-	}
-
-	public class FachInfoTarget {
-		public String regnr;
-		public String anchor;
-
-		public FachInfoTarget(String regnr, String anchor) {
-			this.regnr = regnr;
-			this.anchor = anchor;
-		}
 	}
 }

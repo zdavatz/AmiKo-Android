@@ -77,6 +77,7 @@ import android.os.Environment;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -126,6 +127,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String AMIKO_PREFS_FILE = "AmikoPrefsFile";
     private static final String PREF_DB_UPDATE_DATE_DE = "GermanDBUpdateDate";
     private static final String PREF_DB_UPDATE_DATE_FR = "FrenchDBUpdateDate";
+    private static final int FULL_TEXT_SEARCH_RESULT = 0;
 
     // German section title abbreviations
     private static final String[] SectionTitle_DE = {"Zusammensetzung", "Galenische Form", "Kontraindikationen",
@@ -440,6 +442,7 @@ public class MainActivity extends AppCompatActivity {
     private void setCurrentView(View newCurrentView, boolean withAnimation) {
         if (mCurrentView==newCurrentView)
             return;
+        mWebView.clearMatches();
         // It's important to perform sanity checks on views and viewgroup
         if (mViewHolder!=null) {
             // Set direction of transitation old view to new view
@@ -472,10 +475,8 @@ public class MainActivity extends AppCompatActivity {
             // Hide keyboard
             if (mCurrentView == mShowView) {
                 hideSoftKeyboard(300);
-//          removeTabNavigation();
                 mBottomNavigationView.setVisibility(View.GONE);
             } else if (mCurrentView == mSuggestView) {
-//          restoreTabNavigation();
                 mBottomNavigationView.setVisibility(View.VISIBLE);
             }
         }
@@ -544,7 +545,11 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onTabSelected(TabLayout.Tab tab) {
-            mActionName = tab.getText().toString();
+            String newTabName = tab.getText().toString();
+            if (newTabName.equals(getString(R.string.tab_name_6)) || mActionName.equals(getString(R.string.tab_name_6))) {
+                mSearchResult = new ArrayList<>();
+            }
+            mActionName = newTabName;
             if (mSearchResult!=null) {
                 mTimer = System.currentTimeMillis();
                 showResults(mSearchResult);
@@ -677,19 +682,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                 }
-            }
-        });
-        jsinterface.setFachInfoObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                final JSInterface.FachInfoTarget target = (JSInterface.FachInfoTarget)arg;
-                final Medication m = mMediDataSource.searchFullRegnr(target.regnr);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        showMedicationDetail(m, target.anchor);
-                    }
-                });
             }
         });
 
@@ -1112,6 +1104,17 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == FULL_TEXT_SEARCH_RESULT && resultCode == 0 && data != null) {
+            String anchor = data.getStringExtra("anchor");
+            String regnr = data.getStringExtra("regnr");
+            Medication m = mMediDataSource.searchFullRegnr(regnr);
+            showMedicationDetail(m, anchor, mSearchQuery);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
     /**
      * Asynchronous thread launched to initialize the SQLite database
      * @author Max
@@ -1531,6 +1534,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showMedicationDetail(Medication m, String anchor, final String keyword) {
+        setCurrentView(mShowView, true);
         if (mSearch!=null) {
             if (mSearch.length()>0)
                 mSearch.getText().clear();
@@ -1553,13 +1557,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
-        mExpertInfoView.setFinishLoadingObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                mExpertInfoView.setFinishLoadingObserver(null);
-                mSearch.setText(keyword);
-            }
-        });
+        if (mActionName.equals(getString(R.string.tab_name_6))) {
+            mExpertInfoView.setFinishLoadingObserver(new Observer() {
+                @Override
+                public void update(Observable o, Object arg) {
+                    mExpertInfoView.setFinishLoadingObserver(null);
+                    mSearch.setText(keyword);
+                }
+            });
+        }
 
 
         // Add NavigationDrawer, get handle to DrawerLayout
@@ -2243,14 +2249,11 @@ public class MainActivity extends AppCompatActivity {
                         // full text search
                         FullTextDBAdapter.Entry entry = mFullTextSearchDB.searchHash(fullTextEntry.hash);
                         ArrayList<String> listOfRegnrs = entry.getRegnrsArray();
-                        List<Medication> listOfArticles = mMediDataSource.searchRegnrsFromList(listOfRegnrs);
-                        HashMap<String, ArrayList<String>> dict = entry.regChaptersDict;
+                        ArrayList<Medication> listOfArticles = mMediDataSource.searchRegnrsFromList(listOfRegnrs);
 
-                        FullTextSearch fts = new FullTextSearch();
-                        String fullTextContentStr = fts.table(new ArrayList(listOfArticles), dict, "");
-
-                        mHtmlString = createHtml(mCSS_str, fullTextContentStr);
-                        mWebView.loadDataWithBaseURL("file:///android_res/drawable/", mHtmlString, "text/html", "utf-8", null);
+                        Intent i = new Intent(getContext(), FullTextSearchResultActivity.class);
+                        FullTextSearchResultActivity.receiver = new FullTextSearchResultActivity.Receiver(entry, listOfArticles);
+                        startActivityForResult(i, FULL_TEXT_SEARCH_RESULT);
                     }
                 }
             });
@@ -2317,6 +2320,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (mActionName.equals(getString(R.string.tab_name_6))) {
             html_str += "<meta name=\"viewport\" content=\"width=device-width\">";
+            content_str = "<div id=\"fulltext\">" + content_str + "</div>";
         }
 
         html_str +=

@@ -19,9 +19,10 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
-public class Medication {
+public class Medication implements Serializable {
 
 	private long id;
 	private String title;
