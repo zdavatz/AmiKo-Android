@@ -2208,7 +2208,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     // Change content view
-                    if (mSuggestView!=null) {
+                    if (mSuggestView!=null && !mActionName.equals(getString(R.string.tab_name_6))) {
                         setCurrentView(mShowView, true);
                     }
 
