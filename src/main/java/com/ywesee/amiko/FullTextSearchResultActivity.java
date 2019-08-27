@@ -82,6 +82,10 @@ public class FullTextSearchResultActivity extends AppCompatActivity {
                         Intent data = new Intent();
                         data.putExtra("regnr", regnr);
                         data.putExtra("anchor", anchor);
+                        if (receiver != null) {
+                            FullTextDBAdapter.Entry entry = receiver.entry;
+                            data.putExtra("keyword", entry.keyword);
+                        }
                         setResult(0, data);
                         finish();
                     }
