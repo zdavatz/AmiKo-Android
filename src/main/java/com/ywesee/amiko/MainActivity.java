@@ -1109,8 +1109,12 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == FULL_TEXT_SEARCH_RESULT && resultCode == 0 && data != null) {
             String anchor = data.getStringExtra("anchor");
             String regnr = data.getStringExtra("regnr");
+            String keyword = data.getStringExtra("keyword");
+            if (keyword == null) {
+                keyword = mSearchQuery;
+            }
             Medication m = mMediDataSource.searchFullRegnr(regnr);
-            showMedicationDetail(m, anchor, mSearchQuery);
+            showMedicationDetail(m, anchor, keyword);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
