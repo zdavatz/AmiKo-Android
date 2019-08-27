@@ -430,10 +430,6 @@ public class MainActivity extends AppCompatActivity {
         linearLayout.setDividerDrawable(drawable);
     }
 
-    private void removeTabNavigation() {
-        this.mTabLayout.setVisibility(View.GONE);
-    }
-
     /**
      * Sets currently visible view
      * @param newCurrentView
@@ -476,8 +472,10 @@ public class MainActivity extends AppCompatActivity {
             if (mCurrentView == mShowView) {
                 hideSoftKeyboard(300);
                 mBottomNavigationView.setVisibility(View.GONE);
+                this.mTabLayout.setVisibility(View.GONE);
             } else if (mCurrentView == mSuggestView) {
                 mBottomNavigationView.setVisibility(View.VISIBLE);
+                this.mTabLayout.setVisibility(View.VISIBLE);
             }
         }
     }
