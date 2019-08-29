@@ -1569,7 +1569,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-
         // Add NavigationDrawer, get handle to DrawerLayout
         mDrawerLayout = (DrawerLayout) findViewById(R.id.show_view_container);
         // Set a custom shadow that overlays the main content when the drawer opens
@@ -2319,11 +2318,6 @@ public class MainActivity extends AppCompatActivity {
     */
 
         String html_str = "<html><head>";
-
-        if (mActionName.equals(getString(R.string.tab_name_6))) {
-            html_str += "<meta name=\"viewport\" content=\"width=device-width\">";
-            content_str = "<div id=\"fulltext\">" + content_str + "</div>";
-        }
 
         html_str +=
                 "<style type=\"text/css\">" + style_str + "</style>"
