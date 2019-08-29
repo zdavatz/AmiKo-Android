@@ -548,6 +548,10 @@ public class MainActivity extends AppCompatActivity {
                 mSearchResult = new ArrayList<>();
             }
             mActionName = newTabName;
+            if (mDatabaseUsed.equals("favorites")) {
+                performSearch("");
+            }
+
             if (mSearchResult!=null) {
                 mTimer = System.currentTimeMillis();
                 showResults(mSearchResult);
@@ -1429,11 +1433,23 @@ public class MainActivity extends AppCompatActivity {
                     mTimer = System.currentTimeMillis();
                     // Clear the search container
                     List<ListEntry> medis = new ArrayList<>();
-                    for (String regnr : mFavoriteMedsSet) {
-                        List<Medication> meds = mMediDataSource.searchRegnr((regnr!=null ? regnr : "@@@@"));
-                        if (!meds.isEmpty())
-                            medis.add(new ListEntry(meds.get(0)));
+                    if (mActionName.equals(getString(R.string.tab_name_6))) {
+                        ArrayList<String> ids = new ArrayList<>();
+                        for (String hash: mFavoriteFullTextMedsSet) {
+                            ids.add(hash);
+                        }
+                        ArrayList<FullTextDBAdapter.Entry> fullTextResults = mFullTextSearchDB.searchHash(ids);
+                        for (FullTextDBAdapter.Entry fullTextResult: fullTextResults) {
+                            medis.add(new ListEntry(fullTextResult));
+                        }
+                    } else {
+                        for (String regnr : mFavoriteMedsSet) {
+                            List<Medication> meds = mMediDataSource.searchRegnr((regnr != null ? regnr : "@@@@"));
+                            if (!meds.isEmpty())
+                                medis.add(new ListEntry(meds.get(0)));
+                        }
                     }
+
                     // Sort list of meds
                     Collections.sort(medis, new Comparator<ListEntry>() {
                         @Override
