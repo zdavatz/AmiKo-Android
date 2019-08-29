@@ -92,6 +92,36 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
         return result;
     }
 
+    public ArrayList<Entry> searchHash(List<String> searchTerm) {
+        // Execute DB raw query
+        if (searchTerm.size() == 0) {
+            return new ArrayList<>();
+        }
+        String ids = "(";
+        for (int i = 0; i < searchTerm.size(); i++) {
+            if (i != 0) {
+                ids += ",";
+            }
+            ids += "'" + searchTerm.get(i) + "'";
+        }
+        ids += ")";
+
+        Cursor cursor = this.getReadableDatabase().rawQuery(
+                "SELECT " + KEY_ROWID + "," + KEY_KEYWORD + "," + KEY_REGNR +  " FROM " + DATABASE_TABLE + " WHERE " + KEY_ROWID + " IN " + ids ,
+                null);
+
+        ArrayList<Entry> results = new ArrayList<>();
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            Entry entry = new Entry(cursor);
+            results.add(entry);
+            cursor.moveToNext();
+        }
+        // Make sure to close the cursor
+        cursor.close();
+        return results;
+    }
+
     public class Entry {
         String hash;
         String keyword;
