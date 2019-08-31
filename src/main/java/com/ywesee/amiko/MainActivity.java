@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -92,7 +91,6 @@ import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -650,6 +648,7 @@ public class MainActivity extends AppCompatActivity {
         mWebView = mExpertInfoView.getWebView();
         setFindListener(mWebView);
         setupGestureDetector(mWebView);
+        mWebView.setWebContentsDebuggingEnabled(true);
 
         // Set up observer to JS messages
         JSInterface jsinterface = mExpertInfoView.getJSInterface();
@@ -1485,7 +1484,9 @@ public class MainActivity extends AppCompatActivity {
         else if (mActionName.equals(getString(R.string.tab_name_5)))
             medis = mMediDataSource.searchApplication((query!=null ? query.toString() : "@@@@"));
         else if (mActionName.equals(getString(R.string.tab_name_6)))
-            fullTextEntries = mFullTextSearchDB.searchKeyword(query);
+            if (!query.isEmpty()) {
+                fullTextEntries = mFullTextSearchDB.searchKeyword(query);
+            }
 
         List<ListEntry> results = new ArrayList<>();
         if (medis != null) {
