@@ -132,7 +132,7 @@ android {
     }
     task unzipComedFrequencyDB(dependsOn: downloadComedFrequencyDB, type: Copy) {
         from zipTree(downloadComedFrequencyDB.dest)
-        into amikoAssetDir
+        into comedAssetDir
     }
     task downloadComedInteractions(type: Download) {
         src "http://pillbox.oddb.org/drug_interactions_csv_fr.zip"
