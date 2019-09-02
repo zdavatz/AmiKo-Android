@@ -8,6 +8,14 @@ comed:
 	./gradlew assembleComed $(ARGS)
 .PHONEY: comed
 
+bundleAmiko:
+	./gradlew bundleAmiko $(ARGS)
+.PHONEY: bundleAmiko
+
+bundleComed:
+	./gradlew bundleComed $(ARGS)
+.PHONEY: bundleComed
+
 clean:
 	./gradlew clean
 .PHONEY: clean

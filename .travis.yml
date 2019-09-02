@@ -2,6 +2,8 @@ language: android
 script:
   - make amiko
   - make comed
+  - make bundleAmiko
+  - make bundleComed
 android:
   components:
     - tools
