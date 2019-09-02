@@ -2,9 +2,13 @@
 
 ### Build
 
-`make amiko` or `make comed`
+`make amiko` or `make comed`.
 
-this will also download the all the files (DB, Report and Interactions).
+To create .aab App Bundle:
+
+`make bundleAmiko` `make bundleComed`
+
+these will also download the all the files (DB, Report and Interactions).
 
 run `make -B amiko` to rebuild.
 
