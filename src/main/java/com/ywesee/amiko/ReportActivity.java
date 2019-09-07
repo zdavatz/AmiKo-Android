@@ -151,23 +151,21 @@ public class ReportActivity extends AppCompatActivity {
 
     // Copied from MainActivity, TODO: generialise
     void setFindListener(final WebView webView) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            webView.setFindListener(new WebView.FindListener() {
-                @Override
-                public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
-                    // Update hits counter
-                    if (isDoneCounting) {
-                        if (activeMatchOrdinal<numberOfMatches) {
-                            mSearchHitsCntView.setVisibility(View.VISIBLE);
-                            mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
-                        } else {
-                            mSearchHitsCntView.setVisibility(View.GONE);
-                            webView.clearMatches();
-                        }
+        webView.setFindListener(new WebView.FindListener() {
+            @Override
+            public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
+                // Update hits counter
+                if (isDoneCounting) {
+                    if (activeMatchOrdinal<numberOfMatches) {
+                        mSearchHitsCntView.setVisibility(View.VISIBLE);
+                        mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
+                    } else {
+                        mSearchHitsCntView.setVisibility(View.GONE);
+                        webView.clearMatches();
                     }
                 }
-            });
-        }
+            }
+        });
     }
 
     private void setupGestureDetector(WebView webView) {
@@ -246,15 +244,13 @@ public class ReportActivity extends AppCompatActivity {
 
     @TargetApi(16)
     void findAll(String key, WebView webView) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            webView.findAllAsync(key);
-            try {
-                Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
-                m.setAccessible(true);
-                m.invoke(webView, true);
-            } catch(Exception ignored) {
-                // Exception is ignored
-            }
+        webView.findAllAsync(key);
+        try {
+            Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
+            m.setAccessible(true);
+            m.invoke(webView, true);
+        } catch(Exception ignored) {
+            // Exception is ignored
         }
     }
 }

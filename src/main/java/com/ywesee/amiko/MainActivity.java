@@ -305,10 +305,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void requestPermissionAndDownloadUpdates() {
-        if (Build.VERSION.SDK_INT < 23) {
-            //permission is automatically granted on sdk<23 upon installation
-            downloadUpdates();
-        } else if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             downloadUpdates();
         } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
@@ -583,34 +580,30 @@ public class MainActivity extends AppCompatActivity {
 
     @TargetApi(16)
     void setLayoutTransition() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            LayoutTransition lt = new LayoutTransition();
-            lt.enableTransitionType(LayoutTransition.CHANGING);
-            lt.setDuration(LayoutTransition.APPEARING, 100 /*500*/);
-            lt.setDuration(LayoutTransition.DISAPPEARING, 100);
-            mViewHolder.setLayoutTransition(lt);
-        }
+        LayoutTransition lt = new LayoutTransition();
+        lt.enableTransitionType(LayoutTransition.CHANGING);
+        lt.setDuration(LayoutTransition.APPEARING, 100 /*500*/);
+        lt.setDuration(LayoutTransition.DISAPPEARING, 100);
+        mViewHolder.setLayoutTransition(lt);
     }
 
     @TargetApi(16)
     void setFindListener(final WebView webView) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            webView.setFindListener(new FindListener() {
-                @Override
-                public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
-                    // Update hits counter
-                    if (isDoneCounting) {
-                        if (activeMatchOrdinal<numberOfMatches) {
-                            mSearchHitsCntView.setVisibility(View.VISIBLE);
-                            mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
-                        } else {
-                            mSearchHitsCntView.setVisibility(View.GONE);
-                            webView.clearMatches();
-                        }
-                    }
+        webView.setFindListener(new FindListener() {
+            @Override
+            public void onFindResultReceived(int activeMatchOrdinal, int numberOfMatches, boolean isDoneCounting) {
+            // Update hits counter
+            if (isDoneCounting) {
+                if (activeMatchOrdinal<numberOfMatches) {
+                    mSearchHitsCntView.setVisibility(View.VISIBLE);
+                    mSearchHitsCntView.setText((activeMatchOrdinal+1) + "/" + numberOfMatches);
+                } else {
+                    mSearchHitsCntView.setVisibility(View.GONE);
+                    webView.clearMatches();
                 }
-            });
+            }
         }
+        });
     }
 
     /**
@@ -1384,15 +1377,13 @@ public class MainActivity extends AppCompatActivity {
 
     @TargetApi(16)
     void findAll(String key, WebView webView) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            webView.findAllAsync(key);
-            try {
-                Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
-                m.setAccessible(true);
-                m.invoke(webView, true);
-            } catch(Exception ignored) {
-                // Exception is ignored
-            }
+        webView.findAllAsync(key);
+        try {
+            Method m = WebView.class.getMethod("setFindIsUp", Boolean.TYPE);
+            m.setAccessible(true);
+            m.invoke(webView, true);
+        } catch(Exception ignored) {
+            // Exception is ignored
         }
     }
 
