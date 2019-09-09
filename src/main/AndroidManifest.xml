@@ -80,10 +80,35 @@
                 android:priority="100"
                 >
                 <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="content"
+                    android:mimeType="application/com.ywesee.amiko"
+                    android:pathPattern=".*\\.amk" />
+                <!-- needed for mangled email messages -->
+                <data
+                    android:scheme="content"
+                    android:mimeType="application/ywesee.amk"
+                    android:pathPattern=".*\\.amk" />
+                <!-- needed for mangled email messages -->
+                <data
+                    android:scheme="content"
+                    android:mimeType="application/octet-stream"
+                    android:pathPattern=".*\\.amk" />
+
+            </intent-filter>
+
+            <intent-filter>
+                <data android:scheme="file"
+                    android:mimeType="*/*"
+                    android:pathPattern=".*\\.amk"
+                    android:host="*"/>
+
+                <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="*/*" />
-                <data android:pathPattern=".*\\.amk" />
+                <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
         </activity>
 
