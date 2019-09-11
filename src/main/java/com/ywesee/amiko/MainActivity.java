@@ -889,6 +889,23 @@ public class MainActivity extends AppCompatActivity {
         }
         mSearch.setFocusable(true);
 
+        mSearchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                if (mCurrentView==mSuggestView) {
+                    return true;
+                } else {
+                    setCurrentView(mSuggestView, true);
+                    return false;
+                }
+            }
+        });
+
         if (mSearch!=null) {
             if (mSearchInteractions==false)
                 mSearch.setHint(getString(R.string.search) + " " + mActionName);
