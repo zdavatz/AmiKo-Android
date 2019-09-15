@@ -697,7 +697,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkTimeSinceLastUpdate() {
         SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
-        long timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
+        long timeMillisSince1970 = 0;
+        if (Constants.appLanguage().equals("de")) {
+            timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
+        } else {
+            timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_FR, 0);
+        }
         long timeDiff = (System.currentTimeMillis()-timeMillisSince1970)/1000;
         // That's 30 days in seconds ;)
         if (timeDiff>60*60*24*30)
@@ -773,25 +778,18 @@ public class MainActivity extends AppCompatActivity {
 
         // Initialize preferences
         SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
-
-        long timeMillisSince1970 = 0;
+        SharedPreferences.Editor editor = settings.edit();
         if (Constants.appLanguage().equals("de")) {
-            timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
-            if (timeMillisSince1970==0) {
-                SharedPreferences.Editor editor = settings.edit();
+            if (!settings.contains(PREF_DB_UPDATE_DATE_DE)) {
                 editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
-                // Commit the edits!
-                editor.commit();
             }
         } else if (Constants.appLanguage().equals("fr")) {
-            timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_FR, 0);
-            if (timeMillisSince1970==0) {
-                SharedPreferences.Editor editor = settings.edit();
-                editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
-                // Commit the edits!
-                editor.commit();
+            if (!settings.contains(PREF_DB_UPDATE_DATE_FR)) {
+                editor.putLong(PREF_DB_UPDATE_DATE_FR, System.currentTimeMillis());
             }
         }
+        // Commit the edits!
+        editor.commit();
 
         checkTimeSinceLastUpdate();
 
@@ -833,7 +831,11 @@ public class MainActivity extends AppCompatActivity {
                                 // Store time stamp
                                 SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
                                 SharedPreferences.Editor editor = settings.edit();
-                                editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+                                if (Constants.appLanguage().equals("de")) {
+                                    editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+                                } else {
+                                    editor.putLong(PREF_DB_UPDATE_DATE_FR, System.currentTimeMillis());
+                                }
                                 // Commit the edits!
                                 editor.commit();
                             } else {
