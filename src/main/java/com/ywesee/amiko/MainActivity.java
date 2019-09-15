@@ -122,9 +122,9 @@ import com.google.android.material.tabs.TabLayout;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final String AMIKO_PREFS_FILE = "AmikoPrefsFile";
-    private static final String PREF_DB_UPDATE_DATE_DE = "GermanDBUpdateDate";
-    private static final String PREF_DB_UPDATE_DATE_FR = "FrenchDBUpdateDate";
+    public static final String AMIKO_PREFS_FILE = "AmikoPrefsFile";
+    public static final String PREF_DB_UPDATE_DATE_DE = "GermanDBUpdateDate";
+    public static final String PREF_DB_UPDATE_DATE_FR = "FrenchDBUpdateDate";
     private static final int FULL_TEXT_SEARCH_RESULT = 0;
 
     // German section title abbreviations

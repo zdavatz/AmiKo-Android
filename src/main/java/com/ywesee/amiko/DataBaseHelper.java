@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Observer;
@@ -40,12 +41,17 @@ import java.util.zip.ZipInputStream;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.DatabaseErrorHandler;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.util.Log;
+
+import static com.ywesee.amiko.MainActivity.AMIKO_PREFS_FILE;
+import static com.ywesee.amiko.MainActivity.PREF_DB_UPDATE_DATE_DE;
+import static com.ywesee.amiko.MainActivity.PREF_DB_UPDATE_DATE_FR;
 
 public class DataBaseHelper extends SQLiteOpenHelper {
 
@@ -130,7 +136,22 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		 * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
 		 */
 	public void copyFilesFromNonPersistentFolder() throws Exception {
-		if (!checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
+		SharedPreferences settings = mContext.getSharedPreferences(AMIKO_PREFS_FILE, 0);
+		long timeMillisSince1970 = 0;
+		if (Constants.appLanguage().equals("de")) {
+			timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
+		} else {
+			timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_FR, 0);
+		}
+		Date lastUpdate = new Date(timeMillisSince1970);
+		Date apkBuildDate = new Date(BuildConfig.TIMESTAMP);
+		boolean shouldOverride = apkBuildDate.after(lastUpdate)
+				|| !checkFileExistsAtPath(mMainDBName, mAppDataDir)
+				|| !checkFileExistsAtPath(mFullTextDBName, mAppDataDir)
+				|| !checkFileExistsAtPath(mReportName, mAppDataDir)
+				|| !checkFileExistsAtPath(mInteractionsName, mAppDataDir);
+
+		if (shouldOverride) {
 			/*
 			this.getReadableDatabase();
 			this.close();
@@ -143,8 +164,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Exception("Error copying database!");
 			}
-		}
-		if (!checkFileExistsAtPath(mFullTextDBName, mAppDataDir)) {
 			try {
 				copyFileFromAssetsToPath(mFullTextDBName, mAppDataDir);
 				if (Constants.DEBUG)
@@ -152,8 +171,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Exception("Error copying database!");
 			}
-		}
-		if (!checkFileExistsAtPath(mReportName, mAppDataDir)) {
 			try {
 				// Copy report file from assets
 				copyFileFromAssetsToPath(mReportName, mAppDataDir);
@@ -162,8 +179,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Exception("Error copying report file!");
 			}
-		}
-		if (!checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
 			try {
 				// Copy report file from assets
 				copyFileFromAssetsToPath(mInteractionsName, mAppDataDir);
@@ -172,6 +187,16 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 			} catch (IOException e) {
 				throw new Exception("Error copying drug interactions file!");
 			}
+		}
+		if (apkBuildDate.after(lastUpdate)) {
+			SharedPreferences.Editor editor = settings.edit();
+			if (Constants.appLanguage().equals("de")) {
+				editor.putLong(PREF_DB_UPDATE_DATE_DE, apkBuildDate.getTime());
+			} else if (Constants.appLanguage().equals("fr")) {
+				editor.putLong(PREF_DB_UPDATE_DATE_FR, apkBuildDate.getTime());
+			}
+			// Commit the edits!
+			editor.commit();
 		}
 	}
 
