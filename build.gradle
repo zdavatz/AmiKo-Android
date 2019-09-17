@@ -166,6 +166,33 @@ android {
         }
     }
 
+    tasks.whenTaskAdded { task ->
+        if (task.name.startsWith("bundleComed")) {
+            def renameTaskName = "rename${task.name.capitalize()}Aab"
+            def deleteTaskName = "delete${task.name.capitalize()}Aab"
+            def flavor = task.name.substring("bundle".length()).uncapitalize()
+            tasks.create(renameTaskName, Copy) {
+                def path = "${buildDir}/outputs/bundle/${flavor}/"
+                from(path)
+                include "AmiKo-Android.aab"
+                destinationDir file("${buildDir}/outputs/bundle/${flavor}/")
+                rename "AmiKo-Android.aab", "Comed-Android.aab"
+            }
+
+            tasks.create(deleteTaskName, Delete) {
+                def bundlePath = rootProject.getProjectDir().getAbsolutePath() + "/${project.name}/build/outputs/bundle/${flavor}/"
+                def baseName = getProperty("archivesBaseName")
+
+                delete fileTree("${buildDir}/outputs/bundle/${flavor}/") {
+                    include "AmiKo-Android.aab"
+                }
+            }
+
+            task.finalizedBy(renameTaskName)
+            task.finalizedBy(deleteTaskName)
+        }
+    }
+
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
