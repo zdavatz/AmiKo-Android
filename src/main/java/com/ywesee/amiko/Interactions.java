@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import android.content.Context;
+import android.content.res.Configuration;
 
 public class Interactions {
   private static final String TAG = "Interactions"; // Tag for LogCat window
@@ -78,7 +79,7 @@ public class Interactions {
     String foot_note_html_str = footNoteHtml();
 
     // Update main interactions html string
-    m_interactions_html_str = "<html>"
+    m_interactions_html_str = "<!DOCTYPE html>"
         + "<head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
         + "<script type=\"text/javascript\">" + m_js_deleterow_str + "</script>"
         + m_css_interactions_str + "</head>"
@@ -111,7 +112,10 @@ public class Interactions {
           name1 = m_code1[1];
         }
         // Source folder for the images is /res/drawable
-        String trash_icon = "<input type=\"image\" src=\"trash_icon.png\" onclick=\"deleterow('InterTable',this)\" />";
+        int currentNightMode = mContext.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        String trashIcon =
+                currentNightMode == Configuration.UI_MODE_NIGHT_YES ? "trash_icon_white.png" : "trash_icon.png";
+        String trash_icon = "<input class=\"delete-button\" type=\"image\" src=\""+trashIcon+"\" onclick=\"deleterow('InterTable',this)\" />";
         basket_html_str += "<tr>"
             + "<td>" + med_counter + "</td>"
             + "<td>" + entry1.getKey() + " </td> "
@@ -239,7 +243,7 @@ public class Interactions {
       if (Constants.appLanguage().equals("de")) {
         legend = "<fieldset><legend>Fussnoten</fieldset></legend>" +
             "<p class=\"footnote\">1. Farblegende: </p>" +
-            "<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+            "<table id=\"Farblegende\" cellpadding=\"3px\" width=\"100%25\">" +
             "<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Keine Massnahmen notwendig</td></tr>" +
             "<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Vorsichtsmassnahmen empfohlen</td></tr>" +
             "<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Regelmässige Überwachung</td></tr>" +
@@ -251,7 +255,7 @@ public class Interactions {
       } else if (Constants.appLanguage().equals("fr")) {
         legend = "<fieldset><legend>Notes</fieldset></legend>" +
             "<p class=\"footnote\">1. Légende des couleurs: </p>" +
-            "<table id=\"Farblegende\" style=\"background-color:#ffffff;\" cellpadding=\"3px\" width=\"100%25\">" +
+            "<table id=\"Farblegende\" cellpadding=\"3px\" width=\"100%25\">" +
             "<tr bgcolor=\"#caff70\"><td align=\"center\">A</td><td>Aucune mesure nécessaire</td></tr>" +
             "<tr bgcolor=\"#ffec8b\"><td align=\"center\">B</td><td>Mesures de précaution sont recommandées</td></tr>" +
             "<tr bgcolor=\"#ffb90f\"><td align=\"center\">C</td><td>Doit être régulièrement surveillée</td></tr>" +
