@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.InputType;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.Menu;
@@ -901,8 +902,11 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
         layout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         layout.setOrientation(LinearLayout.VERTICAL);
 
+        TypedValue typedValue = new TypedValue();
+        Resources.Theme theme = context.getTheme();
+        theme.resolveAttribute(R.attr.colorOnBackground, typedValue, true);
         TextView packageTextView = new TextView(context);
-        packageTextView.setTextColor(Color.rgb(0, 0, 0));
+        packageTextView.setTextColor(typedValue.data);
         packageTextView.setWidth(parent.getWidth());
 
         TextView eanCodeTextView = new TextView(context);
