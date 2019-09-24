@@ -74,6 +74,7 @@ public class FullTextSearchResultActivity extends AppCompatActivity {
 
         fullTextSearchManager = new FullTextSearch();
 
+        this.webView.setBackgroundColor(getColor(R.color.background));
         this.webView.addJavascriptInterface(new FTJSInterface(new FTJSInterface.Callback() {
             public void run(final String regnr, final String anchor) {
                 runOnUiThread(new Runnable() {
@@ -150,6 +151,8 @@ public class FullTextSearchResultActivity extends AppCompatActivity {
         html_str +=
                 "<style type=\"text/css\">" + style_str + "</style>"
                 + "</head><body>" + content_str + "</body></html>";
+
+        html_str = Utilities.replaceColoursForNightTheme(html_str, this);
 
         return html_str;
     }

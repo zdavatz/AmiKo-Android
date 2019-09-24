@@ -48,6 +48,8 @@
     margin-top: 20px;
     margin-bottom: 20px;
     font-family: "Verdana","Arial","Tahoma","Helvetica","Geneva","sans-serif"; color:var(--text-color-normal);
+    color:var(--text-color-normal);
+    background-color:var(--background-color-normal);
 }
 #fulltext div p {
     font-size: 0.8em;
@@ -68,6 +70,14 @@
     cursor: pointer;
     text-decoration: underline;
 }
+
+#fulltext li.even {
+    background-color:var(--background-color-gray);
+}
+
+#fulltext li.odd{
+}
+
 #fulltext table {
     font-size: 1.0em;
     margin-top: 1.0em;
@@ -83,5 +93,4 @@
 }
 #fulltext td:hover {
     cursor: pointer;
-    background-color: #FDE95E
 }

@@ -59,9 +59,9 @@ class FullTextSearch {
             String firstLetter = m.getTitle().substring(0, 1).toUpperCase();
 
             if (rows % 2 == 0)
-                contentStyle = "<li style=\"background-color:whitesmoke;\" id=\"" + firstLetter + "\">";
+                contentStyle = "<li class=\"even\" id=\"" + firstLetter + "\">";
             else
-                contentStyle = "<li style=\"background-color:transparent;\" id=\"" + firstLetter + "\">";
+                contentStyle = "<li class=\"odd\" id=\"" + firstLetter + "\">";
 
             String contentChapters = "";
             String regnrs[] = m.getRegnrs().split(",");

@@ -646,6 +646,7 @@ public class MainActivity extends AppCompatActivity {
         mWebView.setBackgroundColor(getColor(R.color.background));
 
         // Set up observer to JS messages
+        final Context _this = this;
         JSInterface jsinterface = mExpertInfoView.getJSInterface();
         jsinterface.addObserver(new Observer()  {
             @Override
@@ -674,7 +675,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             mMedInteractionBasket.updateInteractionsHtml();
                             String html_str = mMedInteractionBasket.getInteractionsHtml();
-                            html_str = replaceColoursForNightTheme(html_str);
+                            html_str = Utilities.replaceColoursForNightTheme(html_str, _this);
                             mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                         }
                     });
@@ -1097,7 +1098,7 @@ public class MainActivity extends AppCompatActivity {
                         updateInteractionBasket();
                         // Update webview
                         String html_str = mMedInteractionBasket.getInteractionsHtml();
-                        html_str = replaceColoursForNightTheme(html_str);
+                        html_str = Utilities.replaceColoursForNightTheme(html_str, _this);
                         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                         // Change view
                         setCurrentView(mShowView, true);
@@ -2264,7 +2265,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             // Update webview
                             String html_str = mMedInteractionBasket.getInteractionsHtml();
-                            html_str = replaceColoursForNightTheme(html_str);
+                            html_str = Utilities.replaceColoursForNightTheme(html_str, mContext);
                             mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                             // Change view
                             setCurrentView(mShowView, true);
@@ -2337,35 +2338,8 @@ public class MainActivity extends AppCompatActivity {
                 "<style type=\"text/css\">" + style_str + "</style>"
                 + "</head><body>" + content_str + "</body></html>";
 
-        html_str = replaceColoursForNightTheme(html_str);
+        html_str = Utilities.replaceColoursForNightTheme(html_str, this);
 
-        return html_str;
-    }
-
-    String replaceColoursForNightTheme(String html_str) {
-        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
-        switch (currentNightMode) {
-            case Configuration.UI_MODE_NIGHT_NO:
-                break;
-            case Configuration.UI_MODE_NIGHT_YES:
-                html_str = html_str.replaceAll("#EEEEEE", "var(--background-color-gray)");
-                break;
-        }
-
-        switch (currentNightMode) {
-            case Configuration.UI_MODE_NIGHT_NO:
-                html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "black");
-                html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "white");
-                html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "eeeeee");
-                html_str = html_str.replaceAll("var\\(--lines-color\\)", "E5E7E8");
-                break;
-            case Configuration.UI_MODE_NIGHT_YES:
-                html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "white");
-                html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "#333333");
-                html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "#444444");
-                html_str = html_str.replaceAll("var\\(--lines-color\\)", "orange");
-                break;
-        }
         return html_str;
     }
 
