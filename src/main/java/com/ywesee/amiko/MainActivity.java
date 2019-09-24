@@ -56,6 +56,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -391,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
         actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setIcon(R.drawable.ic_launcher);
         // Sets color of action bar (including alpha-channel)
-        actionBar.setBackgroundDrawable(new ColorDrawable(Color.argb(255,180,180,180)));
+        actionBar.setBackgroundDrawable(new ColorDrawable(getColor(R.color.action_bar_background)));
 
         //
         actionBar.setTitle(R.string.app_name);
@@ -1369,7 +1370,6 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         // Save UI state changes to the savedInstanceState.
         // This bundle will be passed to onCreate if the process is killed and restarted.
-//    savedInstanceState.putInt("mode", getSupportActionBar().getNavigationMode());
     }
 
     @Override
@@ -2058,7 +2058,6 @@ public class MainActivity extends AppCompatActivity {
                     if (med.getPackInfo()!=null)
                         pack_info_str = med.getPackInfo();
                     viewHolder.text_title.setText(title_str);
-                    viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                     // text_auth.setText(pack_info_str);  // --> Original solution
                     // text_auth.setText(Html.fromHtml(pack_info_str));  // --> Solution with fromHtml (slow)
                     viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
@@ -2093,7 +2092,6 @@ public class MainActivity extends AppCompatActivity {
                         auth_str = med.getAuth();
                     viewHolder.text_title.setText(title_str);
                     viewHolder.text_subtitle.setText(auth_str);
-                    viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                     viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
                     if (med.getCustomerId()==1) {
                         viewHolder.owner_logo.setVisibility(View.VISIBLE);
@@ -2118,7 +2116,6 @@ public class MainActivity extends AppCompatActivity {
                         atc_class_str = m_class[1];
                         viewHolder.text_title.setText(title_str);
                         viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str);
-                        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                         viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
                     } else if (m_class.length==3) {   // *** Ver.>=1.2
                         String[] atc_class_l4_and_l5 = m_class[2].split("#");
@@ -2127,7 +2124,6 @@ public class MainActivity extends AppCompatActivity {
                             atc_class_str = atc_class_l4_and_l5[n-1];
                         viewHolder.text_title.setText(title_str);
                         viewHolder.text_subtitle.setText(atc_code_str + " - " + atc_title_str + "\n" + atc_class_str + "\n" + m_class[1]);
-                        viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                         viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
                     }
                     if (med.getCustomerId()==1) {
@@ -2148,7 +2144,6 @@ public class MainActivity extends AppCompatActivity {
 
                     viewHolder.text_title.setText(title_str);
                     viewHolder.text_subtitle.setText(regnr_str + " - " + auth_str);
-                    viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                     viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
                     if (med.getCustomerId()==1) {
                         viewHolder.owner_logo.setVisibility(View.VISIBLE);
@@ -2167,7 +2162,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     viewHolder.text_title.setText(title_str);
                     viewHolder.text_subtitle.setText(application_str);
-                    viewHolder.text_title.setTextColor(Color.argb(255,10,10,10));
                     viewHolder.text_subtitle.setTextColor(Color.argb(255,128,128,128));
                     if (med.getCustomerId()==1) {
                         viewHolder.owner_logo.setVisibility(View.VISIBLE);
@@ -2198,11 +2192,9 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (isFaved) {
-                favorite_star.setImageResource(R.drawable.star_small_ye);
-                favorite_star.setVisibility(View.VISIBLE);
+                favorite_star.setImageTintList(ColorStateList.valueOf(getColor(R.color.favourite_star_faved)));
             } else {
-                favorite_star.setImageResource(R.drawable.star_small_gy);
-                favorite_star.setVisibility(View.VISIBLE);
+                favorite_star.setImageTintList(ColorStateList.valueOf(getColor(R.color.favourite_star_normal)));
             }
             // Make star clickable
             favorite_star.setOnClickListener( new OnClickListener() {
