@@ -12,7 +12,6 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:layout_gravity="right"
-		android:background="?attr/colorButtonNormal"
 		android:layout_above="@+id/bottom_navigation"
 		>
 
@@ -34,7 +33,6 @@
 			android:layout_height="match_parent"
 			android:layout_alignParentStart="true"
 			android:layout_alignParentTop="true"
-			android:background="@color/white"
 			/>
 	</LinearLayout>
 
