@@ -16,7 +16,8 @@
        	android:id="@+id/fach_info_view"
        	android:layout_width="match_parent"
        	android:layout_height="match_parent"
-       	class="com.ywesee.amiko.InfoFragment" >
+       	class="com.ywesee.amiko.InfoFragment"
+		>
 	</WebView>	
 
     <!-- This view slides in from the side. The drawer has a fixed width in dp
@@ -34,7 +35,7 @@
         android:layout_gravity="right"
         android:choiceMode="singleChoice"
         android:dividerHeight="1dp"
-        android:background="@color/white"       	
+        android:background="@color/background"
       	class="com.ywesee.amiko.SectionFragment" >
 	</ListView>  
     

@@ -643,6 +643,7 @@ public class MainActivity extends AppCompatActivity {
         setFindListener(mWebView);
         setupGestureDetector(mWebView);
         mWebView.setWebContentsDebuggingEnabled(true);
+        mWebView.setBackgroundColor(getColor(R.color.background));
 
         // Set up observer to JS messages
         JSInterface jsinterface = mExpertInfoView.getJSInterface();
@@ -673,6 +674,7 @@ public class MainActivity extends AppCompatActivity {
                         public void run() {
                             mMedInteractionBasket.updateInteractionsHtml();
                             String html_str = mMedInteractionBasket.getInteractionsHtml();
+                            html_str = replaceColoursForNightTheme(html_str);
                             mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                         }
                     });
@@ -1095,6 +1097,7 @@ public class MainActivity extends AppCompatActivity {
                         updateInteractionBasket();
                         // Update webview
                         String html_str = mMedInteractionBasket.getInteractionsHtml();
+                        html_str = replaceColoursForNightTheme(html_str);
                         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                         // Change view
                         setCurrentView(mShowView, true);
@@ -2261,6 +2264,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                             // Update webview
                             String html_str = mMedInteractionBasket.getInteractionsHtml();
+                            html_str = replaceColoursForNightTheme(html_str);
                             mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                             // Change view
                             setCurrentView(mShowView, true);
@@ -2327,21 +2331,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String createHtml( String style_str, String content_str ) {
-        // Old Javascript-based solution... superseeded -> maybe useful for older version of android!
-    /*
-    String js_str = loadFromAssetsFolder("jshighlight.js", "UTF-8"); // loadJS("jshighlight.js");
-    String html_str = "<html><head>"
-            + "<script type=\"text/javascript\">" + js_str + "</script>"
-            + "<style type=\"text/css\">" + style_str + "</style>"
-            + "</head><body>" + content_str + "</body></html>";
-    */
-
-        String html_str = "<html><head>";
+        String html_str = "<!DOCTYPE html><head>";
 
         html_str +=
                 "<style type=\"text/css\">" + style_str + "</style>"
                 + "</head><body>" + content_str + "</body></html>";
 
+        html_str = replaceColoursForNightTheme(html_str);
+
+        return html_str;
+    }
+
+    String replaceColoursForNightTheme(String html_str) {
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        switch (currentNightMode) {
+            case Configuration.UI_MODE_NIGHT_NO:
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                html_str = html_str.replaceAll("#EEEEEE", "var(--background-color-gray)");
+                break;
+        }
+
+        switch (currentNightMode) {
+            case Configuration.UI_MODE_NIGHT_NO:
+                html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "black");
+                html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "white");
+                html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "eeeeee");
+                html_str = html_str.replaceAll("var\\(--lines-color\\)", "E5E7E8");
+                break;
+            case Configuration.UI_MODE_NIGHT_YES:
+                html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "white");
+                html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "#333333");
+                html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "#444444");
+                html_str = html_str.replaceAll("var\\(--lines-color\\)", "orange");
+                break;
+        }
         return html_str;
     }
 
@@ -2403,8 +2427,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 text_title.setText(title);
-                // See section_item.xml for settings!!
-                // text_title.setTextColor(Color.argb(255,240,240,240));
             }
 
             mView.setOnClickListener(new OnClickListener() {
