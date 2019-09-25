@@ -206,5 +206,5 @@
 
 #Farblegende {
   background-color:var(--background-color-normal);
-  color:var(--background-color-normal);
+  color:black; /* Always black */
 }
