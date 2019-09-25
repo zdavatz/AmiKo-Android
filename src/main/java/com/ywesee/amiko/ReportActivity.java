@@ -54,8 +54,12 @@ public class ReportActivity extends AppCompatActivity {
         mWebView.addJavascriptInterface(new JSInterface(this), "jsInterface");
         // Enable javascript
         mWebView.getSettings().setJavaScriptEnabled(true);
+        mWebView.setBackgroundColor(getColor(R.color.background));
+        mWebView.setWebContentsDebuggingEnabled(true);
 
         String parse_report = loadReport(Constants.appReportFile());
+        parse_report = replaceColorForDarkMode(parse_report);
+        parse_report = Utilities.replaceColoursForNightTheme(parse_report, this);
         mWebView.loadDataWithBaseURL("file:///android_res/drawable/", parse_report, "text/html", "utf-8", null);
     }
 
@@ -252,5 +256,14 @@ public class ReportActivity extends AppCompatActivity {
         } catch(Exception ignored) {
             // Exception is ignored
         }
+    }
+
+    String replaceColorForDarkMode(String input) {
+        input = input.replaceAll("#333333", "var(--text-color-normal)");
+        input = input.replaceAll("#666666", "var(--lines-color)");
+        input = input.replaceAll("#ffffff", "var(--background-color-normal)");
+        input = input.replaceAll("#dedede", "var(--background-color-gray)");
+        input = input.replaceAll("</style>", "body {color:var(--text-color-normal);}</style>");
+        return input;
     }
 }
