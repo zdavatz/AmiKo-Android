@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -425,7 +426,9 @@ public class PrescriptionActivity extends AppCompatActivity {
         title.setTextSize(13);
         title.setTypeface(null, Typeface.BOLD);
 
-        AlertDialog ad = new AlertDialog.Builder(this, R.style.EditTextAlertDialog)
+        int currentNightMode = getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+        int dialogStyle = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? R.style.CustomDarkAlertDialog : R.style.CustomAlertDialog;
+        AlertDialog ad = new AlertDialog.Builder(this, dialogStyle)
             .setCustomTitle(title)
             .setView(layout)
             .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {

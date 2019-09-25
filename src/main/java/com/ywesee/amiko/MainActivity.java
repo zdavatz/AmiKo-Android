@@ -642,7 +642,6 @@ public class MainActivity extends AppCompatActivity {
         mWebView = mExpertInfoView.getWebView();
         setFindListener(mWebView);
         setupGestureDetector(mWebView);
-        mWebView.setWebContentsDebuggingEnabled(true);
         mWebView.setBackgroundColor(getColor(R.color.background));
 
         // Set up observer to JS messages
@@ -1379,7 +1378,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        if (newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
+        if (Utilities.isTablet(this) && newConfig.orientation==Configuration.ORIENTATION_LANDSCAPE) {
             getSupportActionBar().hide();
             InputMethodManager keyboard = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             if (keyboard != null) {
@@ -2291,7 +2290,9 @@ public class MainActivity extends AppCompatActivity {
                         final Medication m = mMediDataSource.searchId(med.getId());
                         String[] packs = m.packagesFromPackInfo();
                         final AtomicInteger choice = new AtomicInteger(0);
-                        new AlertDialog.Builder(mContext, R.style.CustomAlertDialog)
+                        int currentNightMode = mContext.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+                        int dialogStyle = currentNightMode == Configuration.UI_MODE_NIGHT_YES ? R.style.CustomDarkAlertDialog : R.style.CustomAlertDialog;
+                        new AlertDialog.Builder(mContext, dialogStyle)
                                 .setSingleChoiceItems(packs, -1, new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
