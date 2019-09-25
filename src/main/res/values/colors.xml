@@ -139,5 +139,11 @@
     <color name="mediumblue">#0000CD</color>
     <color name="darkblue">#00008B</color>
     <color name="navy">#000080</color>
-    <color name="black">#000000</color>   
+    <color name="black">#000000</color>
+
+    <color name="background">#FFFFFF</color>
+    <color name="favourite_star_normal">#F4F4F4</color>
+    <color name="favourite_star_faved">@color/yellow</color>
+    <color name="medi_item_selected_bg">@color/lightgoldenrodyellow</color>
+    <color name="action_bar_background">#B4B4B4</color>
 </resources>

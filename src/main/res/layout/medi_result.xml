@@ -2,10 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/medi_result"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" 
-    android:background="@drawable/list_item_bkg"
+    android:layout_height="match_parent"
     android:padding="5dp">
-    
+
     <!-- The star icon is 28x28 (36-8=28) -->
     <ImageView android:id="@+id/mfavorite"
         android:contentDescription="favorites star"
@@ -13,8 +12,10 @@
         android:layout_height="36dip"
         android:layout_alignParentTop="true"
         android:paddingRight="8dip"
-        android:layout_gravity="left" />
-    
+        android:layout_gravity="left"
+        android:src="@drawable/star_small"
+		/>
+
     <TextView android:id="@+id/mtitle" 
 		android:textIsSelectable="false"            
         android:layout_width="wrap_content"
@@ -22,8 +23,8 @@
         android:layout_toRightOf="@+id/mfavorite"
         android:layout_toLeftOf="@+id/mlogo"
     	android:layout_alignParentTop="true" 
-		style="@android:style/TextAppearance.Medium"/>    	
-    	<!--  android:textStyle="bold" -->
+		style="@android:style/TextAppearance.Medium"
+		android:textColor="?attr/colorOnBackground"/>
 	        
 	<TextView android:id="@+id/mauth" 
 		android:textIsSelectable="false"            

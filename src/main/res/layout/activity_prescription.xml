@@ -55,35 +55,35 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="@color/black" />
+                            android:textColor="?attr/colorOnBackground" />
 
                         <TextView
                             android:id="@+id/doctor_street_text"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="@color/black" />
+                            android:textColor="?attr/colorOnBackground" />
 
                         <TextView
                             android:id="@+id/doctor_zip_city_text"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="@color/black" />
+                            android:textColor="?attr/colorOnBackground" />
 
                         <TextView
                             android:id="@+id/doctor_phone_text"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="@color/black" />
+                            android:textColor="?attr/colorOnBackground" />
 
                         <TextView
                             android:id="@+id/doctor_email_text"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text=""
-                            android:textColor="@color/black" />
+                            android:textColor="?attr/colorOnBackground" />
                         <Button
                             android:id="@+id/fix_doctor_button"
                             android:layout_width="wrap_content"
@@ -123,14 +123,14 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textColor="@color/black" />
+                        android:textColor="?attr/colorOnBackground" />
 
                     <TextView
                         android:id="@+id/patient_weight_height_gender_birthday_text"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textColor="@color/black" />
+                        android:textColor="?attr/colorOnBackground" />
 
                     <TextView
                         android:id="@+id/patient_street_text"
@@ -143,7 +143,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text=""
-                        android:textColor="@color/black" />
+                        android:textColor="?attr/colorOnBackground" />
 
                 </LinearLayout>
 
@@ -216,7 +216,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="right"
-        android:background="@color/white"
+        android:background="@color/background"
         >
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/amk_recycler_view"

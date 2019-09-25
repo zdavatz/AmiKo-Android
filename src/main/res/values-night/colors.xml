@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#333333</color>
+    <color name="favourite_star_normal">#787878</color>
+
+    <color name="medi_item_selected_bg">@color/saddlebrown</color>
+    <color name="action_bar_background">#202020</color>
+</resources>

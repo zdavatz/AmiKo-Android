@@ -208,4 +208,31 @@ public class Utilities {
 	public static boolean isCharacterNumber(char c) {
 		return c >= '0' && c <= '9';
 	}
+
+	public static String replaceColoursForNightTheme(String html_str, Context context) {
+		int currentNightMode = context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK;
+		switch (currentNightMode) {
+			case Configuration.UI_MODE_NIGHT_NO:
+				break;
+			case Configuration.UI_MODE_NIGHT_YES:
+				html_str = html_str.replaceAll("#EEEEEE", "var(--background-color-gray)");
+				break;
+		}
+
+		switch (currentNightMode) {
+			case Configuration.UI_MODE_NIGHT_NO:
+				html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "black");
+				html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "white");
+				html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "eeeeee");
+				html_str = html_str.replaceAll("var\\(--lines-color\\)", "E5E7E8");
+				break;
+			case Configuration.UI_MODE_NIGHT_YES:
+				html_str = html_str.replaceAll("var\\(--text-color-normal\\)", "white");
+				html_str = html_str.replaceAll("var\\(--background-color-normal\\)", "#333333");
+				html_str = html_str.replaceAll("var\\(--background-color-gray\\)", "#444444");
+				html_str = html_str.replaceAll("var\\(--lines-color\\)", "orange");
+				break;
+		}
+		return html_str;
+	}
 }
