@@ -119,7 +119,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		 * Check if file already exist to avoid re-copying it each time when application starts.
 		 * @return true if it exists, false if it doesn't
 		 */
-	private boolean checkFileExistsAtPath(String fileName, String path) {
+	static private boolean checkFileExistsAtPath(String fileName, String path) {
 		File dbFile = new File(path + fileName);
 		return dbFile.exists();
 	}
@@ -132,11 +132,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				;
 	}
 
-	/**
-		 * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
-		 */
-	public void copyFilesFromNonPersistentFolder() throws Exception {
-		SharedPreferences settings = mContext.getSharedPreferences(AMIKO_PREFS_FILE, 0);
+	static public boolean isBuildDateAfterLastUpdate(Context context) {
+		SharedPreferences settings = context.getSharedPreferences(AMIKO_PREFS_FILE, 0);
 		long timeMillisSince1970 = 0;
 		if (Constants.appLanguage().equals("de")) {
 			timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_DE, 0);
@@ -145,12 +142,23 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		}
 		Date lastUpdate = new Date(timeMillisSince1970);
 		Date apkBuildDate = new Date(BuildConfig.TIMESTAMP);
-		boolean shouldOverride = apkBuildDate.after(lastUpdate)
+		return apkBuildDate.after(lastUpdate);
+	}
+
+	static public boolean shouldCopyFromPersistentFolder(Context context) {
+		boolean shouldOverride = isBuildDateAfterLastUpdate(context)
 				|| !checkFileExistsAtPath(mMainDBName, mAppDataDir)
 				|| !checkFileExistsAtPath(mFullTextDBName, mAppDataDir)
 				|| !checkFileExistsAtPath(mReportName, mAppDataDir)
 				|| !checkFileExistsAtPath(mInteractionsName, mAppDataDir);
+		return shouldOverride;
+	}
 
+	/**
+		 * Creates a set of empty databases (if there are more than one) and rewrites them with own databases.
+		 */
+	public void copyFilesFromNonPersistentFolder() throws Exception {
+		boolean shouldOverride = shouldCopyFromPersistentFolder(mContext);
 		if (shouldOverride) {
 			/*
 			this.getReadableDatabase();
@@ -188,7 +196,10 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				throw new Exception("Error copying drug interactions file!");
 			}
 		}
-		if (apkBuildDate.after(lastUpdate)) {
+
+		if (isBuildDateAfterLastUpdate(mContext)) {
+			Date apkBuildDate = new Date(BuildConfig.TIMESTAMP);
+			SharedPreferences settings = mContext.getSharedPreferences(AMIKO_PREFS_FILE, 0);
 			SharedPreferences.Editor editor = settings.edit();
 			if (Constants.appLanguage().equals("de")) {
 				editor.putLong(PREF_DB_UPDATE_DATE_DE, apkBuildDate.getTime());

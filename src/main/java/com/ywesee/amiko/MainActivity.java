@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -699,6 +700,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkTimeSinceLastUpdate() {
+        boolean isCopying = DataBaseHelper.shouldCopyFromPersistentFolder(this);
         SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
         long timeMillisSince1970 = 0;
         if (Constants.appLanguage().equals("de")) {
@@ -706,9 +708,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             timeMillisSince1970 = settings.getLong(PREF_DB_UPDATE_DATE_FR, 0);
         }
-        long timeDiff = (System.currentTimeMillis()-timeMillisSince1970)/1000;
+        Date apkBuildDate = new Date(BuildConfig.TIMESTAMP);
+        Date lastUpdate = isCopying
+                ? apkBuildDate
+                : new Date(timeMillisSince1970);
+
+        long timeDiff = (System.currentTimeMillis() - lastUpdate.getTime())/1000;
         // That's 30 days in seconds ;)
-        if (timeDiff>60*60*24*30)
+        if (timeDiff > 60*60*24*30)
             showDownloadAlert(1);
         if (Constants.DEBUG)
             Log.d(TAG, "Time since last update: " + timeDiff + " sec");
