@@ -107,4 +107,7 @@
     <string name="scan_barcode">Scan Barcode</string>
     <string name="scan_smartcard">Scan card</string>
 
+    <string name="database_updated">Datenbank aktualisiert!</string>
+    <string name="update_report_format">Die Datenbank enthält:\n- %d Produkte\n- %d Fachinfos\n- %d Suchbegriffe\n- %d Interaktionen</string>
+
 </resources>

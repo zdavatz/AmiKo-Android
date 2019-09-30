@@ -1307,8 +1307,21 @@ public class MainActivity extends AppCompatActivity {
             // Reset view
             resetView(true);
             // Friendly message
-            if (mSQLiteDBInitialized)
+            if (mSQLiteDBInitialized) {
+                mMediDataSource.openInteractionsFile();
+                int numProducts = mMediDataSource.getNumProducts();
+                int numRecord = mMediDataSource.getNumRecords();
+                int numSearchTerms = mFullTextSearchDB.getNumRecords();
+                int numInteractions = mMediDataSource.getNumInteractions();
+
                 mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
+
+                new AlertDialog.Builder(getApplicationContext())
+                    .setTitle(getString(R.string.database_updated))
+                    .setMessage(String.format(getString(R.string.update_report_format), numProducts, numRecord, numSearchTerms, numInteractions))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            }
         }
     }
 

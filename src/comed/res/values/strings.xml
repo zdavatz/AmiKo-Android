@@ -108,4 +108,7 @@
     <string name="scan_barcode">Scan Barcode</string>
     <string name="scan_smartcard">Scan card</string>
 
+    <string name="database_updated">Banque des donnees mises à jour!</string>
+    <string name="update_report_format">La banque des données contien:\n- %d produits\n- %d notices infopro\n- %d mot-clés\n- %d interactions</string>
+
 </resources>
