@@ -1201,9 +1201,10 @@ public class MainActivity extends AppCompatActivity {
     private class AsyncUpdateDBTask extends AsyncTask<Void, Integer, Void> {
         private ProgressDialog progressBar; // Progressbar
         private int fileType = -1;
+        private Context context;
 
         public AsyncUpdateDBTask(Context context) {
-            // Do nothing
+            this.context = context;
         }
 
         // Setup the task, invoked before task is executed
@@ -1252,9 +1253,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     @SuppressWarnings({"unchecked"})
                     public void update(Observable o, Object arg) {
+                        List<Integer> args = (List<Integer>)arg;
                         // Method will call onProgressUpdate(Progress...)
-                        fileType = ((List<Integer>)arg).get(1);
-                        publishProgress(((List<Integer>)arg).get(0));
+                        fileType = args.get(0);
+                        publishProgress(args.get(1), args.get(2));
                     }
                 });
                 // Creates database, interactions, and report file
@@ -1281,16 +1283,18 @@ public class MainActivity extends AppCompatActivity {
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             if (progress!=null) {
-                if (progress[0]<1) {
-                    if (fileType==1)
-                        progressBar.setMessage("Initializing SQLite database...");
-                    else if (fileType==2)
-                        progressBar.setMessage("Initializing drug interactions...");
-                    else if (fileType==3)
-                        progressBar.setMessage("Initializing full text database...");
-                }
-                int percentCompleted = progress[0];
-                progressBar.setProgress(percentCompleted);
+
+                if (fileType==1)
+                    progressBar.setMessage("Initializing SQLite database...");
+                else if (fileType==2)
+                    progressBar.setMessage("Initializing drug interactions...");
+                else if (fileType==3)
+                    progressBar.setMessage("Initializing full text database...");
+
+                int doneBytes = progress[0];
+                int totalBytes = progress[1];
+                progressBar.setProgress(doneBytes);
+                progressBar.setMax(totalBytes);
             }
         }
 
@@ -1304,8 +1308,21 @@ public class MainActivity extends AppCompatActivity {
             // Reset view
             resetView(true);
             // Friendly message
-            if (mSQLiteDBInitialized)
+            if (mSQLiteDBInitialized) {
+                mMediDataSource.openInteractionsFile();
+                int numProducts = mMediDataSource.getNumProducts();
+                int numRecord = mMediDataSource.getNumRecords();
+                int numSearchTerms = mFullTextSearchDB.getNumRecords();
+                int numInteractions = mMediDataSource.getNumInteractions();
+
                 mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
+
+                new AlertDialog.Builder(context)
+                    .setTitle(getString(R.string.database_updated))
+                    .setMessage(String.format(getString(R.string.update_report_format), numProducts, numRecord, numSearchTerms, numInteractions))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            }
         }
     }
 
@@ -1908,19 +1925,23 @@ public class MainActivity extends AppCompatActivity {
                         q.setFilterById(mDatabaseId);
                         Cursor cursor = mDownloadManager.query(q);
                         cursor.moveToFirst();
-                        int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                        int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                        final int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                        final int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
                         if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
                             downloading = false;
                             if (mProgressBar.isShowing()) {
                                 mProgressBar.dismiss();
                             }
                         }
-                        final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mProgressBar.setProgress((int) dl_progress);
+                                mProgressBar.setProgress(bytes_downloaded);
+                                if (bytes_total == 0) {
+                                    mProgressBar.setMax(100);
+                                } else {
+                                    mProgressBar.setMax(bytes_total);
+                                }
                             }
                         });
                         cursor.close();

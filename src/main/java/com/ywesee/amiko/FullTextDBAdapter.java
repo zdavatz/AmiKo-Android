@@ -59,6 +59,15 @@ public class FullTextDBAdapter extends SQLiteOpenHelper {
 
     }
 
+    public int getNumRecords() throws SQLException {
+        String query = "select count(*) from " + DATABASE_TABLE;
+        Cursor mCursor = this.getReadableDatabase().rawQuery(query, null);
+        mCursor.moveToNext();
+        int count = mCursor.getInt(0);
+        mCursor.close();
+        return count;
+    }
+
     public ArrayList<Entry> searchKeyword(String searchTerm) {
         // Execute DB raw query
         Cursor cursor = this.getReadableDatabase().rawQuery(

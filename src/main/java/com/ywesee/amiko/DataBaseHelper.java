@@ -101,16 +101,17 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	 * Notifies observer
 	 * @param totBytes: total downloaded bytes
 	 */
-	public void notifyObserver(String fileName, int totBytes) {
+	public void notifyObserver(String fileName, int totBytesRead, int totBytes) {
 		List<Integer> args = new ArrayList<Integer>();
-
-		args.add(totBytes);
 		if (fileName.startsWith("amiko_db_full"))
 			args.add(1);
 		else if (fileName.startsWith("drug_interactions_csv"))
 			args.add(2);
 		else if (fileName.startsWith("amiko_frequency"))
 			args.add(3);
+
+		args.add(totBytesRead);
+		args.add(totBytes);
 
 		mObserver.update(null, args);
 	}
@@ -298,7 +299,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 					while ((bytesRead = zis.read(buffer)) != -1) {
 						fout.write(buffer, 0, bytesRead);
 						totBytesRead += bytesRead;
-						notifyObserver(ze.getName(), (int)(100*(float)totBytesRead/(float)totBytes));
+						notifyObserver(ze.getName(), totBytesRead, totBytes);
 					}
 
 					Log.d(TAG, "Unzipped file " + ze.getName() + " (" + totBytesRead/1000 + "kB)");

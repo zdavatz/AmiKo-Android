@@ -607,6 +607,21 @@ public class DBAdapter {
 		return mCursor;
 	}
 
+	public int getNumProducts() throws SQLException {
+		Cursor mCursor = mDb.query(true, DATABASE_TABLE,
+				new String[] {KEY_PACK_INFO}, null, null, null, null, null, null);
+		mCursor.moveToFirst();
+		int numProducts = 0;
+		while (!mCursor.isAfterLast()) {
+			String info = mCursor.getString(0);
+			numProducts += info.split("\n").length;
+			mCursor.moveToNext();
+		}
+		// Make sure to close the cursor
+		mCursor.close();
+		return numProducts;
+	}
+
 	/**
 	 * Maps cursor to medication (short version, fast)
 	 * @param cursor
