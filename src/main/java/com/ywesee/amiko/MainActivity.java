@@ -1201,9 +1201,10 @@ public class MainActivity extends AppCompatActivity {
     private class AsyncUpdateDBTask extends AsyncTask<Void, Integer, Void> {
         private ProgressDialog progressBar; // Progressbar
         private int fileType = -1;
+        private Context context;
 
         public AsyncUpdateDBTask(Context context) {
-            // Do nothing
+            this.context = context;
         }
 
         // Setup the task, invoked before task is executed
@@ -1316,7 +1317,7 @@ public class MainActivity extends AppCompatActivity {
 
                 mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
 
-                new AlertDialog.Builder(getApplicationContext())
+                new AlertDialog.Builder(context)
                     .setTitle(getString(R.string.database_updated))
                     .setMessage(String.format(getString(R.string.update_report_format), numProducts, numRecord, numSearchTerms, numInteractions))
                     .setPositiveButton(android.R.string.ok, null)
@@ -1924,19 +1925,23 @@ public class MainActivity extends AppCompatActivity {
                         q.setFilterById(mDatabaseId);
                         Cursor cursor = mDownloadManager.query(q);
                         cursor.moveToFirst();
-                        int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                        int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+                        final int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                        final int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
                         if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
                             downloading = false;
                             if (mProgressBar.isShowing()) {
                                 mProgressBar.dismiss();
                             }
                         }
-                        final int dl_progress = (int) ((bytes_downloaded * 100l) / bytes_total);
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                mProgressBar.setProgress((int) dl_progress);
+                                mProgressBar.setProgress(bytes_downloaded);
+                                if (bytes_total == 0) {
+                                    mProgressBar.setMax(100);
+                                } else {
+                                    mProgressBar.setMax(bytes_total);
+                                }
                             }
                         });
                         cursor.close();
