@@ -1252,9 +1252,10 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     @SuppressWarnings({"unchecked"})
                     public void update(Observable o, Object arg) {
+                        List<Integer> args = (List<Integer>)arg;
                         // Method will call onProgressUpdate(Progress...)
-                        fileType = ((List<Integer>)arg).get(1);
-                        publishProgress(((List<Integer>)arg).get(0));
+                        fileType = args.get(0);
+                        publishProgress(args.get(1), args.get(2));
                     }
                 });
                 // Creates database, interactions, and report file
@@ -1281,16 +1282,18 @@ public class MainActivity extends AppCompatActivity {
         protected void onProgressUpdate(Integer... progress) {
             super.onProgressUpdate(progress);
             if (progress!=null) {
-                if (progress[0]<1) {
-                    if (fileType==1)
-                        progressBar.setMessage("Initializing SQLite database...");
-                    else if (fileType==2)
-                        progressBar.setMessage("Initializing drug interactions...");
-                    else if (fileType==3)
-                        progressBar.setMessage("Initializing full text database...");
-                }
-                int percentCompleted = progress[0];
-                progressBar.setProgress(percentCompleted);
+
+                if (fileType==1)
+                    progressBar.setMessage("Initializing SQLite database...");
+                else if (fileType==2)
+                    progressBar.setMessage("Initializing drug interactions...");
+                else if (fileType==3)
+                    progressBar.setMessage("Initializing full text database...");
+
+                int doneBytes = progress[0];
+                int totalBytes = progress[1];
+                progressBar.setProgress(doneBytes);
+                progressBar.setMax(totalBytes);
             }
         }
 
