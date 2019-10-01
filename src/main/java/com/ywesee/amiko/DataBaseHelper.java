@@ -166,14 +166,14 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
-				throw new Exception("Error copying database!");
+				throw new Exception("Error copying main database!" + e.getLocalizedMessage());
 			}
 			try {
 				copyFileFromAssetsToPath(mFullTextDBName, mAppDataDir);
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): database created");
 			} catch (IOException e) {
-				throw new Exception("Error copying database!");
+				throw new Exception("Error copying frequency database!" + e.getLocalizedMessage());
 			}
 			try {
 				// Copy report file from assets
@@ -181,7 +181,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): report file copied");
 			} catch (IOException e) {
-				throw new Exception("Error copying report file!");
+				throw new Exception("Error copying report file!" + e.getLocalizedMessage());
 			}
 			try {
 				// Copy report file from assets
@@ -189,7 +189,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 				if (Constants.DEBUG)
 					Log.d(TAG, "createDataBase(): drug interactions file copied");
 			} catch (IOException e) {
-				throw new Exception("Error copying drug interactions file!");
+				throw new Exception("Error copying drug interactions file!" + e.getLocalizedMessage());
 			}
 		}
 

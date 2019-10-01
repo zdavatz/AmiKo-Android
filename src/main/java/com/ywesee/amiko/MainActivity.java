@@ -1122,6 +1122,7 @@ public class MainActivity extends AppCompatActivity {
 
         boolean dismissSplashAuto = false;
         Context mContext = null;
+        Exception dbException = null;
 
         public AsyncLoadDBTask(Context context) {
             mContext = context;
@@ -1150,6 +1151,7 @@ public class MainActivity extends AppCompatActivity {
                 mFullTextSearchDB.getReadableDatabase();
             } catch(Exception e) {
                 Log.d(TAG, "AsyncLoadDBTask: Unable to create database folders!");
+                dbException = e;
             }
             // Open drug interactions csv file
             mMedInteractionBasket.loadCsv();
@@ -1160,7 +1162,14 @@ public class MainActivity extends AppCompatActivity {
         // Used to clean up, invoked on UI thread after background computation ends
         @Override
         protected void onPostExecute(Void result) {
-            if (dismissSplashAuto==false)
+            if (dbException != null) {
+                new AlertDialog.Builder(mContext)
+                    .setTitle("Error")
+                    .setMessage(dbException.getMessage())
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            }
+            if (!dismissSplashAuto)
                 dismissSplashScreen();
         }
     }
