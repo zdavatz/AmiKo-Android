@@ -180,7 +180,7 @@ public class DBAdapter {
 	}
 
 	public boolean checkDatabasesExist() {
-		return mDbHelper.checkAllFilesExists();
+		return DataBaseHelper.checkAllFilesExists();
 	}
 
 	/**

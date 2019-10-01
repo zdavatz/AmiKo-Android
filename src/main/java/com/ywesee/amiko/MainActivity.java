@@ -268,37 +268,25 @@ public class MainActivity extends AppCompatActivity {
         }, duration);
     }
 
-    private void showDownloadAlert(int install_type) {
+    private void showDownloadAlert() {
         // Display message box asking people whether they want to download the DB from the ywesee server.
         AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
         alert.setIcon(R.drawable.desitin_new);
         if (Constants.appLanguage().equals("de")) {
             alert.setTitle("Medikamentendatenbank");
-            String message = "AmiKo wurde installiert.";
-            if (install_type==1)
-                message = "Ihre Datenbank ist älter als 30 Tage.";
-            alert.setMessage(message + " Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
+            alert.setMessage("Ihre Datenbank ist älter als 30 Tage. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
                     "Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
         } else if (Constants.appLanguage().equals("fr")) {
             alert.setTitle("Banque de données des médicaments");
-            String message = "L'installation de la nouvelle version de CoMed s'est déroulée.";
-            if (install_type==1)
-                message = "Votre banque de données est agée plus de 30 jours.";
-            alert.setMessage(message + " Vous avez tout intérêt de mettre à jour " +
+            alert.setMessage("Votre banque de données est agée plus de 30 jours. Vous avez tout intérêt de mettre à jour " +
                     "votre banque de données (env. 50 MB). D'ailleurs vous pouvez utiliser le download à tout moment si vous désirez.");
         }
-        String yes = "Ja";
-        String no = "Nein";
-        if (Constants.appLanguage().equals("fr")) {
-            yes = "Oui";
-            no = "Non";
-        }
-        alert.setPositiveButton(yes, new DialogInterface.OnClickListener() {
+        alert.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 requestPermissionAndDownloadUpdates();
             }
         });
-        alert.setNegativeButton(no, new DialogInterface.OnClickListener() {
+        alert.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 // Do nothing...
             }
@@ -716,7 +704,7 @@ public class MainActivity extends AppCompatActivity {
         long timeDiff = (System.currentTimeMillis() - lastUpdate.getTime())/1000;
         // That's 30 days in seconds ;)
         if (timeDiff > 60*60*24*30)
-            showDownloadAlert(1);
+            showDownloadAlert();
         if (Constants.DEBUG)
             Log.d(TAG, "Time since last update: " + timeDiff + " sec");
     }
@@ -957,13 +945,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 showSoftKeyboard(100);
-                if (!mSQLiteDBInitialized) {
-                    runOnUiThread(new Runnable() {
-                        public void run() {
-                            showDownloadAlert(0);
-                        }
-                    });
-                }
             }
         });
 
@@ -982,16 +963,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable s) {
                 String text = mSearch.getText().toString();
-                if (text.length()>0) {
-                    if (!mSQLiteDBInitialized) {
-                        runOnUiThread(new Runnable() {
-                            public void run() {
-                                showDownloadAlert(0);
-                            }
-                        });
-                        return;
-                    }
-                }
                 if (!mRestoringState) {
                     if (text.length()>0)
                         performSearch(text);
@@ -1150,20 +1121,21 @@ public class MainActivity extends AppCompatActivity {
     private class AsyncLoadDBTask extends AsyncTask<Void, Integer, Void> {
 
         boolean dismissSplashAuto = false;
+        Context mContext = null;
 
         public AsyncLoadDBTask(Context context) {
-            // Do nothing
+            mContext = context;
         }
 
         // Setup the task, invoked before task is executed
         @Override
         protected void onPreExecute() {
             // Initialize folders for databases
-            mMediDataSource = new DBAdapter(MainActivity.this);
-            mFullTextSearchDB = new FullTextDBAdapter(MainActivity.this);
-            mMedInteractionBasket = new Interactions(MainActivity.this);
+            mMediDataSource = new DBAdapter(mContext);
+            mFullTextSearchDB = new FullTextDBAdapter(mContext);
+            mMedInteractionBasket = new Interactions(mContext);
             // Dismiss splashscreen once database is initialized
-            dismissSplashAuto = mMediDataSource.checkDatabasesExist();
+            dismissSplashAuto = !DataBaseHelper.shouldCopyFromPersistentFolder(mContext);
             showSplashScreen(true, dismissSplashAuto);
         }
 

@@ -125,12 +125,11 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		return dbFile.exists();
 	}
 
-	public boolean checkAllFilesExists() {
+	public static boolean checkAllFilesExists() {
 		return checkFileExistsAtPath(mMainDBName, mAppDataDir) &&
 				checkFileExistsAtPath(mFullTextDBName, mAppDataDir) &&
 				checkFileExistsAtPath(mReportName, mAppDataDir) &&
-				checkFileExistsAtPath(mInteractionsName, mAppDataDir)
-				;
+				checkFileExistsAtPath(mInteractionsName, mAppDataDir);
 	}
 
 	static public boolean isBuildDateAfterLastUpdate(Context context) {
@@ -147,11 +146,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 
 	static public boolean shouldCopyFromPersistentFolder(Context context) {
-		boolean shouldOverride = isBuildDateAfterLastUpdate(context)
-				|| !checkFileExistsAtPath(mMainDBName, mAppDataDir)
-				|| !checkFileExistsAtPath(mFullTextDBName, mAppDataDir)
-				|| !checkFileExistsAtPath(mReportName, mAppDataDir)
-				|| !checkFileExistsAtPath(mInteractionsName, mAppDataDir);
+		boolean shouldOverride = isBuildDateAfterLastUpdate(context) || !checkAllFilesExists();
 		return shouldOverride;
 	}
 
