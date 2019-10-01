@@ -180,7 +180,7 @@ public class DBAdapter {
 	}
 
 	public boolean checkDatabasesExist() {
-		return mDbHelper.checkAllFilesExists();
+		return DataBaseHelper.checkAllFilesExists();
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class DBAdapter {
 			}
 		} catch (Exception e) {
 			Log.e(TAG, e.toString() + " Unable to create database");
-			throw new Exception("Unable to create database");
+			throw new Exception("Unable to create database:" + e.getLocalizedMessage());
 		}
 	}
 
