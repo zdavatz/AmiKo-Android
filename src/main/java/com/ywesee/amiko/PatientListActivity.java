@@ -143,7 +143,8 @@ public class PatientListActivity extends AppCompatActivity {
                         // float diffX = event1.getX()-event2.getX();
                         // left to right swipe... return to mSuggestView
                         float diffX = event2.getX()-event1.getX();
-                        if (diffX>120 && Math.abs(velocityX)>300) {
+                        float diffY = event2.getY()-event1.getY();
+                        if (diffX>120 && Math.abs(velocityX)>300 && Math.abs(diffX) > Math.abs(diffY)) {
                             finish();
                             return true;
                         }
