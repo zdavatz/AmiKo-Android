@@ -118,6 +118,7 @@ import android.widget.TextView;
 import android.widget.TextView.BufferType;
 import android.widget.Toast;
 
+import com.androidnetworking.AndroidNetworking;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.tabs.TabLayout;
 
@@ -229,12 +230,10 @@ public class MainActivity extends AppCompatActivity {
      * HTTP interactions and retrying downloads after failures or across connectivity changes
      * and system reboots.
      */
-    private DownloadManager mDownloadManager = null;
     private long mDatabaseId = 0;   // SQLite DB (zipped)
     private long mFulltextDatabaseId = 0; // Fulltext sql DB
     private long mReportId = 0;     // Report file (html)
     private long mInteractionsId = 0; // Drug interactions file (zipped)
-    private long mDownloadedFileCount = 0;
 
     /**
      * Show soft keyboard
@@ -741,6 +740,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AndroidNetworking.initialize(getApplicationContext());
         MainActivity.instance = this;
 
         try {
@@ -795,57 +795,6 @@ public class MainActivity extends AppCompatActivity {
         mToastObject = new CustomToast(this);
 
         // Initialize download manager
-        mDownloadManager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-
-        mBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-                    long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0);
-                    if (downloadId==mDatabaseId || downloadId == mFulltextDatabaseId || downloadId==mReportId || downloadId==mInteractionsId)
-                        mDownloadedFileCount++;
-                    // Before proceeding make sure all files have been downloaded before proceeding
-                    if (mDownloadedFileCount==4) {
-                        Query query = new Query();
-                        query.setFilterById(downloadId);
-                        Cursor c = mDownloadManager.query(query);
-                        if (c.moveToFirst()) {
-                            int columnIndex = c.getColumnIndex(DownloadManager.COLUMN_STATUS);
-                            // Check if download was successful
-                            if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
-                                try {
-                                    // Update database
-                                    AsyncUpdateDBTask updateDBTask = new AsyncUpdateDBTask(MainActivity.this);
-                                    updateDBTask.execute();
-                                } catch (Exception e) {
-                                    Log.e(TAG, "AsyncUpdateDBTask: exception caught!");
-                                }
-                                // Toast
-                                mToastObject.show("Databases downloaded successfully. Installing...", Toast.LENGTH_SHORT);
-                                if (mProgressBar.isShowing())
-                                    mProgressBar.dismiss();
-                                mUpdateInProgress = false;
-                                // Store time stamp
-                                SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
-                                SharedPreferences.Editor editor = settings.edit();
-                                if (Constants.appLanguage().equals("de")) {
-                                    editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
-                                } else {
-                                    editor.putLong(PREF_DB_UPDATE_DATE_FR, System.currentTimeMillis());
-                                }
-                                // Commit the edits!
-                                editor.commit();
-                            } else {
-                                mToastObject.show("Error while downloading database...", Toast.LENGTH_SHORT);
-                            }
-                        }
-                        c.close();
-                    }
-                }
-            }
-        };
-        registerReceiver(mBroadcastReceiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
     }
 
     public void handleIntent(Intent intent) {
@@ -1180,133 +1129,6 @@ public class MainActivity extends AppCompatActivity {
      * @author Max
      *
      */
-    private class AsyncUpdateDBTask extends AsyncTask<Void, Integer, Void> {
-        private ProgressDialog progressBar; // Progressbar
-        private int fileType = -1;
-        private Context context;
-
-        public AsyncUpdateDBTask(Context context) {
-            this.context = context;
-        }
-
-        // Setup the task, invoked before task is executed
-        @Override
-        protected void onPreExecute() {
-            if (Constants.DEBUG)
-                Log.d(TAG, "onPreExecute(): progressDialog");
-            // Initialize the dialog
-            progressBar = new ProgressDialog(MainActivity.this);
-            progressBar.setMessage("Initializing SQLite database...");
-            // progressBar.setIndeterminate(true);
-            progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progressBar.setProgress(0);
-            progressBar.setMax(100);
-            progressBar.setCancelable(false);
-            progressBar.show();
-        }
-
-        // Used to perform background computation, invoked on the background UI thread
-        @Override
-        protected Void doInBackground(Void... voids) {
-            if (Constants.DEBUG)
-                Log.d(TAG, "doInBackground: open/overwrite database");
-
-            // Creates, opens or overwrites database (singleton)
-            if (mMediDataSource==null) {
-                mMediDataSource = new DBAdapter(MainActivity.this);
-            } else {
-                // Case 2: mMediDataSource is initialized
-                // Database adapter already exists, reuse it!
-                try {
-                    // First, move report file to appropriate folder
-                    mMediDataSource.copyReportFile();
-                }
-                catch (IOException e) {
-                    Log.d(TAG, "Error copying report file!");
-                }
-            }
-            if (mFullTextSearchDB==null) {
-                mFullTextSearchDB = new FullTextDBAdapter(MainActivity.this);
-            }
-
-            try {
-                // Attach observer to totally unzipped bytes (for the progress bar)
-                mMediDataSource.addObserver(new Observer() {
-                    @Override
-                    @SuppressWarnings({"unchecked"})
-                    public void update(Observable o, Object arg) {
-                        List<Integer> args = (List<Integer>)arg;
-                        // Method will call onProgressUpdate(Progress...)
-                        fileType = args.get(0);
-                        publishProgress(args.get(1), args.get(2));
-                    }
-                });
-                // Creates database, interactions, and report file
-                // or overwrites them if they already exists
-                Log.d(TAG, "AsyncUpdateDBTask: Updating database");
-                mFullTextSearchDB.close();
-                mMediDataSource.create();
-                Log.d(TAG, "AsyncUpdateDBTask: Updated database");
-            } catch(Exception e) {
-                Log.d(TAG, "Unable to update database!");
-            }
-
-            // Opens SQLite database
-            mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
-
-            // Open drug interactions csv file
-            mMedInteractionBasket.loadCsv();
-
-            return null;
-        }
-
-        // Used to display any form of progress, invoked on UI thread after call of "publishProgress(Progress...)"
-        @Override
-        protected void onProgressUpdate(Integer... progress) {
-            super.onProgressUpdate(progress);
-            if (progress!=null) {
-
-                if (fileType==1)
-                    progressBar.setMessage("Initializing SQLite database...");
-                else if (fileType==2)
-                    progressBar.setMessage("Initializing drug interactions...");
-                else if (fileType==3)
-                    progressBar.setMessage("Initializing full text database...");
-
-                int doneBytes = progress[0];
-                int totalBytes = progress[1];
-                progressBar.setProgress(doneBytes);
-                progressBar.setMax(totalBytes);
-            }
-        }
-
-        // Used to clean up, invoked on UI thread after background computation ends
-        @Override
-        protected void onPostExecute(Void result) {
-            if (Constants.DEBUG)
-                Log.d(TAG, "mMediDataSource open!");
-            if (progressBar.isShowing())
-                progressBar.dismiss();
-            // Reset view
-            resetView(true);
-            // Friendly message
-            if (mSQLiteDBInitialized) {
-                mMediDataSource.openInteractionsFile();
-                int numProducts = mMediDataSource.getNumProducts();
-                int numRecord = mMediDataSource.getNumRecords();
-                int numSearchTerms = mFullTextSearchDB.getNumRecords();
-                int numInteractions = mMediDataSource.getNumInteractions();
-
-                mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
-
-                new AlertDialog.Builder(context)
-                    .setTitle(getString(R.string.database_updated))
-                    .setMessage(String.format(getString(R.string.update_report_format), numProducts, numRecord, numSearchTerms, numInteractions))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
-            }
-        }
-    }
 
     /**
      * Asynchronous thread launched to search in the SQLite database
@@ -1829,110 +1651,95 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         mUpdateInProgress = true;
-        mDownloadedFileCount = 0;
 
         // First check network connection
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
 
         // Fetch data...
-        if (networkInfo!=null && networkInfo.isConnected()) {
-            // File URIs
-            Uri databaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedDatabase());
-            Uri fullTextDatabaseUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedFullTextDatabase());
-            Uri reportUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appReportFile());
-            Uri interactionsUri = Uri.parse("http://pillbox.oddb.org/" + Constants.appZippedInteractionsFile());
-            // NOTE: the default download destination is a shared volume where the system might delete your file if
-            // it needs to reclaim space for system use
-            DownloadManager.Request requestDatabase = new DownloadManager.Request(databaseUri);
-            DownloadManager.Request requestFullTextDatabase = new DownloadManager.Request(fullTextDatabaseUri);
-            DownloadManager.Request requestReport = new DownloadManager.Request(reportUri);
-            DownloadManager.Request requestInteractions = new DownloadManager.Request(interactionsUri);
-            // Allow download only over WIFI and Mobile network
-            requestDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
-            requestFullTextDatabase.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
-            requestReport.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
-            requestInteractions.setAllowedNetworkTypes(Request.NETWORK_WIFI|Request.NETWORK_MOBILE);
-            // Download visible and shows in notifications while in progress and after completion
-            requestDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            requestFullTextDatabase.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            requestReport.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            requestInteractions.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            // Set the title of this download, to be displayed in notifications (if enabled).
-            requestDatabase.setTitle("AmiKo SQLite database update");
-            requestFullTextDatabase.setTitle("AmiKo fulltext SQLite database update");
-            requestReport.setTitle("AmiKo report update");
-            requestInteractions.setTitle("AmiKo drug interactions update");
-            // Set a description of this download, to be displayed in notifications (if enabled)
-            requestDatabase.setDescription("Updating the AmiKo database.");
-            requestFullTextDatabase.setDescription("Updating the AmiKo fulltext database.");
-            requestReport.setDescription("Updating the AmiKo error report.");
-            requestInteractions.setDescription("Updating the AmiKo drug interactions.");
-            // Set local destination to standard directory (place where files downloaded by the user are placed)
-            /*
-            String main_expansion_file_path = Utilities.expansionFileDir(getPackageName());
-            requestDatabase.setDestinationInExternalPublicDir(main_expansion_file_path, Constants.appZippedDatabase());
-            */
-            requestDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedDatabase());
-            requestFullTextDatabase.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedFullTextDatabase());
-            requestReport.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appReportFile());
-            requestInteractions.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, Constants.appZippedInteractionsFile());
-            // Check if file exist on non persistent store. If yes, delete it.
-            if (Utilities.isExternalStorageReadable() && Utilities.isExternalStorageWritable()) {
-                Utilities.deleteFile(Constants.appZippedDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-                Utilities.deleteFile(Constants.appZippedFullTextDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-                Utilities.deleteFile(Constants.appReportFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-                Utilities.deleteFile(Constants.appZippedInteractionsFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-            }
-            // The downloadId is unique across the system. It is used to make future calls related to this download.
-            mDatabaseId = mDownloadManager.enqueue(requestDatabase);
-            mFulltextDatabaseId = mDownloadManager.enqueue(requestFullTextDatabase);
-            mReportId = mDownloadManager.enqueue(requestReport);
-            mInteractionsId = mDownloadManager.enqueue(requestInteractions);
-
-            mProgressBar = new ProgressDialog(MainActivity.this);
-            mProgressBar.setMessage("Downloading SQLite database...");
-            mProgressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressBar.setProgress(0);
-            mProgressBar.setMax(100);
-            mProgressBar.setCancelable(false);
-            mProgressBar.show();
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    boolean downloading = true;
-                    while (downloading) {
-                        DownloadManager.Query q = new DownloadManager.Query();
-                        q.setFilterById(mDatabaseId);
-                        Cursor cursor = mDownloadManager.query(q);
-                        cursor.moveToFirst();
-                        final int bytes_downloaded = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                        final int bytes_total = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
-                        if (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)) == DownloadManager.STATUS_SUCCESSFUL) {
-                            downloading = false;
-                            if (mProgressBar.isShowing()) {
-                                mProgressBar.dismiss();
-                            }
-                        }
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                mProgressBar.setProgress(bytes_downloaded);
-                                if (bytes_total == 0) {
-                                    mProgressBar.setMax(100);
-                                } else {
-                                    mProgressBar.setMax(bytes_total);
-                                }
-                            }
-                        });
-                        cursor.close();
-                    }
-                }
-            }).start();
-        } else {
+        if (networkInfo == null || !networkInfo.isConnected()) {
             mUpdateInProgress = false;
-            // Display error report
+            return;
+        }
+        Context context = this;
+        ProgressDialog progressBar = new ProgressDialog(MainActivity.this);
+        progressBar.setMessage(getString(R.string.downloading_sqlite_database));
+        progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        progressBar.setProgress(0);
+        progressBar.setMax(100);
+        progressBar.setCancelable(false);
+        progressBar.show();
+        new DBUpdater(this, new DBUpdater.Callback() {
+            @Override
+            public void onDownloadProgress(long done, long total) {
+                progressBar.setMax((int)total);
+                progressBar.setProgress((int)done);
+            }
+
+            @Override
+            public void onPreUnpack() {
+                mFullTextSearchDB.close();
+				mMediDataSource.closeSQLiteDB();
+            }
+
+            @Override
+            public void onUnpackProgress(String tag, long done, long total) {
+                if (tag.equals("databaseZip")) {
+                    progressBar.setMessage(getString(R.string.updating_sqlite_database));
+                } else if (tag.equals("fullTextDatabaseZip")) {
+                    progressBar.setMessage(getString(R.string.updating_full_text_database));
+                } else if (tag.equals("report")) {
+                    progressBar.setMessage(getString(R.string.updating_report));
+                } else if (tag.equals("interactionZip")) {
+                    progressBar.setMessage(getString(R.string.updating_drug_interaction));
+                }
+                progressBar.setMax((int)total);
+                progressBar.setProgress((int)done);
+            }
+
+            @Override
+            public void onFinish() {
+                mSQLiteDBInitialized = mMediDataSource.openSQLiteDB();
+                mMedInteractionBasket.loadCsv();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (progressBar.isShowing())
+                            progressBar.dismiss();
+                        // Reset view
+                        resetView(true);
+                        // Friendly message
+                        if (mSQLiteDBInitialized) {
+                            mMediDataSource.openInteractionsFile();
+                            int numProducts = mMediDataSource.getNumProducts();
+                            int numRecord = mMediDataSource.getNumRecords();
+                            int numSearchTerms = mFullTextSearchDB.getNumRecords();
+                            int numInteractions = mMediDataSource.getNumInteractions();
+
+                            mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
+
+                            new AlertDialog.Builder(context)
+                                    .setTitle(getString(R.string.database_updated))
+                                    .setMessage(String.format(getString(R.string.update_report_format), numProducts, numRecord, numSearchTerms, numInteractions))
+                                    .setPositiveButton(android.R.string.ok, null)
+                                    .show();
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+
+            }
+        }).start();
+        // Check if file exist on non persistent store. If yes, delete it.
+        if (Utilities.isExternalStorageReadable() && Utilities.isExternalStorageWritable()) {
+            Utilities.deleteFile(Constants.appZippedDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+            Utilities.deleteFile(Constants.appZippedFullTextDatabase(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+            Utilities.deleteFile(Constants.appReportFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+            Utilities.deleteFile(Constants.appZippedInteractionsFile(), Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
         }
     }
 

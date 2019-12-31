@@ -111,4 +111,10 @@
     <string name="database_updated">Banque des donnees mises à jour!</string>
     <string name="update_report_format">La banque des données contien:\n- %d produits\n- %d notices infopro\n- %d mot-clés\n- %d interactions</string>
 
+    <string name="downloading_sqlite_database">Downloading SQLite database...</string>
+    <string name="updating_sqlite_database">Initializing SQLite database...</string>
+    <string name="updating_drug_interaction">Initializing drug interactions...</string>
+    <string name="updating_report">Initializing report...</string>
+    <string name="updating_full_text_database">Initializing full text database...</string>
+    
 </resources>

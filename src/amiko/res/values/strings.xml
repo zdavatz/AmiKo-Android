@@ -110,4 +110,10 @@
     <string name="database_updated">Datenbank aktualisiert!</string>
     <string name="update_report_format">Die Datenbank enthält:\n- %d Produkte\n- %d Fachinfos\n- %d Suchbegriffe\n- %d Interaktionen</string>
 
+    <string name="downloading_sqlite_database">Downloading SQLite database...</string>
+    <string name="updating_sqlite_database">Initializing SQLite database...</string>
+    <string name="updating_drug_interaction">Initializing drug interactions...</string>
+    <string name="updating_report">Initializing report...</string>
+    <string name="updating_full_text_database">Initializing full text database...</string>
+
 </resources>

@@ -19,7 +19,6 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,19 +33,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Observer;
 import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.database.DatabaseErrorHandler;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.os.Environment;
 import android.util.Log;
 
 import static com.ywesee.amiko.MainActivity.AMIKO_PREFS_FILE;
@@ -208,33 +200,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	}
 
 	/**
-	 * Copy file from external storage to system folder (persistant storage),
-	 * from where it can be accessed and handled. This is done by transferring a byte stream.
-	 */
-	private void copyFileFromExternalStorageToPath(String fileName, String srcPath, String dstPath) throws IOException {
-		if (mContext!=null && !mContext.getPackageName().isEmpty()) {
-			// Check if file exists
-			File srcFile = new File(srcPath + "/" + fileName);
-			if (srcFile.exists()) {
-				InputStream mInput = new FileInputStream(srcFile);
-				OutputStream mOutput = new FileOutputStream(dstPath + "/" + fileName);
-
-				// Transfer bytes from input to output
-				byte[] mBuffer = new byte[1024];
-				int mLength;
-				while ((mLength = mInput.read(mBuffer))>0) {
-					mOutput.write(mBuffer, 0, mLength);
-				}
-
-				// Close streams
-				mOutput.flush();
-				mOutput.close();
-				mInput.close();
-			}
-		}
-	}
-
-	/**
 		 * Copies file from local assets-folder to system folder (persistant storage),
 		 * from where it can be accessed and handled. This is done by transferring bytestream.
 	 * @param srcFile
@@ -258,56 +223,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 		mOutput.flush();
 		mOutput.close();
 		mInput.close();
-	}
-
-	private void copyFileFromSrcToPath(String srcFile, String dstFile, int totBytes, boolean zipped) throws IOException {
-		if (!zipped) {
-			// Open database
-			InputStream mInput = new FileInputStream(srcFile);
-			OutputStream mOutput = new FileOutputStream(dstFile);
-
-			// Transfer bytes from input to output
-			byte[] mBuffer = new byte[1024];
-			int mLength;
-			while ((mLength = mInput.read(mBuffer))>0) {
-				mOutput.write(mBuffer, 0, mLength);
-			}
-
-			// Close streams
-			mOutput.flush();
-			mOutput.close();
-			mInput.close();
-		} else {
-			byte buffer[] = new byte[2048];
-			int bytesRead = -1;
-
-			try {
-				// Utilities.chmod(srcFile, 755);
-				InputStream is = new FileInputStream(srcFile);
-				ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
-				ZipEntry ze;
-
-				while ((ze = zis.getNextEntry()) != null) {
-					FileOutputStream fout = new FileOutputStream(dstFile);
-					int totBytesRead = 0;	// @Max (03/01/2014) -> used to be 'long'!!
-
-					while ((bytesRead = zis.read(buffer)) != -1) {
-						fout.write(buffer, 0, bytesRead);
-						totBytesRead += bytesRead;
-						notifyObserver(ze.getName(), totBytesRead, totBytes);
-					}
-
-					Log.d(TAG, "Unzipped file " + ze.getName() + " (" + totBytesRead/1000 + "kB)");
-
-					fout.close();
-					zis.closeEntry();
-				}
-
-				zis.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
 	}
 
 	/**
@@ -362,80 +277,6 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 	public Map<String,String> openInteractionsFile() {
 		String mPath = mAppDataDir + mInteractionsName;
 		return readFromCsvToMap( mPath );
-	}
-
-	/**
-	 * Overwrite database
-	 */
-	public void overwriteSQLiteDataBase(String srcFile, int fileSize) throws Exception {
-		/*
-		this.getReadableDatabase();
-		this.close();
-		*/
-		try {
-			if (fileSize<0) {
-				fileSize = Constants.SQLITE_DB_SIZE;
-			}
-			String dbPath = mAppDataDir + mMainDBName;
-			// Copy database from src to dest db
-			copyFileFromSrcToPath(srcFile, dbPath, fileSize, true);
-			Log.d(TAG, "overwriteDataBase(): old database overwritten");
-		} catch (IOException e) {
-			throw new Exception("Error overwriting database: " + e);
-		}
-	}
-
-	public void overwriteFullTextSQLiteDataBase(String srcFile, int fileSize) throws Exception {
-		/*
-		this.getReadableDatabase();
-		this.close();
-		*/
-		try {
-			if (fileSize<0) {
-				fileSize = Constants.SQLITE_DB_SIZE;
-			}
-			String dbPath = mAppDataDir + mFullTextDBName;
-			// Copy database from src to dest db
-			copyFileFromSrcToPath(srcFile, dbPath, fileSize, true);
-			Log.d(TAG, "overwriteDataBase(): old database overwritten");
-		} catch (IOException e) {
-			throw new Exception("Error overwriting database: " + e);
-		}
-	}
-
-	/**
-	 * Overwrite drug interactions file
-	 */
-	public void overwriteInteractionsFile(String srcFile, int fileSize) throws Exception {
-		try {
-					if (fileSize<0)
-						fileSize = Constants.INTERACTIONS_FILE_SIZE;
-			// Copy database from src to dst and unzip it!
-			copyFileFromSrcToPath(srcFile, mAppDataDir + mInteractionsName, fileSize, true);
-			if (Constants.DEBUG)
-				Log.d(TAG, "overwriteDataBase(): old drug interactions file overwritten");
-		} catch (IOException e) {
-			throw new Exception("Error overwriting drug interactions file!");
-		}
-	}
-
-	/**
-	 *
-	 */
-	public long getSizeSQLiteDatabaseFile() {
-		if (checkFileExistsAtPath(mMainDBName, mAppDataDir)) {
-			File file = new File(mAppDataDir + mMainDBName);
-			return file.length();
-		}
-		return 0;
-	}
-
-	public long getSizeInteractionsFile() {
-		if (checkFileExistsAtPath(mInteractionsName, mAppDataDir)) {
-			File file = new File(mAppDataDir + mInteractionsName);
-			return file.length();
-		}
-		return 0;
 	}
 
 	/**
