@@ -19,25 +19,16 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Observer;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Environment;
 import android.util.Log;
 
 public class DBAdapter {
@@ -49,7 +40,6 @@ public class DBAdapter {
 	private Map<String,String> mInteractions = null;
 	private DataBaseHelper mDbHelper;
 	private int mNumRecords;
-	private boolean mDatabaseCreated = false;
 
 	public static final String KEY_ROWID = "_id";
 	public static final String KEY_TITLE = "title";
@@ -91,80 +81,6 @@ public class DBAdapter {
 	}
 
 	/**
-	 *
-	 */
-	public void addObserver(Observer observer) {
-		mDbHelper.addObserver(observer);
-	}
-
-	public int getSizeSQLiteDatabaseFile() {
-		return (int)mDbHelper.getSizeSQLiteDatabaseFile();
-	}
-
-	public int getSizeInteractionsFile() {
-		return (int)mDbHelper.getSizeInteractionsFile();
-	}
-
-	/**
-	 *
-	 */
-	public static int getSizeZippedFile(String zipFile) {
-		ZipEntry ze = null;
-		try {
-			// Utilities.chmod(zipFile, 755);
-			InputStream is = new FileInputStream(zipFile);
-			ZipInputStream zis = new ZipInputStream(new BufferedInputStream(is));
-			ze = zis.getNextEntry();
-			zis.close();
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		if (ze!=null)
-			return (int)ze.getSize();	// returns -1 if size is UNKNOWN...
-		return 0;
-	}
-
-	/**
-	 *
-	 */
-	public static int getSizeZippedSQLiteDatabaseFile() {
-		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-				+ "/" + Constants.appZippedDatabase() );
-	}
-
-	/**
-	 *
-	 */
-	public static int getSizeZippedInteractionsFile() {
-		return getSizeZippedFile( Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-				+ "/" + Constants.appZippedInteractionsFile() );
-	}
-
-	/**
-	 *
-	 */
-	public void copyReportFile() throws IOException {
-		String srcReportFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-				+ "/" + Constants.appReportFile();
-		String dstReportFile = mContext.getApplicationInfo().dataDir + "/databases/" + Constants.appReportFile();
-
-		InputStream mInput = new FileInputStream(srcReportFile);
-		OutputStream mOutput = new FileOutputStream(dstReportFile);
-
-		// Transfer bytes from input to output
-		byte[] mBuffer = new byte[1024];
-		int mLength;
-		while ((mLength = mInput.read(mBuffer))>0) {
-			mOutput.write(mBuffer, 0, mLength);
-		}
-
-		// Close streams
-		mOutput.flush();
-		mOutput.close();
-		mInput.close();
-	}
-
-	/**
 	 * Opens drug interactions file
 	 */
 	void openInteractionsFile() {
@@ -189,71 +105,13 @@ public class DBAdapter {
 	 */
 	public void create() throws Exception {
 		try {
-			if (!mDatabaseCreated) {
-				// Copies interactions db and report file from asset folder
-				mDbHelper.copyFilesFromNonPersistentFolder();
-				mDatabaseCreated = true;
-			} else {
-				this.closeSQLiteDB();
-				overwriteSQLiteDB();
-				overwriteFullTextSQLiteDB();
-				this.openSQLiteDB();
-				overwriteInteractionsFile();
-			}
+			// Copies interactions db and report file from asset folder
+			mDbHelper.copyFilesFromNonPersistentFolder();
 		} catch (Exception e) {
 			Log.e(TAG, e.toString() + " Unable to create database");
 			throw new Exception("Unable to create database:" + e.getLocalizedMessage());
 		}
 	}
-
-	/**
-	 * Overwrites old database
-	 * @throws IOException
-	 */
-	public void overwriteSQLiteDB() throws Exception {
-		try {
-			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-					+ "/" + Constants.appZippedDatabase();
-			// copies and overwrites (if necessary) while unzipping (if necessary)
-			mDbHelper.overwriteSQLiteDataBase(zippedFile, getSizeZippedFile(zippedFile));
-		} catch (Exception e) {
-			Log.e(TAG, e.toString() + " Unable to overwrite database");
-			throw new Exception("Unable to overwrite database");
-		}
-	}
-
-	/**
-	 * Overwrites old database
-	 * @throws IOException
-	 */
-	public void overwriteFullTextSQLiteDB() throws Exception {
-		try {
-			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-					+ "/" + Constants.appZippedFullTextDatabase();
-			// copies and overwrites (if necessary) while unzipping (if necessary)
-			mDbHelper.overwriteFullTextSQLiteDataBase(zippedFile, DBAdapter.getSizeZippedFile(zippedFile));
-		} catch (Exception e) {
-			Log.e(TAG, e.toString() + " Unable to overwrite database");
-			throw new Exception("Unable to overwrite database");
-		}
-	}
-
-	/**
-	 * Overwrites old drug interactions file
-	 * @throws IOException
-	 */
-	public void overwriteInteractionsFile() throws Exception {
-		try {
-			String zippedFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-					+ "/" + Constants.appZippedInteractionsFile();
-			// copies and overwrites (if necessary) while unzipping (if necessary)
-			mDbHelper.overwriteInteractionsFile(zippedFile, getSizeZippedFile(zippedFile));
-		} catch (IOException e) {
-			Log.e(TAG, e.toString() + " Unable to overwrite drug interactions file");
-			throw new Exception("Unable to overwrite drug interactions file");
-		}
-	}
-
 
 	/**
 	 * Opens database and initializes number of stored records
