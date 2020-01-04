@@ -121,7 +121,7 @@ public class DBUpdater {
     private void unzipFile(String srcFile, String dstFile, String tag) {
         byte[] buffer = new byte[2048];
         int bytesRead = -1;
-        long totalSize;
+        long totalSize = 0;
         try {
             totalSize = totalFileSizes.getOrDefault(tag, 100L);
         } catch (Exception e) {}
@@ -154,7 +154,7 @@ public class DBUpdater {
     }
 
     private void copyFile(String srcFile, String dstFile, String tag) throws IOException {
-        long totalSize;
+        long totalSize = 0;
         try {
             totalSize = totalFileSizes.getOrDefault(tag, 100L);
         } catch (Exception e) {}
