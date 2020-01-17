@@ -71,10 +71,10 @@ public class DBAdapter {
 
 	// private static final String DATABASE_TABLE = "amikodb_fts";
 
-    /**
-     * Constructor
-     * @param context
-     */
+	/**
+	 * Constructor
+	 * @param context
+	 */
 	public DBAdapter(Context context) {
 		mContext = context;
 		mDbHelper = new DataBaseHelper(mContext);
@@ -279,8 +279,17 @@ public class DBAdapter {
 
 		List<Medication> medis = new ArrayList<Medication>();
 
+		 String replaced = title.toLowerCase()
+			 .replaceAll("[aáàäâã]", "\\[aáàäâã\\]")
+			 .replaceAll("[eéèëê]", "\\[eéèëê\\]")
+			 .replaceAll("[iíìî]", "\\[iíìî\\]")
+			 .replaceAll("[oóòöôõ]", "\\[oóòöôõ\\]")
+			 .replaceAll("[uúùüû]", "\\[uúùüû\\]")
+			 .replace("*", "[*]")
+			 .replace("?", "[?]");
+
 		String query = "select " + SHORT_TABLE + " from " + DATABASE_TABLE
-				+ " where " + KEY_TITLE + " like " + "'" + title + "%'";
+				+ " where lower(" + KEY_TITLE + ") GLOB " + "'" + replaced + "*'";
 		searchQuery(query, medis);
 
 		return medis;
@@ -430,7 +439,7 @@ public class DBAdapter {
 		List<Medication> medis = new ArrayList<Medication>();
 
 		String query = "select " + SHORT_TABLE + " from " + DATABASE_TABLE + " where "
-                + KEY_PACKAGES + " like " + "'%" + ean + "%'";
+				+ KEY_PACKAGES + " like " + "'%" + ean + "%'";
 		searchQuery(query, medis);
 		return medis;
 	}
