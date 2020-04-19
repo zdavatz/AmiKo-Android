@@ -289,7 +289,7 @@ public class DBAdapter {
 			 .replace("?", "[?]");
 
 		String query = "select " + SHORT_TABLE + " from " + DATABASE_TABLE
-				+ " where lower(" + KEY_TITLE + ") GLOB " + "'" + replaced + "*'";
+				+ " where lower(" + KEY_TITLE + ") GLOB " + "'*" + replaced + "*'";
 		searchQuery(query, medis);
 
 		return medis;

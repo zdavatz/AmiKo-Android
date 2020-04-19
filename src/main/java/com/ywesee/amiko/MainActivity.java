@@ -1514,6 +1514,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true;
             }
+            case (R.id.menu_settings): {
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                return true;
+            }
             case (R.id.menu_help): {
                 mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
                 if (Constants.appOwner().equals("ywesee")) {
