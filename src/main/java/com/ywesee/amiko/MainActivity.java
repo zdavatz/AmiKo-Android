@@ -769,7 +769,8 @@ public class MainActivity extends AppCompatActivity {
         'getFilesDir' returns a java.io.File object representing the root directory
         of the INTERNAL storage four the application from the current context.
         */
-        mFavoriteData = new FavoriteStore(this.getFilesDir().toString());
+        mFavoriteData = new FavoriteStore(this);
+        mFavoriteData.migrateFromOldFiles();
         // Load hashset containing registration numbers from persistent data store
         mFavoriteMedsSet = mFavoriteData.load();
         mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();

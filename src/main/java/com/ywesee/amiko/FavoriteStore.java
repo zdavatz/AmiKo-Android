@@ -19,6 +19,7 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 package com.ywesee.amiko;
 
+import android.content.Context;
 import android.util.JsonReader;
 import android.util.JsonWriter;
 
@@ -36,40 +37,42 @@ public class FavoriteStore {
 
 	private String m_dir = "";
 
-	public FavoriteStore(String dir) {
-		m_dir = dir;
-		File app_data_folder = new File(dir);
+	public FavoriteStore(Context context) {
+		m_dir = context.getFilesDir().getAbsolutePath();
+		File app_data_folder = new File(m_dir);
 		if (!app_data_folder.exists()) {
 			app_data_folder.mkdirs();
 			System.out.println("Created application data folder in " + app_data_folder);
-		} else
+		} else {
 			System.out.println("Found application data folder is in " + app_data_folder);
-		// Check if favorites.txt exists, otherwise create file
-		File wfile = new File(dir + "\\favorites.txt");
-		try {
-			if (!wfile.exists()) {
-				wfile.getParentFile().mkdirs();
-				wfile.createNewFile();
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+		}
+	}
+
+	public void migrateFromOldFiles() {
+		File oldFavFile = new File(m_dir, "favorites.txt");
+		if (oldFavFile.exists()) {
+			oldFavFile.renameTo(new File(m_dir, "favorites.json"));
+		}
+		File oldFullTextFavFile = new File(m_dir, "favorites-full-text.txt");
+		if (oldFullTextFavFile.exists()) {
+			oldFullTextFavFile.renameTo(new File(m_dir, "favorites-full-text.json"));
 		}
 	}
 
 	public HashSet<String> load() {
-		return this.load("favorites.txt");
+		return this.load("favorites.json");
 	}
 
 	public void save(HashSet<String> hs) {
-		this.save("favorites.txt", hs);
+		this.save("favorites.json", hs);
 	}
 
 	public HashSet<String> loadFullText() {
-		return this.load("favorites-full-text.txt");
+		return this.load("favorites-full-text.json");
 	}
 
 	public void saveFullText(HashSet<String> hs) {
-		this.save("favorites-full-text.txt", hs);
+		this.save("favorites-full-text.json", hs);
 	}
 
 	public HashSet<String> load(String path) {
@@ -83,6 +86,7 @@ public class FavoriteStore {
 				hs.add(reader.nextString());
 			}
 			reader.endArray();
+			reader.close();
 			canReadJson = true;
 		} catch (Exception e) {
 			canReadJson = false;
