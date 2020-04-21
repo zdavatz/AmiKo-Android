@@ -53,7 +53,7 @@ public class DoctorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_doctor);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        store = new DoctorStore(this.getFilesDir().toString());
+        store = new DoctorStore(this);
 
         editTitle = findViewById(R.id.doctor_title);
         editName = findViewById(R.id.doctor_name);

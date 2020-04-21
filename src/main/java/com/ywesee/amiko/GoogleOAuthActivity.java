@@ -85,7 +85,7 @@ public class GoogleOAuthActivity extends AppCompatActivity {
                             .setFields("id")
                             .execute();
                     System.out.println("File ID: " + file.getId());
-                    
+
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
