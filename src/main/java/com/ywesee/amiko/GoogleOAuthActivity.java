@@ -25,10 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class GoogleOAuthActivity extends AppCompatActivity {
-    private GoogleAuthorizationCodeFlow flow;
     private TextView descriptionTextView;
-
-    static private String redirectUri = "com.ywesee.amiko:/oauth";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,18 +34,8 @@ public class GoogleOAuthActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("Login Google");
 
+        GoogleOAuthActivity _this = this;
         descriptionTextView = findViewById(R.id.description_textview);
-
-        flow = new GoogleAuthorizationCodeFlow.Builder(
-                new NetHttpTransport(),
-                new JacksonFactory(),
-                Constants.googleClientId,
-                Constants.googleClientSecret,
-                Arrays.asList("https://www.googleapis.com/auth/drive.appdata")
-        )
-                .setAccessType("offline")
-                .setApprovalPrompt("force")
-                .build();
 
         Intent intent = getIntent();
         handleIntent(intent);
@@ -67,25 +54,7 @@ public class GoogleOAuthActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    GoogleTokenResponse response = flow.newTokenRequest(code)
-                            .setRedirectUri(redirectUri)
-                            .execute();
-                    // UserId is always 0 because we don't have a Ywesee-id
-                    Credential cred = flow.createAndStoreCredential(response, "0");
-
-                    Drive driveService = new Drive.Builder(new NetHttpTransport(), new JacksonFactory(), cred).build();
-
-                    File fileMetadata = new File();
-                    String doctorFilename = "doctor.txt";
-                    fileMetadata.setName(doctorFilename);
-                    fileMetadata.setParents(Collections.singletonList("appDataFolder"));
-                    java.io.File filePath = new java.io.File(_this.getFilesDir().toString(), doctorFilename);
-                    FileContent mediaContent = new FileContent("application/json", filePath);
-                    File file = driveService.files().create(fileMetadata, mediaContent)
-                            .setFields("id")
-                            .execute();
-                    System.out.println("File ID: " + file.getId());
-
+                    PersistenceManager.getShared().receivedAuthCodeFromGoogle(code);
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
@@ -105,22 +74,23 @@ public class GoogleOAuthActivity extends AppCompatActivity {
     }
 
     private void handleIntent(Intent intent) {
-        boolean didReceivedCode = false;
+        boolean shouldAskForAuth = true;
         if (intent != null) {
             Uri uri = intent.getData();
             if (uri != null) {
                 String code = uri.getQueryParameter("code");
                 if (code != null) {
-                    didReceivedCode = true;
+                    shouldAskForAuth = false;
                     getAccessTokenWithCode(code);
                 }
             }
         }
-        if (!didReceivedCode) {
+        if (shouldAskForAuth && PersistenceManager.getShared().isGoogleLoggedIn()) {
+            shouldAskForAuth = false;
+        }
+        if (shouldAskForAuth) {
             descriptionTextView.setText(R.string.redirecting_to_google);
-            String url = flow.newAuthorizationUrl()
-                    .setRedirectUri(redirectUri)
-                    .build();
+            String url = PersistenceManager.getShared().getUrlToLoginToGoogle();
 
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(browserIntent);

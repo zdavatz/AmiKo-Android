@@ -741,6 +741,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AndroidNetworking.initialize(getApplicationContext());
+        PersistenceManager.setupShared(this);
         new DoctorStore(this).migrateFromOldFormat();
         MainActivity.instance = this;
 
