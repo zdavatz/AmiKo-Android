@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -26,6 +28,7 @@ import java.util.List;
 
 public class GoogleOAuthActivity extends AppCompatActivity {
     private TextView descriptionTextView;
+    private Button syncButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,6 +39,14 @@ public class GoogleOAuthActivity extends AppCompatActivity {
 
         GoogleOAuthActivity _this = this;
         descriptionTextView = findViewById(R.id.description_textview);
+        syncButton = findViewById(R.id.sync_button);
+        syncButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent();
+                SyncService.enqueueWork(_this, SyncService.class, 0, intent);
+            }
+        });
 
         Intent intent = getIntent();
         handleIntent(intent);
