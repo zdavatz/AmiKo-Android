@@ -66,6 +66,12 @@ public class GoogleOAuthActivity extends AppCompatActivity {
             public void run() {
                 try {
                     PersistenceManager.getShared().receivedAuthCodeFromGoogle(code);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            descriptionTextView.setText("");
+                        }
+                    });
                 } catch (Exception e) {
                     runOnUiThread(new Runnable() {
                         @Override
