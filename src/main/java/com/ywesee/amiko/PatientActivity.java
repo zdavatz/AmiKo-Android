@@ -282,6 +282,7 @@ public class PatientActivity extends AppCompatActivity {
                 if (!errored) {
                     PatientDBAdapter db = new PatientDBAdapter(this);
                     if (mPatient != null) {
+                        patient.timestamp = Utilities.currentTimeString();
                         db.updateRecord(patient);
                         showPatientUpdatedAlert();
                     } else {

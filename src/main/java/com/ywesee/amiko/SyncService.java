@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
 
 public class SyncService extends JobIntentService {
     final static String TAG = "SyncService";
-    final static String FILE_FIELDS = "id, name, version, parents, mimeType, modifiedTime, size";
+    final static String FILE_FIELDS = "id, name, version, parents, mimeType, modifiedTime, size, properties";
     private Drive driveService = null;
 
     public SyncService() {
@@ -59,23 +60,53 @@ public class SyncService extends JobIntentService {
         return driveService;
     }
 
+    /*
+    To sync data, we:
+    1. Load remote file-metadata list (with file version and last modified)
+    2. Compare with local files and versions
+    3. Upload / download files
+    4. Record the versions to local (googleSync/version.json)
+
+    To sync patients, we:
+    1. Get remote patients from file-metadata, under /patients/
+    2. Get patients last modified from db
+    3. Compare them, upload or download
+    4. To upload patient, create empty remote files /patients/<uid>, put the real data under the properties of the file
+     */
     protected void synchronise() {
         Log.i(TAG, "Start syncing");
         List<File> remoteFiles = this.listRemoteFilesAndFolders();
         List<java.io.File> localFiles = this.listLocalFilesAndFolders();
         Map<String, File> remoteFilesMap = this.remoteFilesToMap(remoteFiles);
+        Map<String, File> remotePatientsMap = this.extractPatientsFromFilesMap(remoteFilesMap);
         Map<String, java.io.File> localFilesMap = this.localFilesToMap(localFiles);
         Map<String, Long> localVersions = this.localFileVersionMap();
+        Map<String, Long> patientVersions = this.extractPatientsFromFilesMap(localVersions);
+
+        PatientDBAdapter db = new PatientDBAdapter(this);
+        Map<String, Date> localPatientTimestamps = this.localPatientTimestamps(db);
 
         Log.i(TAG, "remoteFiles " + remoteFiles.toString());
         Log.i(TAG, "localFiles " + localFiles.toString());
         Log.i(TAG, "remoteFilesMap " + remoteFilesMap.toString());
         Log.i(TAG, "localFilesMap " + localFilesMap.toString());
         Log.i(TAG, "localVersions " + localVersions.toString());
+        Log.i(TAG, "remotePatientsMap " + remotePatientsMap.toString());
+        Log.i(TAG, "patientVersions " + patientVersions.toString());
 
-        SyncPlan sp = new SyncPlan(this.getFilesDir(), localFilesMap, localVersions, remoteFilesMap);
+        SyncPlan sp = new SyncPlan(
+                this.getFilesDir(),
+                localFilesMap,
+                localVersions,
+                remoteFilesMap,
+                patientVersions,
+                localPatientTimestamps,
+                remotePatientsMap,
+                db
+        );
 
         HashMap<String, Long> newVersionMap = sp.execute();
+        db.close();
         this.saveLocalFileVersionMap(newVersionMap);
         Log.i(TAG, "End syncing");
     }
@@ -165,6 +196,34 @@ public class SyncService extends JobIntentService {
         return fileMap;
     }
 
+    /**
+     * Modify the given map, move the "patient entries" in the map to the new returned map
+     * @param filesMap
+     * @return
+     */
+    protected <T> HashMap<String, T> extractPatientsFromFilesMap(Map<String, T> filesMap) {
+        HashMap<String, T> map = new HashMap<>();
+        for (String path : new HashSet<>(filesMap.keySet())) {
+            if (path.startsWith("patients/")) {
+                map.put(path.replace("patients/", ""), filesMap.get(path));
+                filesMap.remove(path);
+            }
+        }
+        return map;
+    }
+
+    protected HashMap<String, Date> localPatientTimestamps(PatientDBAdapter db) {
+        HashMap<String, String> strMap = db.getAllTimestamps();
+        HashMap<String, Date> map = new HashMap<>();
+        for (String uid : strMap.keySet()) {
+            Date timeStamp = Utilities.dateFromTimeString(strMap.get(uid));
+            if (timeStamp != null) {
+                map.put(uid, timeStamp);
+            }
+        }
+        return map;
+    }
+
     protected Map<String, java.io.File> localFilesToMap(List<java.io.File> files) {
         java.io.File filesDir = this.getFilesDir();
         Map<String, java.io.File> fileMap = new HashMap<>();
@@ -227,6 +286,9 @@ public class SyncService extends JobIntentService {
         private Map<String, java.io.File> localFilesMap;
         private Map<String, Long> localVersionMap;
         private Map<String, File> remoteFilesMap;
+        private Map<String, Long> patientVersions;
+        private Map<String, Date> localPatientTimestamps;
+        private Map<String, File> remotePatientsMap;
 
         public HashSet<String> pathsToCreate;
         // { path: remote file id }
@@ -238,16 +300,37 @@ public class SyncService extends JobIntentService {
         // set of path
         public HashSet<String> remoteFilesToDelete;
 
+        public HashSet<String> patientsToCreate; // uid
+        public HashMap<String, File> patientsToUpdate; // uid : remote file
+        public HashMap<String, File> patientsToDownload; // uid : remote file
+        public HashSet<String> localPatientsToDelete; // uid
+        public HashMap<String, File> remotePatientsToDelete;
+        private PatientDBAdapter patientDB;
+
         SyncPlan(java.io.File filesDir,
                  Map<String, java.io.File> localFilesMap,
                  Map<String, Long> localVersionMap,
-                 Map<String, File> remoteFilesMap) {
+                 Map<String, File> remoteFilesMap,
+                 Map<String, Long> patientVersions,
+                 Map<String, Date> localPatientTimestamps,
+                 Map<String, File> remotePatientsMap,
+                 PatientDBAdapter patientDB
+                 ) {
 
             this.filesDir = filesDir;
             this.localFilesMap = localFilesMap;
             this.localVersionMap = localVersionMap;
             this.remoteFilesMap = remoteFilesMap;
+            this.patientVersions = patientVersions;
+            this.localPatientTimestamps = localPatientTimestamps;
+            this.remotePatientsMap = remotePatientsMap;
+            this.patientDB = patientDB;
 
+            prepareFiles();
+            preparePatients();
+        }
+
+        void prepareFiles() {
             pathsToCreate = new HashSet<>();
             pathsToUpdate = new HashMap<>();
             pathsToDownload = new HashMap<>();
@@ -282,7 +365,10 @@ public class SyncService extends JobIntentService {
                     }
                 }
                 if (!localHasFile && remoteHasFile) {
-                    remoteFilesToDelete.add(path);
+                    File remoteFile = remoteFilesMap.get(path);
+                    if (!remoteFile.getMimeType().equals("application/vnd.google-apps.folder")) {
+                        remoteFilesToDelete.add(path);
+                    }
                 }
                 if (localHasFile && !remoteHasFile) {
                     localFilesToDelete.add(path);
@@ -290,15 +376,25 @@ public class SyncService extends JobIntentService {
             }
 
             for (String path : remoteFilesMap.keySet()) {
-                // handle when version is missing in local but exist online
-                if (localVersionMap.containsKey(path)) {
-                    continue;
-                }
                 File remoteFile = remoteFilesMap.get(path);
                 if (remoteFile.getMimeType().equals("application/vnd.google-apps.folder")) {
                     continue;
                 }
-                pathsToDownload.put(path, remoteFile.getId());
+                if (localVersionMap.containsKey(path)) {
+                    // We already handled this in the above loop
+                    continue;
+                }
+                if (localFilesMap.containsKey(path)) {
+                    // File exist both on server and local, but has no local version
+                    java.io.File localFile = localFilesMap.get(path);
+                    long localModified = localFile.lastModified();
+                    long remoteModified = remoteFile.getModifiedTime().getValue();
+                    if (localModified > remoteModified) {
+                        pathsToUpdate.put(path, remoteFile.getId());
+                    }
+                } else {
+                    pathsToDownload.put(path, remoteFile.getId());
+                }
             }
 
             Log.i(TAG, "pathsToCreate: " + pathsToCreate.toString());
@@ -307,6 +403,72 @@ public class SyncService extends JobIntentService {
             Log.i(TAG, "localFilesToDelete: " + localFilesToDelete.toString());
             Log.i(TAG, "remoteFilesToDelete: " + remoteFilesToDelete.toString());
             Log.i(TAG, "pathsToCreate: " + pathsToCreate.toString());
+        }
+
+        void preparePatients() {
+            patientsToCreate = new HashSet<>();
+            patientsToUpdate = new HashMap<>();
+            patientsToDownload = new HashMap<>();
+            localPatientsToDelete = new HashSet<>();
+            remotePatientsToDelete = new HashMap<>();
+
+            patientsToCreate.addAll(localPatientTimestamps.keySet());
+            patientsToCreate.removeAll(patientVersions.keySet());
+            patientsToCreate.removeAll(remotePatientsMap.keySet());
+
+            for (String uid : patientVersions.keySet()) {
+                boolean localHasPatient = localPatientTimestamps.containsKey(uid);
+                boolean remoteHasPatient = remotePatientsMap.containsKey(uid);
+
+                if (localHasPatient && remoteHasPatient) {
+                    Long localVersion = patientVersions.get(uid);
+                    Date localTimestamp = localPatientTimestamps.get(uid);
+                    File remoteFile = remotePatientsMap.get(uid);
+                    Long remoteVerion = remoteFile.getVersion();
+
+                    if (remoteVerion == localVersion) {
+                        long localModified = localTimestamp.getTime();
+                        long remoteModified = remoteFile.getModifiedTime().getValue();
+                        if (localModified > remoteModified) {
+                            patientsToUpdate.put(uid, remoteFile);
+                        }
+                    } else if (remoteVerion > localVersion) {
+                        patientsToDownload.put(uid, remoteFile);
+                    }
+                }
+                if (!localHasPatient && remoteHasPatient) {
+                    remotePatientsToDelete.put(uid, remotePatientsMap.get(uid));
+                }
+                if (localHasPatient && !remoteHasPatient) {
+                    localPatientsToDelete.add(uid);
+                }
+            }
+
+            for (String uid : remotePatientsMap.keySet()) {
+                if (patientVersions.containsKey(uid)) {
+                    // We already handled this in the above loop
+                    continue;
+                }
+                if (localPatientTimestamps.containsKey(uid)) {
+                    // File exist both on server and local, but has no local version
+                    Date timestamp = localPatientTimestamps.get(uid);
+                    File remoteFile = remotePatientsMap.get(uid);
+                    long localModified = timestamp.getTime();
+                    long remoteModified = remoteFile.getModifiedTime().getValue();
+                    if (localModified > remoteModified) {
+                        patientsToUpdate.put(uid, remoteFile);
+                    }
+                } else {
+                    File remoteFile = remotePatientsMap.get(uid);
+                    patientsToDownload.put(uid, remoteFile);
+                }
+            }
+
+            Log.i(TAG, "patientsToCreate " + patientsToCreate.toString());
+            Log.i(TAG, "patientsToUpdate " + patientsToUpdate.toString());
+            Log.i(TAG, "patientsToDownload " + patientsToDownload.toString());
+            Log.i(TAG, "localPatientsToDelete " + localPatientsToDelete.toString());
+            Log.i(TAG, "remotePatientsToDelete " + remotePatientsToDelete.toString());
         }
 
         public void createFolders() throws IOException {
@@ -417,7 +579,7 @@ public class SyncService extends JobIntentService {
         }
 
         public void updateFiles() throws IOException {
-            for (String path : this.pathsToUpdate.keySet()) {
+            for (String path : new HashSet<>(this.pathsToUpdate.keySet())) {
                 String fileId = this.pathsToUpdate.get(path);
                 java.io.File localFile = new java.io.File(this.filesDir, path);
 
@@ -497,24 +659,189 @@ public class SyncService extends JobIntentService {
             }
         }
 
+        void createPatientFolder() throws IOException {
+            if (remoteFilesMap.containsKey("patients")) return;
+            File fileMetadata = new File();
+            fileMetadata.setName("patients");
+            fileMetadata.setMimeType("application/vnd.google-apps.folder");
+            fileMetadata.setParents(Collections.singletonList("appDataFolder"));
+            try {
+                File file = driveService.files().create(fileMetadata)
+                        .setFields(FILE_FIELDS)
+                        .execute();
+                remoteFilesMap.put("patients", file);
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
+
+        void createPatients(BatchRequest batch) {
+            File patientFolder = remoteFilesMap.get("patients");
+            if (patientFolder == null) {
+                Log.e(TAG, "Cannot find patients folder");
+                return;
+            }
+            ArrayList<Patient> patients = this.patientDB.getPatientsWithUids(this.patientsToCreate);
+            for (Patient patient : patients) {
+                File fileMetadata = new File();
+                fileMetadata.setName(patient.uid);
+                fileMetadata.setProperties(patient.toMap());
+//            fileMetadata.setMimeType("application/octet-stream");
+                fileMetadata.setParents(Collections.singletonList(patientFolder.getId()));
+                JsonBatchCallback<File> callback = new JsonBatchCallback<File>() {
+                    @Override
+                    public void onFailure(GoogleJsonError e,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.e(TAG, e.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(File result,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.i(TAG, "Created patient " + patient.uid);
+                        Log.i(TAG, "File ID: " + result.getId());
+                        patientsToCreate.remove(patient.uid);
+                        remotePatientsMap.put(patient.uid, result);
+                    }
+                };
+
+                try {
+                    driveService.files().create(fileMetadata)
+                            .setFields(FILE_FIELDS)
+                            .queue(batch, callback);
+                } catch (Exception e) {
+                    Log.e(TAG, e.toString());
+                }
+            }
+        }
+
+        void updatePatients(BatchRequest batch) throws IOException {
+            ArrayList<Patient> patients = this.patientDB.getPatientsWithUids(this.patientsToUpdate.keySet());
+            for (Patient patient : patients) {
+                File file = this.patientsToUpdate.get(patient.uid);
+
+                File fileMetadata = new File();
+                fileMetadata.setName(patient.uid);
+                fileMetadata.setProperties(patient.toMap());
+                JsonBatchCallback<File> callback = new JsonBatchCallback<File>() {
+                    @Override
+                    public void onFailure(GoogleJsonError e,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.e(TAG, e.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(File result,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.i(TAG, "Updated files");
+                        Log.i(TAG, "File name: " + result.getName());
+                        Log.i(TAG, "File ID: " + result.getId());
+                        patientsToUpdate.remove(patient.uid);
+                        remotePatientsMap.put(patient.uid, result);
+                    }
+                };
+
+                driveService.files()
+                        .update(file.getId(), fileMetadata)
+                        .setFields(FILE_FIELDS)
+                        .queue(batch, callback);
+            }
+        }
+
+        void deletePatients(BatchRequest batch) throws IOException {
+            for (String uid : new HashSet<>(this.remotePatientsToDelete.keySet())) {
+                File file = this.remotePatientsToDelete.get(uid);
+                JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
+                    @Override
+                    public void onFailure(GoogleJsonError e,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.e(TAG, e.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(Void v,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.i(TAG, "Deleted remote patient");
+                        Log.i(TAG, "fileId: " + file.getId());
+                        remotePatientsToDelete.remove(uid);
+                        remotePatientsMap.remove(uid);
+                    }
+                };
+                driveService.files()
+                        .delete(file.getId())
+                        .queue(batch, callback);
+            }
+        }
+
+        void downloadRemotePatients() {
+            for (String uid : this.patientsToDownload.keySet()) {
+                File file = this.patientsToDownload.get(uid);
+                this.patientDB.insertRecord(new Patient(file.getProperties()));
+            }
+        }
+
+        void deleteLocalPatients() {
+            for (String uid : this.localPatientsToDelete) {
+                this.patientDB.deletePatientWithUid(uid);
+                this.patientVersions.remove(uid);
+            }
+        }
+
+        private HashMap<String, Long> syncFiles() throws IOException {
+            this.createFolders();
+            Log.i(TAG, "new remote map after creating folder " + remoteFilesMap.toString());
+
+            this.createFiles();
+            this.updateFiles();
+            this.deleteFiles();
+            Log.i(TAG, "new remote map after uploading " + remoteFilesMap.toString());
+            this.downloadRemoteFiles();
+            this.deleteLocalFiles();
+            HashMap<String, Long> newVersionMap = this.remoteFilesToVersionMap(this.remoteFilesMap);
+            return newVersionMap;
+        }
+
+        private HashMap<String, Long> syncPatients() throws IOException {
+            BatchRequest batch = driveService.batch();
+            this.createPatientFolder();
+            Log.i(TAG, "new remote map after creating patient folder " + remoteFilesMap.toString());
+
+            this.createPatients(batch);
+            this.updatePatients(batch);
+            this.deletePatients(batch);
+            if (batch.size() > 0) {
+                batch.execute();
+            }
+            Log.i(TAG, "new remote map after uploading patients " + remotePatientsMap.toString());
+            this.downloadRemotePatients();
+            this.deleteLocalPatients();
+            HashMap<String, Long> newVersionMap = this.remoteFilesToVersionMap(this.remotePatientsMap);
+            return newVersionMap;
+        }
+
         public HashMap<String, Long> execute() {
             try {
-                this.createFolders();
-                Log.i(TAG, "new remote map after creating folder " + remoteFilesMap.toString());
+                HashMap<String, Long> fileVersions = this.syncFiles();
+                HashMap<String, Long> patientVersions = this.syncPatients();
 
-                this.createFiles();
-                this.updateFiles();
-                this.deleteFiles();
-                Log.i(TAG, "new remote map after uploading " + remoteFilesMap.toString());
-                this.downloadRemoteFiles();
-                this.deleteLocalFiles();
-                HashMap<String, Long> newVersionMap = this.remoteFilesToVersionMap(this.remoteFilesMap);
-                return newVersionMap;
+                HashMap<String, Long> result = new HashMap<>(fileVersions);
+                for (String uid : patientVersions.keySet()) {
+                    result.put("patients/" + uid, patientVersions.get(uid));
+                }
+                return result;
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
             }
             return null;
         }
+
+
 
         protected HashMap<String, Long> remoteFilesToVersionMap(Map<String, File> files) {
             HashMap<String, Long> map = new HashMap<>();
