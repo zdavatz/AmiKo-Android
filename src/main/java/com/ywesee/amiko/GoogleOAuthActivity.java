@@ -1,7 +1,10 @@
 package com.ywesee.amiko;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -11,6 +14,7 @@ import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -50,6 +54,17 @@ public class GoogleOAuthActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         handleIntent(intent);
+
+        IntentFilter statusIntentFilter = new IntentFilter(
+                SyncService.BROADCAST_ACTION);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        receivedSyncStatus(intent.getStringExtra("status"));
+                    }
+                },
+                statusIntentFilter);
     }
 
     @Override
@@ -112,5 +127,14 @@ public class GoogleOAuthActivity extends AppCompatActivity {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(browserIntent);
         }
+    }
+
+    protected void receivedSyncStatus(String status) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                descriptionTextView.setText(status);
+            }
+        });
     }
 }

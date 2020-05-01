@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.JobIntentService;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.batch.BatchRequest;
@@ -38,6 +39,7 @@ import java.util.stream.Collectors;
 
 public class SyncService extends JobIntentService {
     final static String TAG = "SyncService";
+    public static final String BROADCAST_ACTION = "com.ywesee.amiko.BROADCAST";
     final static String FILE_FIELDS = "id, name, version, parents, mimeType, modifiedTime, size, properties";
     private Drive driveService = null;
 
@@ -75,6 +77,7 @@ public class SyncService extends JobIntentService {
      */
     protected void synchronise() {
         Log.i(TAG, "Start syncing");
+        this.reportStatus("Starting sync");
         List<File> remoteFiles = this.listRemoteFilesAndFolders();
         List<java.io.File> localFiles = this.listLocalFilesAndFolders();
         Map<String, File> remoteFilesMap = this.remoteFilesToMap(remoteFiles);
@@ -108,6 +111,7 @@ public class SyncService extends JobIntentService {
         HashMap<String, Long> newVersionMap = sp.execute();
         db.close();
         this.saveLocalFileVersionMap(newVersionMap);
+        this.reportStatus("Finished sync");
         Log.i(TAG, "End syncing");
     }
 
@@ -278,6 +282,14 @@ public class SyncService extends JobIntentService {
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
+    }
+
+    protected void reportStatus(String status) {
+        Intent localIntent =
+                new Intent(SyncService.BROADCAST_ACTION)
+                        .putExtra("status", status);
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
     }
 
     class SyncPlan {
@@ -540,6 +552,7 @@ public class SyncService extends JobIntentService {
 
         public void createFiles() {
             HashSet<String> toRemove = new HashSet<>();
+            int i = 0;
             for (String pathToCreate : pathsToCreate) {
                 java.io.File localFile = new java.io.File(this.filesDir, pathToCreate);
                 java.io.File parentFile = localFile.getParentFile();
@@ -561,6 +574,7 @@ public class SyncService extends JobIntentService {
                 }
                 FileContent mediaContent = new FileContent("application/octet-stream", localFile);
 
+                reportStatus("Uploading new files (" + i + "/" + pathsToCreate.size() + ")");
                 try {
                     File result = driveService.files()
                             .create(fileMetadata, mediaContent)
@@ -574,11 +588,13 @@ public class SyncService extends JobIntentService {
                 } catch (Exception e) {
                     Log.e(TAG, e.getMessage());
                 }
+                i++;
             }
             pathsToCreate.removeAll(toRemove);
         }
 
-        public void updateFiles() throws IOException {
+        public void updateFiles() {
+            int i = 0;
             for (String path : new HashSet<>(this.pathsToUpdate.keySet())) {
                 String fileId = this.pathsToUpdate.get(path);
                 java.io.File localFile = new java.io.File(this.filesDir, path);
@@ -587,20 +603,25 @@ public class SyncService extends JobIntentService {
                 fileMetadata.setName(localFile.getName());
                 FileContent mediaContent = new FileContent("application/octet-stream", localFile);
 
-                File result = driveService.files()
-                        .update(fileId, fileMetadata, mediaContent)
-                        .setFields(FILE_FIELDS)
-                        .execute();
-                Log.i(TAG, "Updated files");
-                Log.i(TAG, "File name: " + result.getName());
-                Log.i(TAG, "File ID: " + result.getId());
-                pathsToUpdate.remove(path);
-                remoteFilesMap.put(path, result);
+                reportStatus("Updating files (" + i + "/" + pathsToUpdate.size() + ")");
+                try {
+                    File result = driveService.files()
+                            .update(fileId, fileMetadata, mediaContent)
+                            .setFields(FILE_FIELDS)
+                            .execute();
+                    Log.i(TAG, "Updated files");
+                    Log.i(TAG, "File name: " + result.getName());
+                    Log.i(TAG, "File ID: " + result.getId());
+                    pathsToUpdate.remove(path);
+                    remoteFilesMap.put(path, result);
+                } catch (Exception e){}
+                i++;
             }
         }
 
         public void deleteFiles() throws IOException {
             BatchRequest batch = driveService.batch();
+            reportStatus("Deleting files...");
             for (String path : this.remoteFilesToDelete) {
                 File remoteFile = this.remoteFilesMap.get(path);
                 JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
@@ -632,6 +653,7 @@ public class SyncService extends JobIntentService {
         }
 
         public void downloadRemoteFiles() throws IOException {
+            int i = 0;
             for (String path : this.pathsToDownload.keySet()) {
                 String fileId = this.pathsToDownload.get(path);
                 File remoteFile = this.remoteFilesMap.get(path);
@@ -643,24 +665,32 @@ public class SyncService extends JobIntentService {
                 if (remoteFile.getSize() != null && remoteFile.getSize() == 0) {
                     continue;
                 }
-                FileOutputStream fos = new FileOutputStream(localFile);
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                driveService.files().get(fileId)
-                        .executeMediaAndDownloadTo(outputStream);
-                outputStream.writeTo(fos);
-                localFile.setLastModified(remoteFile.getModifiedTime().getValue());
+                reportStatus("Downloading files (" + i + "/" + pathsToDownload.size() + ")");
+                try {
+                    FileOutputStream fos = new FileOutputStream(localFile);
+                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                    driveService.files().get(fileId)
+                            .executeMediaAndDownloadTo(outputStream);
+                    outputStream.writeTo(fos);
+                    localFile.setLastModified(remoteFile.getModifiedTime().getValue());
+                } catch (Exception e){}
+                i++;
             }
         }
 
         public void deleteLocalFiles() {
+            int i = 0;
             for (String path : this.localFilesToDelete) {
+                reportStatus("Deleting files (" + i + "/" + localFilesToDelete.size() + ")");
                 java.io.File file = new java.io.File(this.filesDir, path);
                 file.delete();
+                i++;
             }
         }
 
         void createPatientFolder() throws IOException {
             if (remoteFilesMap.containsKey("patients")) return;
+            reportStatus("Preparing patients");
             File fileMetadata = new File();
             fileMetadata.setName("patients");
             fileMetadata.setMimeType("application/vnd.google-apps.folder");
@@ -686,7 +716,7 @@ public class SyncService extends JobIntentService {
                 File fileMetadata = new File();
                 fileMetadata.setName(patient.uid);
                 fileMetadata.setProperties(patient.toMap());
-//            fileMetadata.setMimeType("application/octet-stream");
+                fileMetadata.setMimeType("application/octet-stream");
                 fileMetadata.setParents(Collections.singletonList(patientFolder.getId()));
                 JsonBatchCallback<File> callback = new JsonBatchCallback<File>() {
                     @Override
@@ -794,6 +824,7 @@ public class SyncService extends JobIntentService {
         }
 
         private HashMap<String, Long> syncFiles() throws IOException {
+            reportStatus("Preparing folders...");
             this.createFolders();
             Log.i(TAG, "new remote map after creating folder " + remoteFilesMap.toString());
 
@@ -812,6 +843,7 @@ public class SyncService extends JobIntentService {
             this.createPatientFolder();
             Log.i(TAG, "new remote map after creating patient folder " + remoteFilesMap.toString());
 
+            reportStatus("Syncing patients");
             this.createPatients(batch);
             this.updatePatients(batch);
             this.deletePatients(batch);
@@ -840,8 +872,6 @@ public class SyncService extends JobIntentService {
             }
             return null;
         }
-
-
 
         protected HashMap<String, Long> remoteFilesToVersionMap(Map<String, File> files) {
             HashMap<String, Long> map = new HashMap<>();
