@@ -70,6 +70,7 @@ public class PrescriptionUtility {
                 stream.close();
             } catch (Exception e) { }
         }
+        SyncManager.getShared().triggerSync();
         return amkFile;
     }
     public static Prescription readFromFile(File file) {

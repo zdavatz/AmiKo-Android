@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.FileObserver;
 import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
@@ -92,6 +93,7 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private GestureDetector detector;
+    private FileObserver fileObserver;
 
     static final String TAG = "Prescription";
     static final int REQUEST_PATIENT = 1;
@@ -197,6 +199,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                                 if (openedFile != null && openedFile.equals(file)) {
                                     openNewPrescription();
                                 }
+                                SyncManager.getShared().triggerSync();
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
@@ -334,6 +337,22 @@ public class PrescriptionActivity extends AppCompatActivity {
         };
 
         detector = new GestureDetector(this, simpleOnGestureListener);
+        fileObserver = new FileObserver(new File(this.getFilesDir(), "amk").getAbsolutePath()) {
+            @Override
+            public void onEvent(int i, @Nullable String s) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (i == FileObserver.CREATE || i == FileObserver.DELETE) {
+                            reloadRecyclerView();
+                        } else if (i == FileObserver.MODIFY && s.equals(openedFile.getPath())) {
+                            openPrescriptionFromFile(openedFile);
+                        }
+                    }
+                });
+            }
+        };
+        fileObserver.startWatching();
     }
 
     @Override
@@ -837,6 +856,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         openedFile = savedFile;
         openedPrescription = p;
         reloadPlaceDateText();
+        SyncManager.getShared().triggerSync();
     }
 
     Intent createEmailIntent() {

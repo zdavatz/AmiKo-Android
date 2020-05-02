@@ -15,11 +15,14 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
-public class PersistenceManager extends Object {
-    static PersistenceManager shared = null;
+public class SyncManager extends Object {
+    static SyncManager shared = null;
     private Context context = null;
+    private Timer timer;
     static final String TAG = "PersistenceManager";
 
     private GoogleAuthorizationCodeFlow googleAuthFlow;
@@ -27,15 +30,15 @@ public class PersistenceManager extends Object {
 
     static void setupShared(Context context) {
         if (shared == null) {
-            shared = new PersistenceManager(context);
+            shared = new SyncManager(context);
         }
     }
 
-    static PersistenceManager getShared() {
+    static SyncManager getShared() {
         return shared;
     }
 
-    private PersistenceManager(Context context) {
+    private SyncManager(Context context) {
         this.context = context;
         DataStore<StoredCredential> credDataStore = null;
         try {
@@ -55,11 +58,20 @@ public class PersistenceManager extends Object {
                 .setApprovalPrompt("force")
                 .setCredentialDataStore(credDataStore)
                 .build();
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                triggerSync();
+            }
+        }, 0, 3 * 60 * 1000); // 3 min
     }
 
-    public void loginToGoogle(Context context) {
-        Intent intent = new Intent(context, GoogleSyncActivity.class);
-        context.startActivity(intent);
+    public void triggerSync() {
+        if (isGoogleLoggedIn()) {
+            Intent intent = new Intent();
+            SyncService.enqueueWork(context, SyncService.class, 0, intent);
+        }
     }
 
     public String getUrlToLoginToGoogle() {
