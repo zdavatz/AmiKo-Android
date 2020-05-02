@@ -154,6 +154,7 @@ public class DoctorStore {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        SyncManager.getShared().triggerSync();
     }
 
     public Bitmap getSignature() {

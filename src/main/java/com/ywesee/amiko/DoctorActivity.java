@@ -8,6 +8,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.FileObserver;
 import android.provider.MediaStore;
 
 import androidx.annotation.NonNull;
@@ -22,8 +23,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DoctorActivity extends AppCompatActivity {
 
@@ -46,6 +51,7 @@ public class DoctorActivity extends AppCompatActivity {
     private ImageView imageView;
 
     DoctorStore store;
+    List<FileObserver> fileObservers;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +60,27 @@ public class DoctorActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         store = new DoctorStore(this);
+        fileObservers = Arrays.asList(
+                new File(this.getFilesDir(), "doctor.json").getAbsolutePath(),
+                new File(this.getFilesDir(), DoctorStore.DOC_SIGNATURE_FILENAME).getAbsolutePath()
+        )
+                .stream()
+                .map(path -> {
+                    FileObserver f = new FileObserver(path, FileObserver.MODIFY) {
+                        @Override
+                        public void onEvent(int i, @Nullable String s) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    loadFromStore();
+                                }
+                            });
+                        }
+                    };
+                    f.startWatching();
+                    return f;
+                })
+                .collect(Collectors.toList());
 
         editTitle = findViewById(R.id.doctor_title);
         editName = findViewById(R.id.doctor_name);
@@ -93,6 +120,14 @@ public class DoctorActivity extends AppCompatActivity {
             }
         });
         this.loadFromStore();
+    }
+
+    @Override
+    protected void onDestroy() {
+        for (FileObserver f : fileObservers) {
+            f.stopWatching();
+        }
+        super.onDestroy();
     }
 
     private void pickDoctorSignatureFromLibrary() {
