@@ -1,5 +1,6 @@
 package com.ywesee.amiko;
 
+import android.content.Context;
 import android.content.Intent;
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -28,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -56,7 +58,7 @@ public class SyncService extends JobIntentService {
         if (driveService != null) {
             return driveService;
         }
-        Credential cred = PersistenceManager.getShared().getGoogleCredential();
+        Credential cred = SyncManager.getShared().getGoogleCredential();
         if (cred == null) return null;
         driveService = new Drive.Builder(new NetHttpTransport(), new JacksonFactory(), cred).build();
         return driveService;
@@ -290,6 +292,15 @@ public class SyncService extends JobIntentService {
                         .putExtra("status", status);
         // Broadcasts the Intent to receivers in this app.
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+    }
+
+    public static String lastSynced(Context context) {
+        java.io.File versionFile = new java.io.File(context.getFilesDir(), "googleSync/versions.json");
+        if (!versionFile.exists()) {
+            return "None";
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
+        return sdf.format(new Date(versionFile.lastModified()));
     }
 
     class SyncPlan {

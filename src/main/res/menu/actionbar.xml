@@ -30,9 +30,10 @@
 	    android:orderInCategory="5"
 	    app:showAsAction="collapseActionView" />
 
-	<item android:id="@+id/menu_settings"
-		android:title="@string/menu_settings"
+	<item
+		android:id="@+id/menu_syncing"
 		android:orderInCategory="5"
+		android:title="@string/menu_syncing"
 		app:showAsAction="collapseActionView" />
 	
 	<item android:id="@+id/menu_help"

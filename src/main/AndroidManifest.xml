@@ -180,22 +180,13 @@
                 android:value="com.ywesee.amiko.MainActivity" />
         </activity>
 
-        <activity android:name=".SettingsActivity"
-            android:alwaysRetainTaskState="true"
-            android:screenOrientation="portrait"
-            >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.ywesee.amiko.MainActivity" />
-        </activity>
-
-        <activity android:name=".GoogleOAuthActivity"
+        <activity android:name=".GoogleSyncActivity"
             android:alwaysRetainTaskState="true"
             android:screenOrientation="portrait"
             android:launchMode="singleTask">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.ywesee.amiko.SettingsActivity" />
+                android:value="com.ywesee.amiko.MainActivity" />
 
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

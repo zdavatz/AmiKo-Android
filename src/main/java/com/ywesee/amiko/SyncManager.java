@@ -58,7 +58,7 @@ public class PersistenceManager extends Object {
     }
 
     public void loginToGoogle(Context context) {
-        Intent intent = new Intent(context, GoogleOAuthActivity.class);
+        Intent intent = new Intent(context, GoogleSyncActivity.class);
         context.startActivity(intent);
     }
 
@@ -93,5 +93,11 @@ public class PersistenceManager extends Object {
 
     public boolean isGoogleLoggedIn() {
         return this.getGoogleCredential() != null;
+    }
+
+    public void logoutGoogle() {
+        try {
+            googleAuthFlow.getCredentialDataStore().delete("0");
+        } catch (Exception e){}
     }
 }

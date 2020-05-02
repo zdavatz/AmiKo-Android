@@ -16,41 +16,42 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleTokenResponse;
-import com.google.api.client.http.FileContent;
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.drive.Drive;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-public class GoogleOAuthActivity extends AppCompatActivity {
+public class GoogleSyncActivity extends AppCompatActivity {
     private TextView descriptionTextView;
+    private Button loginButton;
+    private TextView syncTextView;
     private Button syncButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_google_auth);
+        setContentView(R.layout.activity_google_sync);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("Login Google");
 
-        GoogleOAuthActivity _this = this;
+        GoogleSyncActivity _this = this;
         descriptionTextView = findViewById(R.id.description_textview);
+        loginButton = findViewById(R.id.login_button);
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (SyncManager.getShared().isGoogleLoggedIn()) {
+                    logout();
+                } else {
+                    login();
+                }
+            }
+        });
+        syncTextView = findViewById(R.id.sync_description);
         syncButton = findViewById(R.id.sync_button);
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent();
-                SyncService.enqueueWork(_this, SyncService.class, 0, intent);
+                SyncManager.getShared().triggerSync();
             }
         });
+        updateUI();
 
         Intent intent = getIntent();
         handleIntent(intent);
@@ -73,18 +74,32 @@ public class GoogleOAuthActivity extends AppCompatActivity {
         handleIntent(intent);
     }
 
+    private void updateUI() {
+        if (SyncManager.getShared().isGoogleLoggedIn()) {
+            descriptionTextView.setText(R.string.logged_in);
+            loginButton.setText(R.string.logout);
+            syncButton.setEnabled(true);
+        } else {
+            descriptionTextView.setText(R.string.not_logged_in);
+            loginButton.setText(R.string.login);
+            syncButton.setEnabled(false);
+        }
+        syncTextView.setText("Last synced: " + SyncService.lastSynced(this));
+    }
+
     private void getAccessTokenWithCode(String code) {
-        GoogleOAuthActivity _this = this;
+        GoogleSyncActivity _this = this;
         descriptionTextView.setText(R.string.loading);
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    PersistenceManager.getShared().receivedAuthCodeFromGoogle(code);
+                    SyncManager.getShared().receivedAuthCodeFromGoogle(code);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             descriptionTextView.setText("");
+                            updateUI();
                         }
                     });
                 } catch (Exception e) {
@@ -102,38 +117,36 @@ public class GoogleOAuthActivity extends AppCompatActivity {
                 }
             }
         });
+    }
 
+    private void login() {
+        descriptionTextView.setText(R.string.redirecting_to_google);
+        String url = SyncManager.getShared().getUrlToLoginToGoogle();
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserIntent);
+        updateUI();
+    }
+
+    private void logout() {
+        SyncManager.getShared().logoutGoogle();
+        updateUI();
     }
 
     private void handleIntent(Intent intent) {
-        boolean shouldAskForAuth = true;
-        if (intent != null) {
-            Uri uri = intent.getData();
-            if (uri != null) {
-                String code = uri.getQueryParameter("code");
-                if (code != null) {
-                    shouldAskForAuth = false;
-                    getAccessTokenWithCode(code);
-                }
-            }
-        }
-        if (shouldAskForAuth && PersistenceManager.getShared().isGoogleLoggedIn()) {
-            shouldAskForAuth = false;
-        }
-        if (shouldAskForAuth) {
-            descriptionTextView.setText(R.string.redirecting_to_google);
-            String url = PersistenceManager.getShared().getUrlToLoginToGoogle();
-
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            startActivity(browserIntent);
-        }
+        if (intent == null) return;
+        Uri uri = intent.getData();
+        if (uri == null) return;
+        String code = uri.getQueryParameter("code");
+        if (code == null) return;
+        getAccessTokenWithCode(code);
+        updateUI();
     }
 
     protected void receivedSyncStatus(String status) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                descriptionTextView.setText(status);
+                syncTextView.setText(status);
             }
         });
     }
