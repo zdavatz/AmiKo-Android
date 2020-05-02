@@ -75,7 +75,21 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
 
     public long insertRecord(Patient p) {
         ContentValues values = p.toContentValues();
-        return this.getWritableDatabase().insert(DATABASE_TABLE, null, values);
+        long id = this.getWritableDatabase().insert(DATABASE_TABLE, null, values);
+        SyncManager.getShared().triggerSync();
+        return id;
+    }
+
+    public long upsertRecordByUid(Patient p) {
+        Patient existing = this.getPatientWithUniqueId(p.uid);
+        if (existing != null) {
+            ContentValues values = p.toContentValues();
+            long id = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_UID + "=" + p.uid, null);
+            SyncManager.getShared().triggerSync();
+            return id;
+        } else {
+            return this.insertRecord(p);
+        }
     }
 
     /**
@@ -84,11 +98,15 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
      * @return
      */
     public boolean deleteRecord(Patient p) {
-        return this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + p.rowId, null) > 0;
+        boolean result = this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + p.rowId, null) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
     }
 
     public boolean deletePatientWithUid(String uid) {
-        return this.getWritableDatabase().delete(DATABASE_TABLE, KEY_UID + "= ?", new String[] { uid }) > 0;
+        boolean result = this.getWritableDatabase().delete(DATABASE_TABLE, KEY_UID + "= ?", new String[] { uid }) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
     }
 
     /**
@@ -243,6 +261,8 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
     // Update record
     public boolean updateRecord(Patient patient) {
         ContentValues values = patient.toContentValues();
-        return this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_ROWID + "=" + patient.rowId, null) > 0;
+        boolean result = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_ROWID + "=" + patient.rowId, null) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
     }
 }

@@ -41,7 +41,9 @@ import java.util.stream.Collectors;
 
 public class SyncService extends JobIntentService {
     final static String TAG = "SyncService";
-    public static final String BROADCAST_ACTION = "com.ywesee.amiko.BROADCAST";
+    public static final String BROADCAST_STATUS = "com.ywesee.amiko.SYNC_BROADCAST";
+    public static final String BROADCAST_SYNCED_FILE = "com.ywesee.amiko.SYNC_FILE_BROADCAST";
+    public static final String BROADCAST_SYNCED_PATIENT = "com.ywesee.amiko.SYNC_PATIENT_BROADCAST";
     final static String FILE_FIELDS = "id, name, version, parents, mimeType, modifiedTime, size, properties";
     private Drive driveService = null;
 
@@ -288,8 +290,24 @@ public class SyncService extends JobIntentService {
 
     protected void reportStatus(String status) {
         Intent localIntent =
-                new Intent(SyncService.BROADCAST_ACTION)
+                new Intent(SyncService.BROADCAST_STATUS)
                         .putExtra("status", status);
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+    }
+
+    protected void reportUpdatedFile(java.io.File file) {
+        Intent localIntent =
+                new Intent(SyncService.BROADCAST_SYNCED_FILE)
+                        .putExtra("path", file.getAbsolutePath());
+        // Broadcasts the Intent to receivers in this app.
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+    }
+
+    protected void reportUpdatedPatient(String uid) {
+        Intent localIntent =
+                new Intent(SyncService.BROADCAST_SYNCED_PATIENT)
+                        .putExtra("uid", uid);
         // Broadcasts the Intent to receivers in this app.
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
     }
@@ -414,6 +432,8 @@ public class SyncService extends JobIntentService {
                     long remoteModified = remoteFile.getModifiedTime().getValue();
                     if (localModified > remoteModified) {
                         pathsToUpdate.put(path, remoteFile.getId());
+                    } else if (localModified < remoteModified) {
+                        pathsToDownload.put(path, remoteFile.getId());
                     }
                 } else {
                     pathsToDownload.put(path, remoteFile.getId());
@@ -480,6 +500,8 @@ public class SyncService extends JobIntentService {
                     long remoteModified = remoteFile.getModifiedTime().getValue();
                     if (localModified > remoteModified) {
                         patientsToUpdate.put(uid, remoteFile);
+                    } else if (remoteModified > localModified) {
+                        patientsToDownload.put(uid, remoteFile);
                     }
                 } else {
                     File remoteFile = remotePatientsMap.get(uid);
@@ -504,6 +526,8 @@ public class SyncService extends JobIntentService {
                     break;
                 }
 
+                Drive driveService = getDriveService();
+                if (driveService == null) return;
                 BatchRequest batch = driveService.batch();
 
                 for (java.io.File folderToCreate : allFoldersToCreate) {
@@ -562,6 +586,8 @@ public class SyncService extends JobIntentService {
         }
 
         public void createFiles() {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             HashSet<String> toRemove = new HashSet<>();
             int i = 0;
             for (String pathToCreate : pathsToCreate) {
@@ -605,6 +631,8 @@ public class SyncService extends JobIntentService {
         }
 
         public void updateFiles() {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             int i = 0;
             for (String path : new HashSet<>(this.pathsToUpdate.keySet())) {
                 String fileId = this.pathsToUpdate.get(path);
@@ -631,6 +659,8 @@ public class SyncService extends JobIntentService {
         }
 
         public void deleteFiles() throws IOException {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             BatchRequest batch = driveService.batch();
             reportStatus("Deleting files...");
             for (String path : this.remoteFilesToDelete) {
@@ -664,6 +694,8 @@ public class SyncService extends JobIntentService {
         }
 
         public void downloadRemoteFiles() throws IOException {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             int i = 0;
             for (String path : this.pathsToDownload.keySet()) {
                 String fileId = this.pathsToDownload.get(path);
@@ -684,6 +716,7 @@ public class SyncService extends JobIntentService {
                             .executeMediaAndDownloadTo(outputStream);
                     outputStream.writeTo(fos);
                     localFile.setLastModified(remoteFile.getModifiedTime().getValue());
+                    reportUpdatedFile(localFile);
                 } catch (Exception e){}
                 i++;
             }
@@ -695,6 +728,7 @@ public class SyncService extends JobIntentService {
                 reportStatus("Deleting files (" + i + "/" + localFilesToDelete.size() + ")");
                 java.io.File file = new java.io.File(this.filesDir, path);
                 file.delete();
+                reportUpdatedFile(file);
                 i++;
             }
         }
@@ -717,6 +751,8 @@ public class SyncService extends JobIntentService {
         }
 
         void createPatients(BatchRequest batch) {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             File patientFolder = remoteFilesMap.get("patients");
             if (patientFolder == null) {
                 Log.e(TAG, "Cannot find patients folder");
@@ -759,6 +795,8 @@ public class SyncService extends JobIntentService {
         }
 
         void updatePatients(BatchRequest batch) throws IOException {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             ArrayList<Patient> patients = this.patientDB.getPatientsWithUids(this.patientsToUpdate.keySet());
             for (Patient patient : patients) {
                 File file = this.patientsToUpdate.get(patient.uid);
@@ -794,6 +832,8 @@ public class SyncService extends JobIntentService {
         }
 
         void deletePatients(BatchRequest batch) throws IOException {
+            Drive driveService = getDriveService();
+            if (driveService == null) return;
             for (String uid : new HashSet<>(this.remotePatientsToDelete.keySet())) {
                 File file = this.remotePatientsToDelete.get(uid);
                 JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
@@ -823,7 +863,8 @@ public class SyncService extends JobIntentService {
         void downloadRemotePatients() {
             for (String uid : this.patientsToDownload.keySet()) {
                 File file = this.patientsToDownload.get(uid);
-                this.patientDB.insertRecord(new Patient(file.getProperties()));
+                this.patientDB.upsertRecordByUid(new Patient(file.getProperties()));
+                reportUpdatedPatient(uid);
             }
         }
 
@@ -831,6 +872,7 @@ public class SyncService extends JobIntentService {
             for (String uid : this.localPatientsToDelete) {
                 this.patientDB.deletePatientWithUid(uid);
                 this.patientVersions.remove(uid);
+                reportUpdatedPatient(uid);
             }
         }
 

@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.FileObserver;
 import android.text.InputType;
 import android.util.Log;
 import android.util.TypedValue;
@@ -44,7 +43,6 @@ import com.ywesee.amiko.barcodereader.GS1Extractor;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -93,7 +91,6 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     private DrawerLayout drawerLayout;
     private GestureDetector detector;
-    private FileObserver fileObserver;
 
     static final String TAG = "Prescription";
     static final int REQUEST_PATIENT = 1;
@@ -337,22 +334,29 @@ public class PrescriptionActivity extends AppCompatActivity {
         };
 
         detector = new GestureDetector(this, simpleOnGestureListener);
-        fileObserver = new FileObserver(new File(this.getFilesDir(), "amk").getAbsolutePath()) {
-            @Override
-            public void onEvent(int i, @Nullable String s) {
-                runOnUiThread(new Runnable() {
+
+        String amkFolderPath = new File(this.getFilesDir(), "amk").getAbsolutePath();
+        IntentFilter statusIntentFilter = new IntentFilter(
+                SyncService.BROADCAST_SYNCED_FILE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
                     @Override
-                    public void run() {
-                        if (i == FileObserver.CREATE || i == FileObserver.DELETE) {
-                            reloadRecyclerView();
-                        } else if (i == FileObserver.MODIFY && s.equals(openedFile.getPath())) {
-                            openPrescriptionFromFile(openedFile);
-                        }
+                    public void onReceive(Context context, Intent intent) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                String path = intent.getStringExtra("path");
+                                if (path.startsWith(amkFolderPath)) {
+                                    reloadAMKFileList();
+                                }
+                                if (openedFile != null && path.equals(openedFile.getAbsolutePath())) {
+                                    openPrescriptionFromFile(openedFile);
+                                }
+                            }
+                        });
                     }
-                });
-            }
-        };
-        fileObserver.startWatching();
+                },
+                statusIntentFilter);
     }
 
     @Override

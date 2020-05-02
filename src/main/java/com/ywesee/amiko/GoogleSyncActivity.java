@@ -57,7 +57,7 @@ public class GoogleSyncActivity extends AppCompatActivity {
         handleIntent(intent);
 
         IntentFilter statusIntentFilter = new IntentFilter(
-                SyncService.BROADCAST_ACTION);
+                SyncService.BROADCAST_STATUS);
         LocalBroadcastManager.getInstance(this).registerReceiver(
                 new BroadcastReceiver() {
                     @Override
