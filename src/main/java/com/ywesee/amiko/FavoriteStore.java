@@ -125,6 +125,7 @@ public class FavoriteStore {
 			writer.endArray();
 			writer.close();
 			stream.close();
+			SyncManager.getShared().triggerSync();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
