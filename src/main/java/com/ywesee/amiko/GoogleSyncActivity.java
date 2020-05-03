@@ -120,6 +120,7 @@ public class GoogleSyncActivity extends AppCompatActivity {
                         public void run() {
                             descriptionTextView.setText("");
                             updateUI();
+                            SyncManager.getShared().triggerSync();
                         }
                     });
                 } catch (Exception e) {
