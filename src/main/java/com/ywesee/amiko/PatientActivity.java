@@ -1,9 +1,11 @@
 package com.ywesee.amiko;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -31,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -139,6 +142,28 @@ public class PatientActivity extends AppCompatActivity {
         if (r != null) {
             updateUIForSmartcardScanResult(r);
         }
+
+        Context _this = this;
+        IntentFilter statusIntentFilter = new IntentFilter(
+                SyncService.BROADCAST_SYNCED_PATIENT);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        String uid = intent.getStringExtra("uid");
+                        PatientDBAdapter db = new PatientDBAdapter(_this);
+                        Patient p = db.getPatientWithUniqueId(uid);
+                        db.close();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mPatient = p;
+                                updateUIForPatient();
+                            }
+                        });
+                    }
+                },
+                statusIntentFilter);
     }
 
     boolean getIsCreateOnly() {
@@ -282,6 +307,7 @@ public class PatientActivity extends AppCompatActivity {
                 if (!errored) {
                     PatientDBAdapter db = new PatientDBAdapter(this);
                     if (mPatient != null) {
+                        patient.timestamp = Utilities.currentTimeString();
                         db.updateRecord(patient);
                         showPatientUpdatedAlert();
                     } else {

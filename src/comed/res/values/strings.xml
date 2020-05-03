@@ -34,6 +34,7 @@
     <string name="menu_share">Partager</string>
 	<string name="menu_rate">Evaluer</string>
     <string name="menu_help">A propos</string>
+    <string name="menu_syncing">Sync</string>
 
     <string name="search">Recherche</string>
     <string name="tab_name_1">Spécialité</string>
@@ -116,5 +117,15 @@
     <string name="updating_drug_interaction">Initializing drug interactions...</string>
     <string name="updating_report">Initializing report...</string>
     <string name="updating_full_text_database">Initializing full text database...</string>
-    
+
+    <string name="status">Status</string>
+    <string name="not_logged_in">Not logged in</string>
+    <string name="logged_in">Logged in</string>
+    <string name="sync_now">Sync now</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+
+    <string name="redirecting_to_google">Redirecting to Google...</string>
+    <string name="loading">Loading</string>
+    <string name="delete_on_google_drive">Do you want to delete files on Google drive?</string>
 </resources>

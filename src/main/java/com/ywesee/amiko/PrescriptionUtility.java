@@ -70,6 +70,7 @@ public class PrescriptionUtility {
                 stream.close();
             } catch (Exception e) { }
         }
+        SyncManager.getShared().triggerSync();
         return amkFile;
     }
     public static Prescription readFromFile(File file) {
@@ -78,6 +79,8 @@ public class PrescriptionUtility {
             Base64InputStream b64Stream = new Base64InputStream(inputStream, Base64.DEFAULT );
             JsonReader jsonReader = new JsonReader(new InputStreamReader(b64Stream, "UTF-8"));
             Prescription p = new Prescription(jsonReader);
+            jsonReader.close();
+            b64Stream.close();
             return p;
         } catch (Exception e) {
             Log.e("PrescriptionUtility", "Cannot parse file json: " + e.toString() + ":" + e.getLocalizedMessage());
@@ -90,6 +93,7 @@ public class PrescriptionUtility {
         Base64InputStream b64Stream = new Base64InputStream(inputStream, Base64.DEFAULT);
         JsonReader jsonReader = new JsonReader(new InputStreamReader(b64Stream, "UTF-8"));
         Prescription p = new Prescription(jsonReader);
+        jsonReader.close();
         return p;
     }
 

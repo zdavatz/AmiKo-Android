@@ -1,7 +1,9 @@
 package com.ywesee.amiko;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -73,7 +75,21 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
 
     public long insertRecord(Patient p) {
         ContentValues values = p.toContentValues();
-        return this.getWritableDatabase().insert(DATABASE_TABLE, null, values);
+        long id = this.getWritableDatabase().insert(DATABASE_TABLE, null, values);
+        SyncManager.getShared().triggerSync();
+        return id;
+    }
+
+    public long upsertRecordByUid(Patient p) {
+        Patient existing = this.getPatientWithUniqueId(p.uid);
+        if (existing != null) {
+            ContentValues values = p.toContentValues();
+            long id = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_UID + "=" + p.uid, null);
+            SyncManager.getShared().triggerSync();
+            return id;
+        } else {
+            return this.insertRecord(p);
+        }
     }
 
     /**
@@ -82,7 +98,15 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
      * @return
      */
     public boolean deleteRecord(Patient p) {
-        return this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + p.rowId, null) > 0;
+        boolean result = this.getWritableDatabase().delete(DATABASE_TABLE, KEY_ROWID + "=" + p.rowId, null) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
+    }
+
+    public boolean deletePatientWithUid(String uid) {
+        boolean result = this.getWritableDatabase().delete(DATABASE_TABLE, KEY_UID + "= ?", new String[] { uid }) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
     }
 
     /**
@@ -153,6 +177,27 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
         return null;
     }
 
+    /**
+     * @return A uid -> timestamp map
+     * @throws SQLException
+     */
+    public HashMap<String, String> getAllTimestamps() throws SQLException {
+        Cursor cursor = this.getReadableDatabase().query(DATABASE_TABLE,
+                new String[] {KEY_TIMESTAMP, KEY_UID},
+                null, null, null, null, null);
+        HashMap<String, String> map = new HashMap<>();
+        // Iterate through cursor to extract required info
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            String timestamp = cursor.getString(0);
+            String uid = cursor.getString(1);
+            map.put(uid, timestamp);
+            cursor.moveToNext();
+        }
+        cursor.close();
+        return map;
+    }
+
     public Patient getPatientWithNamesAndBirthday(String familyname, String givenname, String birthdate) {
         Cursor cursor = this.getReadableDatabase().query(DATABASE_TABLE,
                 new String[] {KEY_ROWID, KEY_TIMESTAMP, KEY_UID, KEY_FAMILYNAME, KEY_GIVENNAME, KEY_BIRTHDATE, KEY_GENDER,
@@ -167,6 +212,32 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
             return patient;
         }
         return null;
+    }
+
+    public ArrayList<Patient> getPatientsWithUids(Set<String> uids) {
+        String idsString = "";
+        for (String uid : uids) {
+            if (idsString.length() != 0) {
+                idsString += ",";
+            }
+            idsString += "'" + uid + "'";
+        }
+        Cursor cursor = this.getReadableDatabase().query(DATABASE_TABLE,
+                new String[] {KEY_ROWID, KEY_TIMESTAMP, KEY_UID, KEY_FAMILYNAME, KEY_GIVENNAME, KEY_BIRTHDATE, KEY_GENDER,
+                        KEY_WEIGHT_KG, KEY_HEIGHT_CM, KEY_ZIPCODE, KEY_CITY, KEY_COUNTRY, KEY_ADDRESS, KEY_PHONE,
+                        KEY_EMAIL},
+                KEY_UID + " IN ("+idsString+")", null, null, null, KEY_FAMILYNAME + "," + KEY_GIVENNAME);
+
+        ArrayList<Patient> patients = new ArrayList<>();
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+            Patient patient = new Patient(cursor);
+            patients.add(patient);
+            cursor.moveToNext();
+        }
+        // Make sure to close the cursor
+        cursor.close();
+        return patients;
     }
 
     /**
@@ -190,6 +261,8 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
     // Update record
     public boolean updateRecord(Patient patient) {
         ContentValues values = patient.toContentValues();
-        return this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_ROWID + "=" + patient.rowId, null) > 0;
+        boolean result = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_ROWID + "=" + patient.rowId, null) > 0;
+        SyncManager.getShared().triggerSync();
+        return result;
     }
 }

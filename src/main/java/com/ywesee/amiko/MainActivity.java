@@ -21,7 +21,6 @@ package com.ywesee.amiko;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +35,7 @@ import java.util.Observer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import android.Manifest;
 import android.animation.LayoutTransition;
@@ -44,8 +44,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DownloadManager;
-import android.app.DownloadManager.Query;
-import android.app.DownloadManager.Request;
 import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.ActivityNotFoundException;
@@ -59,7 +57,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -72,9 +69,9 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
@@ -177,6 +174,9 @@ public class MainActivity extends AppCompatActivity {
     private HashSet<String> mFavoriteFullTextMedsSet = null;
     // Reference to favorites' datastore
     private FavoriteStore mFavoriteData = null;
+    // For syncing favorite data
+    private List<FileObserver> fileObservers;
+
     // This is the currently used database
     private String mDatabaseUsed = "aips";
     // Searching for interactions?
@@ -741,6 +741,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         AndroidNetworking.initialize(getApplicationContext());
+        SyncManager.setupShared(this);
+        new DoctorStore(this).migrateFromOldFormat();
         MainActivity.instance = this;
 
         try {
@@ -769,10 +771,26 @@ public class MainActivity extends AppCompatActivity {
         'getFilesDir' returns a java.io.File object representing the root directory
         of the INTERNAL storage four the application from the current context.
         */
-        mFavoriteData = new FavoriteStore(this.getFilesDir().toString());
+        mFavoriteData = new FavoriteStore(this);
+        mFavoriteData.migrateFromOldFiles();
         // Load hashset containing registration numbers from persistent data store
         mFavoriteMedsSet = mFavoriteData.load();
         mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();
+        fileObservers = Arrays.asList(
+                new File(this.getFilesDir(), "favorites-full-text.json"),
+                new File(this.getFilesDir(), "favorites.json")
+        ).stream()
+                .map(file -> {
+                    FileObserver f = new FileObserver(file.getAbsolutePath()) {
+                        @Override
+                        public void onEvent(int i, @Nullable String s){
+                            mFavoriteMedsSet = mFavoriteData.load();
+                            mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();
+                        }
+                    };
+                    f.startWatching();
+                    return f;
+                }).collect(Collectors.toList());
 
         // Initialize preferences
         SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
@@ -936,7 +954,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
         return true;
     }
 
@@ -1512,6 +1529,11 @@ public class MainActivity extends AppCompatActivity {
                         mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
                     }
                 }
+                return true;
+            }
+            case (R.id.menu_syncing): {
+                Intent intent = new Intent(this, GoogleSyncActivity.class);
+                startActivity(intent);
                 return true;
             }
             case (R.id.menu_help): {

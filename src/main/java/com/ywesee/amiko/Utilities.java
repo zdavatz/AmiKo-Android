@@ -154,6 +154,14 @@ public class Utilities {
 		return sdf.format(new Date());
 	}
 
+	public static Date dateFromTimeString(String str) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
+		try {
+			return sdf.parse(str);
+		} catch (Exception e) { }
+		return null;
+	}
+
 	public static long foundationHash(String baseString) {
 		char[] chars = baseString.toCharArray();
 		int len = baseString.length();

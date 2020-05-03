@@ -4,11 +4,12 @@
     package="com.ywesee.amiko"
     android:installLocation="auto"
     android:versionCode="182"
-    android:versionName="1.8.2" >
+    android:versionName="1.8.2"
+    tools:ignore="LockedOrientationActivity">
 
     <!-- Required to download files from Google Play -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Required to keep CPU alive while downloading files (NOT to keep screen awake) -->
+    <!-- Required to keep CPU alive while downloading files (NOT to keep screen awake) and Sync Service -->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<!-- Required to write to external storage -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -33,6 +34,11 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:largeHeap="true">
+
+        <service android:name=".SyncService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false" />
+
 
         <meta-data
             android:name="com.google.android.gms.vision.DEPENDENCIES"
@@ -172,6 +178,23 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.MainActivity" />
+        </activity>
+
+        <activity android:name=".GoogleSyncActivity"
+            android:alwaysRetainTaskState="true"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.ywesee.amiko.MainActivity" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="com.ywesee.amiko" />
+            </intent-filter>
         </activity>
 
     </application>

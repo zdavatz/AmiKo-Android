@@ -13,7 +13,9 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.ywesee.amiko.PatientDBAdapter.KEY_ADDRESS;
 import static com.ywesee.amiko.PatientDBAdapter.KEY_BIRTHDATE;
@@ -139,6 +141,23 @@ public class Patient implements Serializable {
         reader.endObject();
     }
 
+    public Patient(Map<String, String> map) {
+        this.timestamp = map.get(KEY_TIMESTAMP);
+        this.uid = map.get(KEY_UID);
+        this.familyname = map.get(KEY_FAMILYNAME);
+        this.givenname = map.get(KEY_GIVENNAME);
+        this.birthdate = map.get(KEY_BIRTHDATE);
+        this.gender = map.get(KEY_GENDER);
+        this.weight_kg = Integer.parseInt(map.get(KEY_WEIGHT_KG));
+        this.height_cm = Integer.parseInt(map.get(KEY_HEIGHT_CM));
+        this.zipcode = map.get(KEY_ZIPCODE);
+        this.city = map.get(KEY_CITY);
+        this.country = map.get(KEY_COUNTRY);
+        this.address = map.get(KEY_ADDRESS);
+        this.phone = map.get(KEY_PHONE);
+        this.email = map.get(KEY_EMAIL);
+    }
+
     ContentValues toContentValues() {
         ContentValues values = new ContentValues();
         this.uid = this.hashValue();
@@ -160,6 +179,28 @@ public class Patient implements Serializable {
         values.put(KEY_EMAIL, email);
 
         return values;
+    }
+
+    HashMap<String, String> toMap() {
+        HashMap<String, String> map = new HashMap<>();
+        this.uid = this.hashValue();
+
+        map.put(KEY_TIMESTAMP, timestamp);
+        map.put(KEY_UID, uid);
+        map.put(KEY_FAMILYNAME, familyname);
+        map.put(KEY_GIVENNAME, givenname);
+        map.put(KEY_BIRTHDATE, birthdate);
+        map.put(KEY_GENDER, gender);
+        map.put(KEY_WEIGHT_KG, Integer.toString(weight_kg));
+        map.put(KEY_HEIGHT_CM, Integer.toString(height_cm));
+        map.put(KEY_ZIPCODE, zipcode);
+        map.put(KEY_CITY, city);
+        map.put(KEY_COUNTRY, country);
+        map.put(KEY_ADDRESS, address);
+        map.put(KEY_PHONE, phone);
+        map.put(KEY_EMAIL, email);
+
+        return map;
     }
 
     public String hashValue() {

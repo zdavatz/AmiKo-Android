@@ -1,8 +1,10 @@
 package com.ywesee.amiko;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -18,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -126,6 +129,24 @@ public class PatientListActivity extends AppCompatActivity {
         });
 
         setupGestureDetector();
+
+        IntentFilter statusIntentFilter = new IntentFilter(
+                SyncService.BROADCAST_SYNCED_PATIENT);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                mAllPatients = mDBAdapter.getAllRecords();
+                                applyPatientsAndUpdateSearchResult();
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        });
+                    }
+                },
+                statusIntentFilter);
     }
 
     private void setupGestureDetector() {

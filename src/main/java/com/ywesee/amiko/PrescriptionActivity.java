@@ -43,7 +43,6 @@ import com.ywesee.amiko.barcodereader.GS1Extractor;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -197,6 +196,7 @@ public class PrescriptionActivity extends AppCompatActivity {
                                 if (openedFile != null && openedFile.equals(file)) {
                                     openNewPrescription();
                                 }
+                                SyncManager.getShared().triggerSync();
                             }
                         })
                         .setNegativeButton(getString(R.string.no), null)
@@ -334,6 +334,29 @@ public class PrescriptionActivity extends AppCompatActivity {
         };
 
         detector = new GestureDetector(this, simpleOnGestureListener);
+
+        String amkFolderPath = new File(this.getFilesDir(), "amk").getAbsolutePath();
+        IntentFilter statusIntentFilter = new IntentFilter(
+                SyncService.BROADCAST_SYNCED_FILE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                String path = intent.getStringExtra("path");
+                                if (path.startsWith(amkFolderPath)) {
+                                    reloadAMKFileList();
+                                }
+                                if (openedFile != null && path.equals(openedFile.getAbsolutePath())) {
+                                    openPrescriptionFromFile(openedFile);
+                                }
+                            }
+                        });
+                    }
+                },
+                statusIntentFilter);
     }
 
     @Override
@@ -775,7 +798,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             String[] packArray = dbPackages.split("\n");
             for (int i = 0; i < packArray.length; i++) {
                 String[] p = packArray[i].split("\\|");
-                if (p.length < INDEX_EAN_CODE_IN_PACK) break;
+                if (p.length <= INDEX_EAN_CODE_IN_PACK) break;
                 eancode = p[INDEX_EAN_CODE_IN_PACK];
                 if (eancode.equals(ean)) {
                     found = true;
@@ -837,6 +860,7 @@ public class PrescriptionActivity extends AppCompatActivity {
         openedFile = savedFile;
         openedPrescription = p;
         reloadPlaceDateText();
+        SyncManager.getShared().triggerSync();
     }
 
     Intent createEmailIntent() {
