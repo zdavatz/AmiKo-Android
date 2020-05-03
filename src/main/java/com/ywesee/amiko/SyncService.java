@@ -83,6 +83,10 @@ public class SyncService extends JobIntentService {
         Log.i(TAG, "Start syncing");
         this.reportStatus("Starting sync");
         List<File> remoteFiles = this.listRemoteFilesAndFolders();
+        if (remoteFiles == null) {
+            // Error during listing all files, better stop, otherwise we will wrongly delete files
+            return;
+        }
         List<java.io.File> localFiles = this.listLocalFilesAndFolders();
         Map<String, File> remoteFilesMap = this.remoteFilesToMap(remoteFiles);
         Map<String, File> remotePatientsMap = this.extractPatientsFromFilesMap(remoteFilesMap);
@@ -135,6 +139,7 @@ public class SyncService extends JobIntentService {
             } while (pageToken != null);
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
+            return null;
         }
         return files;
     }

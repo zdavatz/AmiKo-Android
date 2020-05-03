@@ -1,13 +1,16 @@
 package com.ywesee.amiko;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -16,8 +19,25 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.gms.common.api.Batch;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.googleapis.batch.BatchRequest;
+import com.google.api.client.googleapis.batch.json.JsonBatchCallback;
+import com.google.api.client.googleapis.json.GoogleJsonError;
+import com.google.api.client.http.HttpHeaders;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class GoogleSyncActivity extends AppCompatActivity {
+    static private String TAG = "GoogleSyncActivity";
     private TextView descriptionTextView;
     private Button loginButton;
     private TextView syncTextView;
@@ -128,8 +148,22 @@ public class GoogleSyncActivity extends AppCompatActivity {
     }
 
     private void logout() {
-        SyncManager.getShared().logoutGoogle();
-        updateUI();
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setIcon(R.drawable.desitin_new);
+        alert.setMessage(R.string.delete_on_google_drive);
+
+        alert.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                clearGoogleDriveStorageThenLogout();
+            }
+        });
+        alert.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                SyncManager.getShared().logoutGoogle();
+                updateUI();
+            }
+        });
+        alert.show();
     }
 
     private void handleIntent(Intent intent) {
@@ -149,5 +183,81 @@ public class GoogleSyncActivity extends AppCompatActivity {
                 syncTextView.setText(status);
             }
         });
+    }
+
+    protected void clearGoogleDriveStorageThenLogout() {
+        ProgressDialog progressBar = new ProgressDialog(this);
+        progressBar.setMessage(getString(R.string.loading));
+        progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressBar.setIndeterminate(true);
+        progressBar.setCancelable(false);
+        progressBar.show();
+
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                performClearGoogleDriveStorage();
+                SyncManager.getShared().logoutGoogle();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.dismiss();
+                        updateUI();
+                    }
+                });
+            }
+        });
+    }
+
+    protected void performClearGoogleDriveStorage() {
+        Credential cred = SyncManager.getShared().getGoogleCredential();
+        if (cred == null) return;
+        Drive driveService = new Drive.Builder(new NetHttpTransport(), new JacksonFactory(), cred).build();
+        List<File> files = this.listRemoteFilesAndFolders(driveService);
+        BatchRequest batch = driveService.batch();
+        try {
+            for (File file : files) {
+                JsonBatchCallback<Void> callback = new JsonBatchCallback<Void>() {
+                    @Override
+                    public void onFailure(GoogleJsonError e,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.e(TAG, e.getMessage());
+                    }
+
+                    @Override
+                    public void onSuccess(Void result,
+                                          HttpHeaders responseHeaders)
+                            throws IOException {
+                        Log.i(TAG, "Deleted file " + file.getId());
+                    }
+                };
+                driveService.files().delete(file.getId()).queue(batch, callback);
+            }
+            if (batch.size() > 0) {
+                batch.execute();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+
+    protected List<File> listRemoteFilesAndFolders(Drive driveService) {
+        ArrayList<File> files = new ArrayList<>();
+        try {
+            String pageToken = null;
+            do {
+                FileList fl = driveService.files().list()
+                        .setSpaces("appDataFolder")
+                        .setFields("nextPageToken, files(id)")
+                        .execute();
+                files.addAll(fl.getFiles());
+                pageToken = fl.getNextPageToken();
+            } while (pageToken != null);
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+            return null;
+        }
+        return files;
     }
 }
