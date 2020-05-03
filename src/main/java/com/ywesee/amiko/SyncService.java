@@ -400,7 +400,7 @@ public class SyncService extends JobIntentService {
                     if (localFile.isDirectory() || remoteFile.getMimeType().equals("application/vnd.google-apps.folder")) {
                         continue;
                     }
-                    if (remoteVerion == localVersion) {
+                    if (remoteVerion.equals(localVersion)) {
                         long localModified = localFile.lastModified();
                         long remoteModified = remoteFile.getModifiedTime().getValue();
                         if (localModified > remoteModified) {
@@ -474,7 +474,7 @@ public class SyncService extends JobIntentService {
                     File remoteFile = remotePatientsMap.get(uid);
                     Long remoteVerion = remoteFile.getVersion();
 
-                    if (remoteVerion == localVersion) {
+                    if (remoteVerion.equals(localVersion)) {
                         long localModified = localTimestamp.getTime();
                         long remoteModified = remoteFile.getModifiedTime().getValue();
                         if (localModified > remoteModified) {
@@ -720,6 +720,7 @@ public class SyncService extends JobIntentService {
                     driveService.files().get(fileId)
                             .executeMediaAndDownloadTo(outputStream);
                     outputStream.writeTo(fos);
+                    fos.close();
                     localFile.setLastModified(remoteFile.getModifiedTime().getValue());
                     reportUpdatedFile(localFile);
                 } catch (Exception e){}

@@ -80,6 +80,7 @@ public class PrescriptionUtility {
             JsonReader jsonReader = new JsonReader(new InputStreamReader(b64Stream, "UTF-8"));
             Prescription p = new Prescription(jsonReader);
             jsonReader.close();
+            b64Stream.close();
             return p;
         } catch (Exception e) {
             Log.e("PrescriptionUtility", "Cannot parse file json: " + e.toString() + ":" + e.getLocalizedMessage());

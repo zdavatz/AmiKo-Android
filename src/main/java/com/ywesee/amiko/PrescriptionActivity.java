@@ -798,7 +798,7 @@ public class PrescriptionActivity extends AppCompatActivity {
             String[] packArray = dbPackages.split("\n");
             for (int i = 0; i < packArray.length; i++) {
                 String[] p = packArray[i].split("\\|");
-                if (p.length < INDEX_EAN_CODE_IN_PACK) break;
+                if (p.length <= INDEX_EAN_CODE_IN_PACK) break;
                 eancode = p[INDEX_EAN_CODE_IN_PACK];
                 if (eancode.equals(ean)) {
                     found = true;
