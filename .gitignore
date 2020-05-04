@@ -30,5 +30,6 @@ AmiKo.publish.jks
 .idea/caches
 
 cybermax-key.keystore
+comed_gdrive.keystore
 privateKeyAmiKo
 .DS_Store
