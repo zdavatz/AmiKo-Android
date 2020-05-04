@@ -50,8 +50,8 @@ public class SyncManager extends Object {
         googleAuthFlow = new GoogleAuthorizationCodeFlow.Builder(
                 new NetHttpTransport(),
                 new JacksonFactory(),
-                Constants.googleClientId,
-                Constants.googleClientSecret,
+                Constants.googleClientId(),
+                "", // No secret for android app
                 Arrays.asList("https://www.googleapis.com/auth/drive.appdata")
         )
                 .setAccessType("offline")
