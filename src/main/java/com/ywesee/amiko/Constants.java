@@ -29,9 +29,6 @@ public class Constants {
 	public static final int INTERACTIONS_FILE_SIZE = 10000000;
 	public static final int DB_VERSION = 140;
 
-	public static final String googleClientId = "";
-	public static final String googleClientSecret = "";
-
 	/** Release history
 	 *  25/03/2013 - AmiKo/CoMed Release = 0.9.0, Database = 090
 	 *  08/04/2013 - AmiKo/CoMed Release = 1.1.0, Database = 110
@@ -159,5 +156,12 @@ public class Constants {
 			return "amiko_frequency_fr.db";
 		else
 			return "amiko_frequency_de.db";
+	}
+
+	public static String googleClientId() {
+		if (appLanguage().equals("fr")) {
+			return "149847481686-2du2ombt889vld61obpf5i27anl4hhg0.apps.googleusercontent.com";
+		}
+		return "991043339089-mvaj5suu8788k8n3sf05tiaafs344mp1.apps.googleusercontent.com";
 	}
 }
