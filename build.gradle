@@ -89,8 +89,7 @@ android {
     task downloadAmikoDB(type: Download) {
         src "http://pillbox.oddb.org/amiko_db_full_idx_de.zip"
         dest new File(buildDir, 'amiko_db_full_idx_de.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipAmikoDB(dependsOn: downloadAmikoDB, type: Copy) {
@@ -100,8 +99,7 @@ android {
     task downloadAmikoFrequencyDB(type: Download) {
         src "http://pillbox.oddb.org/amiko_frequency_de.db.zip"
         dest new File(buildDir, 'amiko_frequency_de.db.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipAmikoFrequencyDB(dependsOn: downloadAmikoFrequencyDB, type: Copy) {
@@ -111,8 +109,7 @@ android {
     task downloadAmikoInteractions(type: Download) {
         src "http://pillbox.oddb.org/drug_interactions_csv_de.zip"
         dest new File(buildDir, 'drug_interactions_csv_de.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipAmikoInteractions(dependsOn: downloadAmikoInteractions, type: Copy) {
@@ -127,8 +124,7 @@ android {
     task downloadComedDB(type: Download) {
         src "http://pillbox.oddb.org/amiko_db_full_idx_fr.zip"
         dest new File(buildDir, 'amiko_db_full_idx_fr.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipComedDB(dependsOn: downloadComedDB, type: Copy) {
@@ -138,8 +134,7 @@ android {
     task downloadComedFrequencyDB(type: Download) {
         src "http://pillbox.oddb.org/amiko_frequency_fr.db.zip"
         dest new File(buildDir, 'amiko_frequency_fr.db.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipComedFrequencyDB(dependsOn: downloadComedFrequencyDB, type: Copy) {
@@ -149,8 +144,7 @@ android {
     task downloadComedInteractions(type: Download) {
         src "http://pillbox.oddb.org/drug_interactions_csv_fr.zip"
         dest new File(buildDir, 'drug_interactions_csv_fr.zip')
-        overwrite false
-        onlyIfModified true
+        overwrite true
         useETag true
     }
     task unzipComedInteractions(dependsOn: downloadComedInteractions, type: Copy) {
