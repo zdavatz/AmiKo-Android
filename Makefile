@@ -1,18 +1,18 @@
 identifier="com.ywesee.amiko"
 
-amiko:
+amiko: clean
 	./gradlew assembleAmiko $(ARGS)
 .PHONEY: amiko
 
-comed:
+comed: clean
 	./gradlew assembleComed $(ARGS)
 .PHONEY: comed
 
-bundleAmiko:
+bundleAmiko: clean
 	./gradlew bundleAmiko $(ARGS)
 .PHONEY: bundleAmiko
 
-bundleComed:
+bundleComed: clean
 	./gradlew bundleComed $(ARGS)
 .PHONEY: bundleComed
 
