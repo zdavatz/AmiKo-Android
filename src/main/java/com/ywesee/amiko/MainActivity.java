@@ -1739,6 +1739,16 @@ public class MainActivity extends AppCompatActivity {
                             int numSearchTerms = mFullTextSearchDB.getNumRecords();
                             int numInteractions = mMediDataSource.getNumInteractions();
 
+                            SharedPreferences settings = getSharedPreferences(AMIKO_PREFS_FILE, 0);
+                            SharedPreferences.Editor editor = settings.edit();
+                            if (Constants.appLanguage().equals("de")) {
+                                editor.putLong(PREF_DB_UPDATE_DATE_DE, System.currentTimeMillis());
+                            } else if (Constants.appLanguage().equals("fr")) {
+                                editor.putLong(PREF_DB_UPDATE_DATE_FR, System.currentTimeMillis());
+                            }
+                            // Commit the edits!
+                            editor.commit();
+
                             mToastObject.show("Databases initialized successfully", Toast.LENGTH_LONG);
 
                             new AlertDialog.Builder(context)
