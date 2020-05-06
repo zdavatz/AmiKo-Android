@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 #make -B amiko
 #make -B comed
-make bundleAmiko
-make bundleComed
+# see https://github.com/zdavatz/AmiKo-Android/pull/183
+make bundle
+make publishBundle
+#make bundleAmiko
+#make bundleComed
 #scp build/outputs/apk/amiko/release/AmiKo-Android-amiko-release.apk zeno@192.168.0.166:/home/ftp/
 #scp build/outputs/apk/comed/release/AmiKo-Android-comed-release.apk zeno@192.168.0.166:/home/ftp/
 #apkup --key amiko.json --apk ./build/outputs/apk/amiko/release/AmiKo-Android-amiko-release.apk
 #apkup --key amiko.json --apk ./build/outputs/apk/comed/release/AmiKo-Android-comed-release.apk
 #apkup --key amiko.json --apk ./build/outputs/bundle/amikoRelease/AmiKo-Android.aab
 #apkup --key amiko.json --apk ./build/outputs/bundle/comedRelease/Comed-Android.aab
-cd /home/zeno/.software/android-bundle-uploader
-python main.py ../AmiKo-Android/amiko.json com.ywesee.amiko.de ../AmiKo-Android/build/outputs/bundle/amikoRelease/AmiKo-Android-amiko-release.aab production
-python main.py ../AmiKo-Android/amiko.json com.ywesee.amiko.fr ../AmiKo-Android/build/outputs/bundle/comedRelease/AmiKo-Android-comed-release.aab production
+#cd /home/zeno/.software/android-bundle-uploader
+#python main.py ../AmiKo-Android/amiko.json com.ywesee.amiko.de ../AmiKo-Android/build/outputs/bundle/amikoRelease/AmiKo-Android-amiko-release.aab production
+#python main.py ../AmiKo-Android/amiko.json com.ywesee.amiko.fr ../AmiKo-Android/build/outputs/bundle/comedRelease/AmiKo-Android-comed-release.aab production
