@@ -16,6 +16,14 @@ bundleComed:
 	./gradlew bundleComed $(ARGS)
 .PHONEY: bundleComed
 
+bundle:
+	./gradlew bundle $(ARGS)
+.PHONEY: bundle
+
+publishBundle:
+	./gradlew publishBundle $(ARGS)
+.PHONEY: publishBundle
+
 clean:
 	./gradlew clean
 .PHONEY: clean
