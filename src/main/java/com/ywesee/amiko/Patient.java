@@ -93,8 +93,18 @@ public class Patient implements Serializable {
         this.givenname = json.optString(KEY_AMK_PAT_NAME);
         this.familyname = json.optString(KEY_AMK_PAT_SURNAME);
         this.birthdate = json.optString(KEY_AMK_PAT_BIRTHDATE);
-        this.weight_kg = json.optInt(KEY_AMK_PAT_WEIGHT);
-        this.height_cm = json.optInt(KEY_AMK_PAT_HEIGHT);
+        try {
+            String str = json.optString(KEY_AMK_PAT_WEIGHT);
+            this.weight_kg = Integer.parseInt(str);
+        } catch (Exception e) {
+            this.weight_kg = 0;
+        }
+        try {
+            String str = json.optString(KEY_AMK_PAT_HEIGHT);
+            this.height_cm = Integer.parseInt(str);
+        } catch (Exception e) {
+            this.height_cm = 0;
+        }
         this.gender = json.optString(KEY_AMK_PAT_GENDER);
         this.address = json.optString(KEY_AMK_PAT_ADDRESS);
         this.zipcode = json.optString(KEY_AMK_PAT_ZIP);
@@ -117,9 +127,19 @@ public class Patient implements Serializable {
             } else if (name.equals(KEY_AMK_PAT_BIRTHDATE)){
                 this.birthdate = reader.nextString();
             } else if (name.equals(KEY_AMK_PAT_WEIGHT)){
-                this.weight_kg = reader.nextInt();
+                try {
+                    String str = reader.nextString();
+                    this.weight_kg = Integer.parseInt(str);
+                } catch (Exception e) {
+                    this.weight_kg = 0;
+                }
             } else if (name.equals(KEY_AMK_PAT_HEIGHT)){
-                this.height_cm = reader.nextInt();
+                try {
+                    String str = reader.nextString();
+                    this.height_cm = Integer.parseInt(str);
+                } catch (Exception e) {
+                    this.height_cm = 0;
+                }
             } else if (name.equals(KEY_AMK_PAT_GENDER)){
                 this.gender = reader.nextString();
             } else if (name.equals(KEY_AMK_PAT_ADDRESS)){
@@ -148,8 +168,16 @@ public class Patient implements Serializable {
         this.givenname = map.get(KEY_GIVENNAME);
         this.birthdate = map.get(KEY_BIRTHDATE);
         this.gender = map.get(KEY_GENDER);
-        this.weight_kg = Integer.parseInt(map.get(KEY_WEIGHT_KG));
-        this.height_cm = Integer.parseInt(map.get(KEY_HEIGHT_CM));
+        try {
+            this.weight_kg = Integer.parseInt(map.get(KEY_WEIGHT_KG));
+        } catch (Exception e) {
+            this.weight_kg = 0;
+        }
+        try {
+            this.height_cm = Integer.parseInt(map.get(KEY_HEIGHT_CM));
+        } catch (Exception e) {
+            this.height_cm = 0;
+        }
         this.zipcode = map.get(KEY_ZIPCODE);
         this.city = map.get(KEY_CITY);
         this.country = map.get(KEY_COUNTRY);

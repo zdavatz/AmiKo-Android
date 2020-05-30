@@ -64,7 +64,7 @@ public class SyncManager extends Object {
             public void run() {
                 triggerSync();
             }
-        }, 0, 60 * 1000); // 3 min
+        }, 0, 3 * 60 * 1000); // 3 min
     }
 
     public void triggerSync() {
