@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ywesee.amiko"
     android:installLocation="auto"
-    android:versionCode="184"
-    android:versionName="1.8.4"
+    android:versionCode="185"
+    android:versionName="1.8.5"
     tools:ignore="LockedOrientationActivity">
 
     <!-- Required to download files from Google Play -->
