@@ -784,8 +784,10 @@ public class MainActivity extends AppCompatActivity {
                     FileObserver f = new FileObserver(file.getAbsolutePath()) {
                         @Override
                         public void onEvent(int i, @Nullable String s){
-                            mFavoriteMedsSet = mFavoriteData.load();
-                            mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();
+                            if (i == CLOSE_WRITE || i == DELETE || i == MODIFY) {
+                                mFavoriteMedsSet = mFavoriteData.load();
+                                mFavoriteFullTextMedsSet = mFavoriteData.loadFullText();
+                            }
                         }
                     };
                     f.startWatching();
