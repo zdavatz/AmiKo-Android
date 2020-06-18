@@ -123,9 +123,9 @@ public class FavoriteStore {
 				writer.value(str);
 			}
 			writer.endArray();
+			writer.flush();
 			writer.close();
-			stream.close();
-			SyncManager.getShared().triggerSync();
+			stream.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
@@ -133,5 +133,6 @@ public class FavoriteStore {
 				stream.close();
 			} catch (Exception e) { }
 		}
+		SyncManager.getShared().triggerSync();
 	}
 }
