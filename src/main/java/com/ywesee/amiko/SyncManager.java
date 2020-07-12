@@ -26,7 +26,7 @@ public class SyncManager extends Object {
     static final String TAG = "PersistenceManager";
 
     private GoogleAuthorizationCodeFlow googleAuthFlow;
-    static private String googleRedirectUri = "com.ywesee.amiko:/oauth";
+    static private String googleRedirectUri = BuildConfig.OAUTH_REDIRECT_SCHEME + ":/oauth"; //"com.ywesee.amiko:/oauth";
 
     static void setupShared(Context context) {
         if (shared == null) {

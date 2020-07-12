@@ -193,7 +193,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <data android:scheme="com.ywesee.amiko" />
+                <data android:scheme="${oauthRedirectScheme}" />
             </intent-filter>
         </activity>
 
