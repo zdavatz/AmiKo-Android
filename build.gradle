@@ -80,11 +80,19 @@ android {
             dimension "version"
             applicationIdSuffix ".de"
             versionNameSuffix "-de"
+
+            def redirectScheme = "com.ywesee.amiko.de"
+            buildConfigField "String", "OAUTH_REDIRECT_SCHEME", "\"" + redirectScheme + "\"";
+            manifestPlaceholders = [oauthRedirectScheme: redirectScheme]
         }
         comed {
             dimension "version"
             applicationIdSuffix ".fr"
             versionNameSuffix "-fr"
+
+            def redirectScheme = "com.ywesee.amiko.fr"
+            buildConfigField "String", "OAUTH_REDIRECT_SCHEME", "\"" + redirectScheme + "\"";
+            manifestPlaceholders = [oauthRedirectScheme: redirectScheme]
         }
     }
 
