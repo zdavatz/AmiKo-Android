@@ -450,7 +450,6 @@ public class SyncService extends JobIntentService {
             Log.i(TAG, "pathsToDownload: " + pathsToDownload.toString());
             Log.i(TAG, "localFilesToDelete: " + localFilesToDelete.toString());
             Log.i(TAG, "remoteFilesToDelete: " + remoteFilesToDelete.toString());
-            Log.i(TAG, "pathsToCreate: " + pathsToCreate.toString());
         }
 
         void preparePatients() {
@@ -870,6 +869,7 @@ public class SyncService extends JobIntentService {
             for (String uid : this.patientsToDownload.keySet()) {
                 File file = this.patientsToDownload.get(uid);
                 this.patientDB.upsertRecordByUid(new Patient(file.getProperties()));
+                patientVersions.put(uid, file.getVersion());
                 reportUpdatedPatient(uid);
             }
         }

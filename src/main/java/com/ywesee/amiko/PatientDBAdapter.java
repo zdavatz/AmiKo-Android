@@ -84,7 +84,7 @@ public class PatientDBAdapter extends SQLiteOpenHelper {
         Patient existing = this.getPatientWithUniqueId(p.uid);
         if (existing != null) {
             ContentValues values = p.toContentValues();
-            long id = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_UID + "=" + p.uid, null);
+            long id = this.getWritableDatabase().update(DATABASE_TABLE, values, KEY_UID + "= ? ", new String[]{p.uid});
             SyncManager.getShared().triggerSync();
             return id;
         } else {
