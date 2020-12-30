@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -211,6 +213,20 @@ public class Utilities {
 	}
 	public static String foundationHashString(String baseString) {
 		return Long.toUnsignedString(foundationHash(baseString));
+	}
+
+	public static String sha256(String str) throws NoSuchAlgorithmException {
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		digest.reset();
+		byte[] hashByte = digest.digest(str.getBytes());
+		return bin2hex(hashByte);
+	}
+
+	static String bin2hex(byte[] data) {
+		StringBuilder hex = new StringBuilder(data.length * 2);
+		for (byte b : data)
+			hex.append(String.format("%02x", b & 0xFF));
+		return hex.toString();
 	}
 
 	public static boolean isCharacterNumber(char c) {

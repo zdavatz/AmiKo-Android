@@ -12,6 +12,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
@@ -232,9 +234,24 @@ public class Patient implements Serializable {
     }
 
     public String hashValue() {
-        return Utilities.foundationHashString(String.format("%s.%s.%s", this.familyname, this.givenname, this.birthdate));
-    }
+        String birthdayString = "";
+        String[] parts = this.birthdate.split("\\.");
+        for (String part : parts) {
+            if (birthdayString.length() > 0) {
+                birthdayString += ".";
+            }
+            birthdayString += Integer.valueOf(part).toString(); // remove leading 0
+        }
 
+        String str = String.format("%s.%s.%s", this.familyname.toLowerCase(), this.givenname.toLowerCase(), birthdayString);
+        try {
+            return Utilities.sha256(str);
+        } catch (Exception e) {
+            Log.e("Amiko.Patient", e.toString());
+            return  "";
+        }
+    }
+    
     public String stringForDisplay() {
         return this.familyname + " " + this.givenname;
     }
