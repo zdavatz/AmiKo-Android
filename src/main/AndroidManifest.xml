@@ -8,6 +8,7 @@
     tools:ignore="LockedOrientationActivity">
 
     <!-- Required to download files from Google Play -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Required to keep CPU alive while downloading files (NOT to keep screen awake) and Sync Service -->
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
