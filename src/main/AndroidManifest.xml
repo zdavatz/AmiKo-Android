@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ywesee.amiko"
     android:installLocation="auto"
-    android:versionCode="188"
-    android:versionName="1.8.8"
+    android:versionCode="189"
+    android:versionName="1.8.9"
     tools:ignore="LockedOrientationActivity">
 
     <!-- Required to download files from Google Play -->
@@ -28,7 +28,8 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"  android:required="true" />
 
     <application
-        android:networkSecurityConfig="@xml/network_security_config"
+      android:networkSecurityConfig="@xml/network_security_config"
+      android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:roundIcon="@drawable/ic_launcher_round"
