@@ -222,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Splash screen dialog
     private Dialog mSplashDialog = null;
+    private AlertDialog mDownloadAlertDialog = null;
 
     /**
      * The download manager is a system service that handles long-running HTTP downloads.
@@ -269,28 +270,32 @@ public class MainActivity extends AppCompatActivity {
 
     private void showDownloadAlert() {
         // Display message box asking people whether they want to download the DB from the ywesee server.
-        AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
-        alert.setIcon(R.drawable.desitin_new);
-        if (Constants.appLanguage().equals("de")) {
-            alert.setTitle("Medikamentendatenbank");
-            alert.setMessage("Ihre Datenbank ist älter als 30 Tage. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
-                    "Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
-        } else if (Constants.appLanguage().equals("fr")) {
-            alert.setTitle("Banque de données des médicaments");
-            alert.setMessage("Votre banque de données est agée plus de 30 jours. Vous avez tout intérêt de mettre à jour " +
-                    "votre banque de données (env. 50 MB). D'ailleurs vous pouvez utiliser le download à tout moment si vous désirez.");
+        if (mDownloadAlertDialog == null && !mUpdateInProgress) {
+            AlertDialog.Builder alert = new AlertDialog.Builder(MainActivity.this);
+            alert.setIcon(R.drawable.desitin_new);
+            if (Constants.appLanguage().equals("de")) {
+                alert.setTitle("Medikamentendatenbank");
+                alert.setMessage("Ihre Datenbank ist älter als 30 Tage. Empfehlung: Laden Sie jetzt die tagesaktuelle Datenbank runter (ca. 50 MB). " +
+                        "Sie können die Daten täglich aktualisieren, falls Sie wünschen.");
+            } else if (Constants.appLanguage().equals("fr")) {
+                alert.setTitle("Banque de données des médicaments");
+                alert.setMessage("Votre banque de données est agée plus de 30 jours. Vous avez tout intérêt de mettre à jour " +
+                        "votre banque de données (env. 50 MB). D'ailleurs vous pouvez utiliser le download à tout moment si vous désirez.");
+            }
+            alert.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    requestPermissionAndDownloadUpdates();
+                    mDownloadAlertDialog = null;
+                }
+            });
+            alert.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    // Do nothing...
+                    mDownloadAlertDialog = null;
+                }
+            });
+            mDownloadAlertDialog = alert.show();
         }
-        alert.setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                requestPermissionAndDownloadUpdates();
-            }
-        });
-        alert.setNegativeButton(getString(R.string.no), new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int whichButton) {
-                // Do nothing...
-            }
-        });
-        alert.show();
     }
 
     public void requestPermissionAndDownloadUpdates() {
