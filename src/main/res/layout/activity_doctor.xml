@@ -30,6 +30,32 @@
                 />
 
             <TextView
+                android:id="@+id/zsr_number_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/zsr_number" />
+
+            <EditText
+                android:id="@+id/zsr_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="text" />
+
+            <TextView
+                android:id="@+id/gln_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="GLN" />
+
+            <EditText
+                android:id="@+id/gln"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="number" />
+
+            <TextView
                 android:id="@+id/doctor_name_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
