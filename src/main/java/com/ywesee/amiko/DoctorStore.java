@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.JsonReader;
+import android.util.JsonToken;
 import android.util.JsonWriter;
 
 import java.io.BufferedOutputStream;
@@ -32,6 +33,10 @@ public class DoctorStore {
     public String zip;
     public String phone;
     public String email;
+    public String gln;
+    public String iban;
+    public String vatNumber;
+    public String zsrNumber;
 
     public DoctorStore(Context context) {
         dir = context.getFilesDir().toString();
@@ -124,6 +129,24 @@ public class DoctorStore {
                 }
                 else if (name.equals("email")) {
                     this.email = reader.nextString();
+                } else if (name.equals("gln")) {
+                    this.gln = reader.nextString();
+                } else if (name.equals("iban")) {
+                    JsonToken next = reader.peek();
+                    if (next.name().equals("NULL")) {
+                        reader.nextNull();
+                    } else {
+                        this.iban = reader.nextString();
+                    }
+                } else if (name.equals("vat_number")) {
+                    JsonToken next = reader.peek();
+                    if (next.name().equals("NULL")) {
+                        reader.nextNull();
+                    } else {
+                        this.vatNumber = reader.nextString();
+                    }
+                } else if (name.equals("zsr_number")) {
+                    this.zsrNumber = reader.nextString();
                 }
             }
             reader.endObject();
@@ -148,6 +171,11 @@ public class DoctorStore {
             writer.name("zip").value(this.zip);
             writer.name("phone").value(this.phone);
             writer.name("email").value(this.email);
+            writer.name("gln").value(this.gln);
+            // This can exist but we don't have UI to edit it, so it's possible to be null
+            writer.name("iban").value(this.iban != null ? this.iban : "");
+            writer.name("vat_number").value(this.vatNumber != null ? this.vatNumber : "");
+            writer.name("zsr_number").value(this.zsrNumber);
             writer.endObject();
             writer.close();
 

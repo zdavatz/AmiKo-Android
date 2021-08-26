@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DoctorActivity extends AppCompatActivity {
@@ -41,6 +43,8 @@ public class DoctorActivity extends AppCompatActivity {
     static final int MIN_SIGNATURE_WIDTH = 90;
 
     private EditText editTitle;
+    private EditText editZsrNumber;
+    private EditText editGln;
     private EditText editName;
     private EditText editSurname;
     private EditText editStreet;
@@ -91,6 +95,8 @@ public class DoctorActivity extends AppCompatActivity {
         editPhone = findViewById(R.id.doctor_phone);
         editEmail = findViewById(R.id.doctor_email);
         imageView = findViewById(R.id.imageView);
+        editZsrNumber = findViewById(R.id.zsr_number);
+        editGln = findViewById(R.id.gln);
 
         final DoctorActivity _this = this;
         Button selfieButton = findViewById(R.id.button_selfie);
@@ -156,6 +162,8 @@ public class DoctorActivity extends AppCompatActivity {
         editZip.setText(store.zip);
         editPhone.setText(store.phone);
         editEmail.setText(store.email);
+        editZsrNumber.setText(store.zsrNumber);
+        editGln.setText(store.gln);
         imageView.setImageBitmap(store.getSignature());
     }
 
@@ -181,6 +189,18 @@ public class DoctorActivity extends AppCompatActivity {
                         errored = true;
                     }
                 }
+                if (!editZsrNumber.getText().toString().equals("")) {
+                    Pattern pattern = Pattern.compile("^[a-zA-Z][0-9]{6}$");
+                    Matcher matcher = pattern.matcher(editZsrNumber.getText().toString());
+                    if (!matcher.matches()) {
+                        editZsrNumber.setError("Error");
+                        errored = true;
+                    }
+                }
+                if (!editGln.getText().toString().equals("") && editGln.getText().toString().length() != 13) {
+                    editGln.setError("Error");
+                    errored = true;
+                }
 
                 store.name = editName.getText().toString();
                 store.surname = editSurname.getText().toString();
@@ -189,6 +209,8 @@ public class DoctorActivity extends AppCompatActivity {
                 store.zip = editZip.getText().toString();
                 store.phone = editPhone.getText().toString();
                 store.email = editEmail.getText().toString();
+                store.zsrNumber = editZsrNumber.getText().toString();
+                store.gln = editGln.getText().toString();
                 if (!errored) {
                     store.save();
                     finish();
@@ -241,6 +263,8 @@ public class DoctorActivity extends AppCompatActivity {
             } catch (Exception e) {
 
             }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
         }
     }
 

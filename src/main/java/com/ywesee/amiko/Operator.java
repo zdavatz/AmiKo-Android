@@ -30,6 +30,10 @@ public class Operator implements Serializable {
     public static final String KEY_AMK_DOC_ZIP = "zip_code";
     public static final String KEY_AMK_DOC_PHONE = "phone_number";
     public static final String KEY_AMK_DOC_EMAIL = "email_address";
+    public static final String KEY_AMK_DOC_GLN = "gln";
+    public static final String KEY_AMK_DOC_IBAN = "iban";
+    public static final String KEY_AMK_DOC_VAT = "vat_number";
+    public static final  String KEY_AMK_DOC_ZSR_NUMBER = "zsr_number";
 
     public static final String KEY_AMK_DOC_SIGNATURE = "signature";
 
@@ -41,6 +45,10 @@ public class Operator implements Serializable {
     public String zipCode;
     public String phoneNumber;
     public String emailAddress;
+    public String gln;
+    public String iban;
+    public String vatNumber;
+    public String zsrNumber;
 
     // base64 of png of doctor signature image
     private String signature;
@@ -57,6 +65,10 @@ public class Operator implements Serializable {
         this.zipCode = obj.optString(KEY_AMK_DOC_ZIP, "");
         this.phoneNumber = obj.optString(KEY_AMK_DOC_PHONE, "");
         this.emailAddress = obj.optString(KEY_AMK_DOC_EMAIL, "");
+        this.gln = obj.optString(KEY_AMK_DOC_GLN, "");
+        this.iban = obj.optString(KEY_AMK_DOC_IBAN, "");
+        this.vatNumber = obj.optString(KEY_AMK_DOC_VAT, "");
+        this.zsrNumber = obj.optString(KEY_AMK_DOC_ZSR_NUMBER, "");
 
         String signatureString = obj.optString(KEY_AMK_DOC_SIGNATURE, "");
         if (!signatureString.equals("")) {
@@ -84,6 +96,14 @@ public class Operator implements Serializable {
                 this.phoneNumber = reader.nextString();
             } else if (name.equals(KEY_AMK_DOC_EMAIL)) {
                 this.emailAddress = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_GLN)) {
+                this.gln = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_IBAN)) {
+                this.iban = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_VAT)) {
+                this.vatNumber = reader.nextString();
+            } else if (name.equals(KEY_AMK_DOC_ZSR_NUMBER)) {
+                this.zsrNumber = reader.nextString();
             } else if (name.equals(KEY_AMK_DOC_SIGNATURE)) {
                 this.setSignature(reader.nextString());
             } else {
@@ -112,6 +132,10 @@ public class Operator implements Serializable {
         o.zipCode = store.zip;
         o.phoneNumber = store.phone;
         o.emailAddress = store.email;
+        o.gln = store.gln;
+        o.iban = store.iban;
+        o.vatNumber = store.vatNumber;
+        o.zsrNumber = store.zsrNumber;
         o.setSignatureImage(store.getSignature());
 
         return o;
@@ -211,6 +235,10 @@ public class Operator implements Serializable {
         writer.name(KEY_AMK_DOC_ZIP).value(this.zipCode);
         writer.name(KEY_AMK_DOC_PHONE).value(this.phoneNumber);
         writer.name(KEY_AMK_DOC_EMAIL).value(this.emailAddress);
+        writer.name(KEY_AMK_DOC_GLN).value(this.gln);
+        writer.name(KEY_AMK_DOC_IBAN).value(this.iban);
+        writer.name(KEY_AMK_DOC_VAT).value(this.vatNumber);
+        writer.name(KEY_AMK_DOC_ZSR_NUMBER).value(this.zsrNumber);
         if (this.signature != null) {
             writer.name(KEY_AMK_DOC_SIGNATURE).value(this.signature);
         } else {
@@ -235,6 +263,10 @@ public class Operator implements Serializable {
             j.put(KEY_AMK_DOC_PHONE, this.phoneNumber);
             j.put(KEY_AMK_DOC_EMAIL, this.emailAddress);
             j.put(KEY_AMK_DOC_SIGNATURE, this.signature);
+            j.put(KEY_AMK_DOC_GLN, this.gln);
+            j.put(KEY_AMK_DOC_IBAN, this.iban);
+            j.put(KEY_AMK_DOC_VAT, this.vatNumber);
+            j.put(KEY_AMK_DOC_ZSR_NUMBER, this.zsrNumber);
         } catch (Exception e) {
             Log.w("Amiko.Operator", e.toString());
         }
