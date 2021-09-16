@@ -10,7 +10,17 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
+
+import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.JSONObjectRequestListener;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class Interactions {
   private static final String TAG = "Interactions"; // Tag for LogCat window
@@ -21,7 +31,7 @@ public class Interactions {
   private List<String> m_section_titles_list = null;
   private String m_interactions_html_str = null;
   private String m_css_interactions_str = null;
-  private String m_js_deleterow_str = null;
+  private String m_js_interactions_str = null;
 
   public Interactions(Context context) {
     mContext = context;
@@ -33,7 +43,7 @@ public class Interactions {
       else
         m_css_interactions_str = "<style>" + Utilities.loadFromAssetsFolder(mContext, "interactions_css_phone.css", "UTF-8") + "</style>";
       // Load delete row javascript
-      m_js_deleterow_str = Utilities.loadFromAssetsFolder(mContext, "deleterow.js", "UTF-8");
+      m_js_interactions_str = Utilities.loadFromAssetsFolder(mContext, "interactions.js", "UTF-8");
     }
   }
 
@@ -73,6 +83,43 @@ public class Interactions {
     return m_section_ids_list;
   }
 
+  public void callEPha() {
+    JSONArray jsonArray = new JSONArray();
+    for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
+      JSONObject jsonObject = new JSONObject();
+      try {
+        jsonObject.put("type", "drug");
+        String[] packages = entry1.getValue().getPackages().split("\\|");
+        String gtin = packages[9];
+        jsonObject.put("gtin", gtin);
+        jsonArray.put(jsonObject);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+    AndroidNetworking.post("https://api.epha.health/clinic/advice/" + Constants.appLanguage() + "/")
+            .addHeaders("Content-Type", "application/json")
+            .addJSONArrayBody(jsonArray)
+            .build()
+            .getAsJSONObject(new JSONObjectRequestListener() {
+              @Override
+              public void onResponse(JSONObject response) {
+                String link = null;
+                try {
+                  link = response.getJSONObject("data").getString("link");
+                  mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                } catch (JSONException e) {
+                  e.printStackTrace();
+                }
+              }
+
+              @Override
+              public void onError(ANError anError) {
+
+              }
+            });
+  }
+
   public void updateInteractionsHtml() {
     String basket_html_str = medBasketHtml();
     String interactions_html_str = interactionsHtml();
@@ -81,7 +128,7 @@ public class Interactions {
     // Update main interactions html string
     m_interactions_html_str = "<!DOCTYPE html>"
         + "<head><meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />"
-        + "<script type=\"text/javascript\">" + m_js_deleterow_str + "</script>"
+        + "<script type=\"text/javascript\">" + m_js_interactions_str + "</script>"
         + m_css_interactions_str + "</head>"
         + "<body><div id=\"interactions\">"
         + basket_html_str + "<br>" + interactions_html_str + "<br>" + foot_note_html_str
@@ -125,10 +172,17 @@ public class Interactions {
             + "</tr>";
         med_counter++;
       }
-      if (Constants.appLanguage().equals("de"))
-        basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" /></div><br>";
-      else if (Constants.appLanguage().equals("fr"))
-        basket_html_str += "</table><div id=\"Delete_all\"><input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" /></div><br>";
+      if (Constants.appLanguage().equals("de")) {
+        basket_html_str += "</table><div id=\"Delete_all\">";
+        basket_html_str += "<input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" />";
+        basket_html_str += "<input type=\"button\" value=\"EPha API\" style=\"cursor: pointer; float:right;\" onclick=\"callEPhaAPI()\" />";
+        basket_html_str += "</div><br>";
+      } else if (Constants.appLanguage().equals("fr")) {
+        basket_html_str += "</table><div id=\"Delete_all\">";
+        basket_html_str += "<input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" />";
+        basket_html_str += "<input type=\"button\" value=\"EPha API\" style=\"cursor: pointer; float:right;\" onclick=\"callEPhaAPI()\" />";
+        basket_html_str += "</div><br>";
+      }
     } else {
       // Medikamentenkorb ist leer
       if (Constants.appLanguage().equals("de"))

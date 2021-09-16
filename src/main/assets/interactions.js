@@ -20,3 +20,7 @@ function deleterow(tableID,currentRow) {
         window.alert(e);
     }
 }
+
+function callEPhaAPI() {
+    jsInterface.sendMessage("call_epha");
+}
