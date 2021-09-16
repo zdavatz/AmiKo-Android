@@ -655,6 +655,8 @@ public class MainActivity extends AppCompatActivity {
                             sendFeedbackScreenshot(MainActivity.this, 2);
                         }
                     }, 500);
+                } else if (s.equals("call_epha")) {
+                    mMedInteractionBasket.callEPha();
                 } else {
                     if (s.equals("delete_all")) {
                         mMedInteractionBasket.clearBasket();
