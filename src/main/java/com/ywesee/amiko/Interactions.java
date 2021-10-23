@@ -30,8 +30,10 @@ public class Interactions {
   private List<String> m_section_ids_list = null;
   private List<String> m_section_titles_list = null;
   private String m_interactions_html_str = null;
+  private JSONObject m_epha_response = null;
   private String m_css_interactions_str = null;
   private String m_js_interactions_str = null;
+  public Runnable htmlUpdated = null;
 
   public Interactions(Context context) {
     mContext = context;
@@ -57,18 +59,24 @@ public class Interactions {
   }
 
   public void addToBasket(String title, Medication med) {
-    if (m_med_basket!=null)
+    if (m_med_basket!=null) {
       m_med_basket.put(title, med);
+    }
+    callEPha();
   }
 
   public void deleteFromBasket(String row_key) {
-    if (m_med_basket!=null && m_med_basket.containsKey(row_key))
+    if (m_med_basket!=null && m_med_basket.containsKey(row_key)) {
       m_med_basket.remove(row_key);
+    }
+    callEPha();
   }
 
   public void clearBasket() {
-    if (m_med_basket!=null)
+    if (m_med_basket!=null) {
       m_med_basket.clear();
+    }
+    callEPha();
   }
 
   public String getInteractionsHtml() {
@@ -85,6 +93,10 @@ public class Interactions {
 
   public void callEPha() {
     JSONArray jsonArray = new JSONArray();
+    if (m_med_basket.isEmpty()) {
+      m_epha_response = null;
+      return;
+    }
     for (Map.Entry<String, Medication> entry1 : m_med_basket.entrySet()) {
       JSONObject jsonObject = new JSONObject();
       try {
@@ -104,10 +116,13 @@ public class Interactions {
             .getAsJSONObject(new JSONObjectRequestListener() {
               @Override
               public void onResponse(JSONObject response) {
-                String link = null;
                 try {
-                  link = response.getJSONObject("data").getString("link");
-                  mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+                  int code = response.getJSONObject("meta").getInt("code");
+                  if (code >= 200 && code < 300) {
+                    JSONObject jsonObj = response.getJSONObject("data");
+                    m_epha_response = jsonObj;
+                  }
+                  updateInteractionsHtml();
                 } catch (JSONException e) {
                   e.printStackTrace();
                 }
@@ -115,9 +130,107 @@ public class Interactions {
 
               @Override
               public void onError(ANError anError) {
-
+                anError.printStackTrace();
               }
             });
+  }
+
+  public void openEPha() {
+    if (m_epha_response == null) return;
+    try {
+      String link = m_epha_response.getString("link");
+      mContext.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  private String htmlForEpha(JSONObject j) throws JSONException {
+    String lang = Constants.appLanguage();
+    int safety = j.getInt("safety");
+    int kinetic = j.getJSONObject("risk").getInt("kinetic");
+    int qtc = j.getJSONObject("risk").getInt("qtc");
+    int warning = j.getJSONObject("risk").getInt("warning");
+    int serotonerg = j.getJSONObject("risk").getInt("serotonerg");
+    int anticholinergic = j.getJSONObject("risk").getInt("anticholinergic");
+    int adverse = j.getJSONObject("risk").getInt("adverse");
+
+    String html_str = "";
+
+    if (lang.equals("de")) {
+      html_str += "Sicherheit<BR>";
+      html_str += "<p class='risk-description'>Je höher die Sicherheit, desto sicherer die Kombination.</p>";
+    } else {
+      html_str += "Sécurité<BR>";
+      html_str += "<p class='risk-description'>Plus la sécurité est élevée, plus la combinaison est sûre.</p>";
+    }
+
+    html_str += "<div class='risk'>100";
+    html_str += "<div class='gradient'>" +
+            "<div class='pin' style='left: " + (100-safety) + "%'>" + safety + "</div>" +
+            "</div>";
+    html_str += "0</div><BR><BR>";
+
+    if (lang.equals("de")) {
+      html_str += "Risikofaktoren<BR>";
+      html_str += "<p class='risk-description'>Je tiefer das Risiko, desto sicherer die Kombination.</p>";
+    } else {
+      html_str += "Facteurs de risque<BR>";
+      html_str += "<p class='risk-description'>Plus le risque est faible, plus la combinaison est sûre.</p>";
+    }
+
+    html_str += "<table class='risk-table'>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Pharmakokinetik" : "Pharmacocinétique";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + kinetic + "%'>" + kinetic + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Verlängerung der QT-Zeit" : "Allongement du temps QT";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + qtc + "%'>" + qtc + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Warnhinweise" : "Avertissements";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + warning + "%'>" + warning + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Serotonerge Effekte" : "Effets sérotoninergiques";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + serotonerg + "%'>" + serotonerg + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Anticholinerge Effekte" : "Effets anticholinergiques";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + anticholinergic + "%'>" + anticholinergic + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "<tr><td class='risk-name'>";
+    html_str += lang.equals("de") ? "Allgemeine Nebenwirkungen" : "Effets secondaires généraux";
+    html_str += "</td>";
+    html_str += "<td>";
+    html_str += "<div class='risk'>0";
+    html_str += "<div class='gradient'><div class='pin' style='left: " + adverse + "%'>" + adverse + "</div></div>";
+    html_str += "100</div>";
+    html_str += "</td></tr>";
+    html_str += "</table>";
+
+    return html_str;
   }
 
   public void updateInteractionsHtml() {
@@ -133,6 +246,9 @@ public class Interactions {
         + "<body><div id=\"interactions\">"
         + basket_html_str + "<br>" + interactions_html_str + "<br>" + foot_note_html_str
         + "</div></body></html>";
+    if (htmlUpdated != null) {
+      htmlUpdated.run();
+    }
   }
 
   private String medBasketHtml() {
@@ -172,15 +288,24 @@ public class Interactions {
             + "</tr>";
         med_counter++;
       }
+      basket_html_str += "</table>";
+
+      if (m_epha_response != null) {
+        try {
+          String ephaHtml = this.htmlForEpha(m_epha_response);
+          basket_html_str += ephaHtml;
+        } catch (Exception e){}
+      }
+
       if (Constants.appLanguage().equals("de")) {
-        basket_html_str += "</table><div id=\"Delete_all\">";
+        basket_html_str += "<div id=\"Delete_all\">";
         basket_html_str += "<input type=\"button\" value=\"Korb leeren\" onclick=\"deleterow('Delete_all',this)\" />";
-        basket_html_str += "<input type=\"button\" value=\"EPha API\" style=\"cursor: pointer; float:right;\" onclick=\"callEPhaAPI()\" />";
+        basket_html_str += "<input type=\"button\" value=\"EPha API Details anzeigen\" style=\"cursor: pointer; float:right;\" onclick=\"openEPha()\" />";
         basket_html_str += "</div><br>";
       } else if (Constants.appLanguage().equals("fr")) {
-        basket_html_str += "</table><div id=\"Delete_all\">";
+        basket_html_str += "<div id=\"Delete_all\">";
         basket_html_str += "<input type=\"button\" value=\"Tout supprimer\" onclick=\"deleterow('Delete_all',this)\" />";
-        basket_html_str += "<input type=\"button\" value=\"EPha API\" style=\"cursor: pointer; float:right;\" onclick=\"callEPhaAPI()\" />";
+        basket_html_str += "<input type=\"button\" value=\"Afficher les détails de l'API EPha\" style=\"cursor: pointer; float:right;\" onclick=\"openEPha()\" />";
         basket_html_str += "</div><br>";
       }
     } else {
