@@ -21,6 +21,6 @@ function deleterow(tableID,currentRow) {
     }
 }
 
-function callEPhaAPI() {
-    jsInterface.sendMessage("call_epha");
+function openEPha() {
+    jsInterface.sendMessage("open_epha");
 }
