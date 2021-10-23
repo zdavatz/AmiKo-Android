@@ -668,9 +668,6 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             mMedInteractionBasket.updateInteractionsHtml();
-                            String html_str = mMedInteractionBasket.getInteractionsHtml();
-                            html_str = Utilities.replaceColoursForNightTheme(html_str, _this);
-                            mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
                         }
                     });
                 }
@@ -1111,6 +1108,19 @@ public class MainActivity extends AppCompatActivity {
             mMediDataSource = new DBAdapter(mContext);
             mFullTextSearchDB = new FullTextDBAdapter(mContext);
             mMedInteractionBasket = new Interactions(mContext);
+            mMedInteractionBasket.htmlUpdated = new Runnable() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String html_str = mMedInteractionBasket.getInteractionsHtml();
+                            html_str = Utilities.replaceColoursForNightTheme(html_str, mContext);
+                            mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
+                        }
+                    });
+                }
+            };
             // Dismiss splashscreen once database is initialized
             dismissSplashAuto = !DataBaseHelper.shouldCopyFromPersistentFolder(mContext);
             showSplashScreen(true, dismissSplashAuto);
