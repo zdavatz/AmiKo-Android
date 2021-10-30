@@ -208,6 +208,7 @@
 div.risk {
     margin-top:  25px;
     display: flex;
+    align-items: center;
 }
 
 p.risk-description {
@@ -223,7 +224,7 @@ div.gradient {
 div.gradient .pin {
     position: relative;
     display: inline-block;
-    top: -22px;
+    transform: translateY(-100%);
 }
 
 div.gradient .pin::after {
@@ -237,6 +238,7 @@ div.gradient .pin::after {
     width: 5px;
     background: black;
     margin-left: -2.5px;
+    margin-top: -1px;
 }
 
 .risk-table {
