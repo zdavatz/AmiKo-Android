@@ -79,6 +79,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -1558,7 +1559,7 @@ public class MainActivity extends AppCompatActivity {
             case (R.id.menu_help): {
                 mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
                 if (Constants.appOwner().equals("ywesee")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.ywesee.com/AmiKo/Index"));
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.ywesee.com/AmiKo/Index"));
                     startActivity(browserIntent);
                 }
                 return true;
@@ -1630,17 +1631,18 @@ public class MainActivity extends AppCompatActivity {
             rootView.setDrawingCacheEnabled(true);
             Bitmap bitmap = rootView.getDrawingCache();
             // The file be saved to the download folder
-            File outputFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/amiko_screenshot.png");
+            File outputFile = new File(getCacheDir()+"/amiko_screenshot.png");
             FileOutputStream fOutStream = new FileOutputStream(outputFile);
             // Picture is then compressed
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, fOutStream);
             rootView.setDrawingCacheEnabled(false);
             fOutStream.close();
             // Start email activity
+            Uri fileUri = FileProvider.getUriForFile(this, getPackageName() + ".com.ywesee.amiko.provider", outputFile);
             if (mode==1)
-                startEmailActivity(activity, Uri.fromFile(outputFile), "", "AmiKo for Android");
+                startEmailActivity(activity, fileUri, "", "AmiKo for Android");
             else if (mode==2)
-                startEmailActivity(activity, Uri.fromFile(outputFile), "zdavatz@ywesee.com", "Interaction notification");
+                startEmailActivity(activity, fileUri, "zdavatz@ywesee.com", "Interaction notification");
         } catch(Exception e) {
             e.printStackTrace();
         }
