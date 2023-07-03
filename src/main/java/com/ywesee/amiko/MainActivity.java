@@ -1559,7 +1559,7 @@ public class MainActivity extends AppCompatActivity {
             case (R.id.menu_help): {
                 mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
                 if (Constants.appOwner().equals("ywesee")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.ywesee.com/AmiKo/Index"));
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ywesee.com/AmiKo/Index"));
                     startActivity(browserIntent);
                 }
                 return true;
