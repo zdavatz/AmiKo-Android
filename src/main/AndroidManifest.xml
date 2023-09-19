@@ -181,7 +181,7 @@
                 android:value="com.ywesee.amiko.MainActivity" />
         </activity>
 
-        <activity android:name=".GoogleSyncActivity"
+        <activity android:name=".SettingsActivity"
             android:alwaysRetainTaskState="true"
             android:screenOrientation="portrait"
             android:launchMode="singleTask">

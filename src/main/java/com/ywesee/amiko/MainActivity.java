@@ -1551,8 +1551,8 @@ public class MainActivity extends AppCompatActivity {
                 }
                 return true;
             }
-            case (R.id.menu_syncing): {
-                Intent intent = new Intent(this, GoogleSyncActivity.class);
+            case (R.id.menu_settings): {
+                Intent intent = new Intent(this, SettingsActivity.class);
                 startActivity(intent);
                 return true;
             }

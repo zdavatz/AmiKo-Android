@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/status" />
+        android:text="@string/sync_status" />
 
     <TextView
         android:id="@+id/description_textview"
@@ -24,7 +24,7 @@
 
     <Space
         android:layout_width="match_parent"
-        android:layout_height="40sp" />
+        android:layout_height="17dp" />
 
     <TextView
         android:id="@+id/sync_description"
@@ -36,4 +36,34 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/sync_now" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider" />
+
+    <TextView
+        android:id="@+id/hin_sds_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="HIN (SDS) Login:" />
+
+    <Button
+        android:id="@+id/login_with_sds_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/login_with_hin_sds" />
+
+    <TextView
+        android:id="@+id/adswiss_textview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="HIN (ADSwiss) Login:" />
+
+    <Button
+        android:id="@+id/login_with_adswiss_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/login_with_adswiss" />
 </LinearLayout>

@@ -34,7 +34,7 @@
     <string name="menu_share">Partager</string>
 	<string name="menu_rate">Evaluer</string>
     <string name="menu_help">A propos</string>
-    <string name="menu_syncing">Sync</string>
+    <string name="menu_settings">Préférences</string>
 
     <string name="search">Recherche</string>
     <string name="tab_name_1">Spécialité</string>
@@ -118,7 +118,7 @@
     <string name="updating_report">Initializing report...</string>
     <string name="updating_full_text_database">Initializing full text database...</string>
 
-    <string name="status">Status</string>
+    <string name="sync_status">Sync Status</string>
     <string name="not_logged_in">Not logged in</string>
     <string name="logged_in">Logged in</string>
     <string name="sync_now">Sync now</string>

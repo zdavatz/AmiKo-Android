@@ -35,22 +35,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class GoogleSyncActivity extends AppCompatActivity {
+public class SettingsActivity extends AppCompatActivity {
     static private String TAG = "GoogleSyncActivity";
     private TextView descriptionTextView;
     private Button loginButton;
     private TextView syncTextView;
     private Button syncButton;
+    private TextView loginWithSDSTextView;
+    private Button loginWithSDSButton;
+    private TextView loginWithADSwissTextView;
+    private Button loginWithADSwissButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SyncManager.setupShared(this);
-        setContentView(R.layout.activity_google_sync);
+        setContentView(R.layout.activity_settings);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setTitle("Login Google");
+        setTitle(getString(R.string.menu_settings));
 
-        GoogleSyncActivity _this = this;
+        SettingsActivity _this = this;
         descriptionTextView = findViewById(R.id.description_textview);
         loginButton = findViewById(R.id.login_button);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -71,6 +75,22 @@ public class GoogleSyncActivity extends AppCompatActivity {
                 SyncManager.getShared().triggerSync();
             }
         });
+        loginWithSDSTextView = findViewById(R.id.hin_sds_textview);
+        loginWithSDSButton = findViewById(R.id.login_with_sds_button);
+        loginWithSDSButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+        loginWithADSwissTextView = findViewById(R.id.adswiss_textview);
+        loginWithADSwissButton = findViewById(R.id.login_with_adswiss_button);
+        loginWithADSwissButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
         updateUI();
 
         Intent intent = getIntent();
@@ -86,6 +106,8 @@ public class GoogleSyncActivity extends AppCompatActivity {
                     }
                 },
                 statusIntentFilter);
+
+
     }
 
     @Override
@@ -108,7 +130,7 @@ public class GoogleSyncActivity extends AppCompatActivity {
     }
 
     private void getAccessTokenWithCode(String code) {
-        GoogleSyncActivity _this = this;
+        SettingsActivity _this = this;
         descriptionTextView.setText(R.string.loading);
         AsyncTask.execute(new Runnable() {
             @Override
