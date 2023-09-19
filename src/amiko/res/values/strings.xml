@@ -128,4 +128,11 @@
     <string name="loading">Loading</string>
     <string name="delete_on_google_drive">Do you want to delete files on Google drive?</string>
     <string name="zsr_number">ZSR-Nr.</string>
+
+    <string name="login_with_hin_sds">Einloggen mit HIN SDS</string>
+    <string name="login_with_adswiss">Einloggen mit ADSwiss</string>
+    <string name="logout_from_hin_sds">Ausloggen von HIN SDS</string>
+    <string name="logout_from_adswiss">Ausloggen von ADSwiss</string>
+    <string name="sign_eprescription_confirm">Möchten Sie Ihr ERezept unterschreiben?</string>
+    <string name="generating_prescription">ERezept wird erstellt</string>
 </resources>
