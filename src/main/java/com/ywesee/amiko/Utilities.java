@@ -164,6 +164,11 @@ public class Utilities {
 		return null;
 	}
 
+	public static String timeStringFromDate(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
+		return sdf.format(date);
+	}
+
 	public static long foundationHash(String baseString) {
 		char[] chars = baseString.toCharArray();
 		int len = baseString.length();
