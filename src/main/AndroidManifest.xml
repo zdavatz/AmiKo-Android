@@ -195,6 +195,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="${oauthRedirectScheme}" />
+                <data android:scheme="${hinOauthRedirectScheme}" />
             </intent-filter>
         </activity>
 
