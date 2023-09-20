@@ -29,6 +29,9 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.ywesee.amiko.hinclient.HINClient;
+import com.ywesee.amiko.hinclient.HINClientResponseCallback;
+import com.ywesee.amiko.hinclient.HINToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -80,7 +83,7 @@ public class SettingsActivity extends AppCompatActivity {
         loginWithSDSButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForSDS())));
             }
         });
         loginWithADSwissTextView = findViewById(R.id.adswiss_textview);
@@ -88,7 +91,7 @@ public class SettingsActivity extends AppCompatActivity {
         loginWithADSwissButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForADSwiss())));
             }
         });
         updateUI();
@@ -193,9 +196,32 @@ public class SettingsActivity extends AppCompatActivity {
         if (intent == null) return;
         Uri uri = intent.getData();
         if (uri == null) return;
-        String code = uri.getQueryParameter("code");
-        if (code == null) return;
-        getAccessTokenWithCode(code);
+        if (uri.getScheme().equals("amiko") || uri.getScheme().equals("comed")) {
+            // HIN OAuth
+            String code = uri.getQueryParameter("code");
+            String state = uri.getQueryParameter("state");
+            HINClient.Instance.fetchAccessTokenWithAuthCode(code, new HINClientResponseCallback<HINToken>() {
+                @Override
+                public void onResponse(HINToken res) {
+                    if (state.equals("hin_sds")) {
+                        res.application = HINToken.Application.SDS;
+                    } else {
+                        res.application = HINToken.Application.ADSwiss;
+                    }
+                    // TODO save res
+                }
+
+                @Override
+                public void onError(Exception err) {
+
+                }
+            });
+        } else if (uri.getScheme().equals("com.ywesee.amiko.de") || uri.getScheme().equals("com.ywesee.amiko.fr")) {
+            // Google OAuth
+            String code = uri.getQueryParameter("code");
+            if (code == null) return;
+            getAccessTokenWithCode(code);
+        }
         updateUI();
     }
 

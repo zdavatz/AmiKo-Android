@@ -145,7 +145,7 @@ public class HINClient {
             }
 
             @Override
-            public void onResponse(HINToken newToken) {
+            public void onResponse(HINToken token) {
                 AndroidNetworking.get("https://oauth2.sds.hin.ch/api/public/v1/self/")
                         .addHeaders("Accept", "application/json")
                         .addHeaders("Authorization", "Bearer " + token.accessToken)
