@@ -35,4 +35,9 @@ public class ADSwissAuthHandle {
     public boolean isExpired() {
         return this.expiresAt.before(new Date()) || new Date(this.lastUsedAt.getTime() + 60 * 60 * 2 * 1000 /*2 hours*/).before(new Date());
     }
+
+
+    public void updateLastUsedAt() {
+        this.lastUsedAt = new Date();
+    }
 }

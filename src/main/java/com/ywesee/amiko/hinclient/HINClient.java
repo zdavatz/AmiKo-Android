@@ -1,13 +1,15 @@
 package com.ywesee.amiko.hinclient;
 
+import android.graphics.Bitmap;
 import android.util.Log;
 
 import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.error.ANError;
+import com.androidnetworking.interfaces.BitmapRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
-import com.google.api.client.googleapis.auth.oauth2.GoogleOAuthConstants;
 import com.ywesee.amiko.BuildConfig;
 import com.ywesee.amiko.Constants;
+import com.ywesee.amiko.Prescription;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -169,5 +171,106 @@ public class HINClient {
                         });
             }
         });
+    }
+
+    public void fetchADSwissSAML(HINToken token, HINClientResponseCallback<ADSwissSAML> callback) {
+        this.renewTokenIfNeeded(token, new HINClientResponseCallback<HINToken>() {
+            @Override
+            public void onError(Exception err) {
+                callback.onError(err);
+            }
+            @Override
+            public void onResponse(HINToken token) {
+                String url = String.format("https://%s/authService/EPDAuth?targetUrl=%s&style=redirect", HINDomainForADSwiss(), oauthCallback());
+                AndroidNetworking.post(url)
+                        .addHeaders("Accept", "application/json")
+                        .addHeaders("Authorization", "Bearer " + token.accessToken)
+                        .build()
+                        .getAsJSONObject(new JSONObjectRequestListener() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    ADSwissSAML saml = new ADSwissSAML(response, token);
+                                    callback.onResponse(saml);
+                                } catch (JSONException e) {
+                                    callback.onError(e);
+                                }
+                            }
+
+                            @Override
+                            public void onError(ANError anError) {
+                                callback.onError(anError);
+                            }
+                        });
+            }
+        });
+    }
+
+    public void fetchADSwissAuthHandle(HINToken token, String authCode, HINClientResponseCallback<ADSwissAuthHandle> callback) {
+        this.renewTokenIfNeeded(token, new HINClientResponseCallback<HINToken>() {
+            @Override
+            public void onError(Exception err) {
+                callback.onError(err);
+            }
+            @Override
+            public void onResponse(HINToken token) {
+                String url = String.format("https://%s/authService/EPDAuth/auth_handle", HINDomainForADSwiss());
+                JSONObject body = new JSONObject();
+                try {
+                    body.put("authCode", authCode);
+                } catch (JSONException e) {
+                    callback.onError(e);
+                }
+                AndroidNetworking.post(url)
+                        .addHeaders("Accept", "application/json")
+                        .addHeaders("Content-Type", "application/json")
+                        .addHeaders("Authorization", "Bearer " + token.accessToken)
+                        .addJSONObjectBody(body)
+                        .build()
+                        .getAsJSONObject(new JSONObjectRequestListener() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                try {
+                                    String authHandleStr = response.getString("authHandle");
+                                    ADSwissAuthHandle handle = new ADSwissAuthHandle(authHandleStr);
+                                    callback.onResponse(handle);
+                                } catch (JSONException e) {
+                                    callback.onError(e);
+                                }
+                            }
+
+                            @Override
+                            public void onError(ANError anError) {
+                                callback.onError(anError);
+                            }
+                        });
+            }
+        });
+    }
+
+    public void makeQRCode(ADSwissAuthHandle authHandle, Prescription prescription, HINClientResponseCallback<Bitmap> callback) {
+        String url = "https://" + this.certifactionDomain() + "/ePrescription/create?output-format=qrcode";
+        authHandle.updateLastUsedAt();
+        // TODO save new auth handle
+        try {
+            AndroidNetworking.post(url)
+                    .addHeaders("Content-Type", "text/plain")
+                    .addHeaders("Authorization", "Bearer " + authHandle.token)
+                    .addByteBody(prescription.bodyForEPrescription())
+                    .build()
+                    .getAsBitmap(new BitmapRequestListener() {
+                        @Override
+                        public void onResponse(Bitmap response) {
+                            callback.onResponse(response);
+                        }
+
+                        @Override
+                        public void onError(ANError anError) {
+                            callback.onError(anError);
+                        }
+                    });
+        } catch (Exception e) {
+            callback.onError(e);
+        }
     }
 }
