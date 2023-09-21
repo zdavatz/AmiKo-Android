@@ -37,7 +37,7 @@ public class PrescriptionPrintingUtility {
     static final int MILS_PER_INCH = 1000;
     static final int POINTS_IN_INCH = 72;
 
-    public static File generatePDF(Context context, Prescription prescription, String filename) {
+    public static File generatePDF(Context context, Prescription prescription, String filename, Bitmap ePrescriptionQRCode) {
         float margin = mm2pix(18);
 //        float fontSize = 11.0;
 
@@ -60,14 +60,14 @@ public class PrescriptionPrintingUtility {
         PdfDocument.Page page = document.startPage(1);
         Canvas canvas = page.getCanvas();
         if (prescription.medications.size() == 0) {
-            drawHeader(originY, canvas, prescription);
+            drawHeader(originY, canvas, prescription, ePrescriptionQRCode);
         }
 
         for (int i = 0; i < prescription.medications.size(); i++) {
             Product p = prescription.medications.get(i);
             if (needToDrawHeader) {
                 drawPageNumber(context, canvas, pageNumber);
-                drawHeader(originY, canvas, prescription);
+                drawHeader(originY, canvas, prescription, ePrescriptionQRCode);
                 needToDrawHeader = false;
                 originY = medY;
             }
@@ -99,7 +99,7 @@ public class PrescriptionPrintingUtility {
         }
     }
 
-    public static float drawHeader(float originY, Canvas canvas, Prescription prescription) {
+    public static float drawHeader(float originY, Canvas canvas, Prescription prescription, Bitmap ePrescriptionQRCode) {
         float fontSize = 11;
 //        float filenameY = mm2pix(50);
         float docY = mm2pix(60);
@@ -116,7 +116,7 @@ public class PrescriptionPrintingUtility {
         String patientString = prescription.patient.getStringForPrescriptionPrinting();
         drawMultipleLinesText(patientString, canvas, paint, marginX, originY + patY);
 
-        Bitmap signature = prescription.doctor.getSignatureThumbnailForPrinting();
+        Bitmap signature = prescription.doctor.getSignatureThumbnailForPrinting(ePrescriptionQRCode);
         if (signature != null) {
             int signatureX = (int) (a4Width - marginX - doctorRect.getWidth());
             int signatureY = (int) (originY + docY + doctorRect.getHeight());
