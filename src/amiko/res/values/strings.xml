@@ -118,7 +118,7 @@
     <string name="updating_full_text_database">Initializing full text database...</string>
 
     <string name="sync_status">Sync Status</string>
-    <string name="not_logged_in">Not logged in</string>
+    <string name="not_logged_in">[nicht eingeloggt]</string>
     <string name="logged_in">Logged in</string>
     <string name="sync_now">Sync now</string>
     <string name="login">Login</string>
