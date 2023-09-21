@@ -145,7 +145,8 @@ public class Utilities {
             br.close();
         }
         catch (Exception e) {
-        	System.err.println(">> Error in reading file");        	
+        	System.err.println(">> Error in reading file");
+			return null;
         }
         
 		return file_str;	
