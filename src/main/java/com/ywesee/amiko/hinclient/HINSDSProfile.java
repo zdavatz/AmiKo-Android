@@ -1,5 +1,6 @@
 package com.ywesee.amiko.hinclient;
 
+import com.ywesee.amiko.DoctorStore;
 import com.ywesee.amiko.Operator;
 
 import org.json.JSONException;
@@ -50,30 +51,30 @@ public class HINSDSProfile {
         this.verificationLevel = contact.getString("verificationLevel");
     }
 
-    public void mergeToOperator(Operator operator) {
-        if (operator.emailAddress == null || operator.emailAddress.length() == 0) {
-            operator.emailAddress = this.email;
+    public void mergeToOperator(DoctorStore doctorStore) {
+        if (doctorStore.email == null || doctorStore.email.length() == 0) {
+            doctorStore.email = this.email;
         }
-        if (operator.familyName == null || operator.familyName.length() == 0) {
-            operator.familyName = this.lastName;
+        if (doctorStore.surname == null || doctorStore.surname.length() == 0) {
+            doctorStore.surname = this.lastName;
         }
-        if (operator.givenName == null || operator.givenName.length() == 0) {
-            operator.givenName = this.firstName;
+        if (doctorStore.name == null || doctorStore.name.length() == 0) {
+            doctorStore.name = this.firstName;
         }
-        if (operator.postalAddress == null || operator.postalAddress.length() == 0) {
-            operator.postalAddress = this.address;
+        if (doctorStore.street == null || doctorStore.street.length() == 0) {
+            doctorStore.street = this.address;
         }
-        if (operator.zipCode == null || operator.zipCode.length() == 0) {
-            operator.zipCode = this.postalCode;
+        if (doctorStore.zip == null || doctorStore.zip.length() == 0) {
+            doctorStore.zip = this.postalCode;
         }
-        if (operator.city == null || operator.city.length() == 0) {
-            operator.city = this.city;
+        if (doctorStore.city == null || doctorStore.city.length() == 0) {
+            doctorStore.city = this.city;
         }
-        if (operator.phoneNumber == null || operator.phoneNumber.length() == 0) {
-            operator.phoneNumber = this.phoneNr;
+        if (doctorStore.phone == null || doctorStore.phone.length() == 0) {
+            doctorStore.phone = this.phoneNr;
         }
-        if (operator.gln == null || operator.gln.length() == 0) {
-            operator.gln = this.gln;
+        if (doctorStore.gln == null || doctorStore.gln.length() == 0) {
+            doctorStore.gln = this.gln;
         }
     }
 }
