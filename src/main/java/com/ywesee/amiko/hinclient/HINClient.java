@@ -94,7 +94,7 @@ public class HINClient {
         }
     }
 
-    public void fetchAccessTokenWithAuthCode(String authCode, HINClientResponseCallback<HINToken> callback) {
+    public void fetchAccessTokenWithAuthCode(String authCode, HINToken.Application app, HINClientResponseCallback<HINToken> callback) {
         AndroidNetworking.post("https://oauth2.hin.ch/REST/v1/OAuth/GetAccessToken")
                 .addHeaders("Accept", "application/json")
                 .addHeaders("Content-Type", "application/x-www-form-urlencoded")
@@ -108,7 +108,7 @@ public class HINClient {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            HINToken token = new HINToken(response);
+                            HINToken token = new HINToken(response, app);
                             callback.onResponse(token);
                         } catch (JSONException e) {
                             Log.e(TAG, e.getLocalizedMessage());
