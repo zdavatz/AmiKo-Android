@@ -31,6 +31,8 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import com.ywesee.amiko.hinclient.HINClient;
 import com.ywesee.amiko.hinclient.HINClientResponseCallback;
+import com.ywesee.amiko.hinclient.HINSDSProfile;
+import com.ywesee.amiko.hinclient.HINSettingsStore;
 import com.ywesee.amiko.hinclient.HINToken;
 
 import java.io.IOException;
@@ -78,12 +80,19 @@ public class SettingsActivity extends AppCompatActivity {
                 SyncManager.getShared().triggerSync();
             }
         });
+        HINSettingsStore store = new HINSettingsStore(this);
         loginWithSDSTextView = findViewById(R.id.hin_sds_textview);
         loginWithSDSButton = findViewById(R.id.login_with_sds_button);
         loginWithSDSButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForSDS())));
+                HINToken token = store.getSDSToken();
+                if (token == null) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForSDS())));
+                } else {
+                    store.deleteSDSToken();
+                    updateUI();
+                }
             }
         });
         loginWithADSwissTextView = findViewById(R.id.adswiss_textview);
@@ -91,7 +100,13 @@ public class SettingsActivity extends AppCompatActivity {
         loginWithADSwissButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForADSwiss())));
+                HINToken token = store.getADSwissToken();
+                if (token == null) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForADSwiss())));
+                } else {
+                    store.deleteADSwissToken();
+                    updateUI();
+                }
             }
         });
         updateUI();
@@ -109,8 +124,6 @@ public class SettingsActivity extends AppCompatActivity {
                     }
                 },
                 statusIntentFilter);
-
-
     }
 
     @Override
@@ -130,6 +143,23 @@ public class SettingsActivity extends AppCompatActivity {
             syncButton.setEnabled(false);
         }
         syncTextView.setText("Last synced: " + SyncService.lastSynced(this));
+        HINSettingsStore store = new HINSettingsStore(this);
+        HINToken sdsToken = store.getSDSToken();
+        HINToken adswissToken = store.getADSwissToken();
+        if (sdsToken == null) {
+            loginWithSDSTextView.setText("HIN (SDS): " + getString(R.string.not_logged_in));
+            loginWithSDSButton.setText(getString(R.string.login_with_hin_sds));
+        } else {
+            loginWithSDSTextView.setText("HIN (SDS): " + sdsToken.hinId);
+            loginWithSDSButton.setText(getString(R.string.logout_from_hin_sds));
+        }
+        if (adswissToken == null) {
+            loginWithADSwissTextView.setText("HIN (ADSwiss): " + getString(R.string.not_logged_in));
+            loginWithADSwissButton.setText(getString(R.string.login_with_adswiss));
+        } else {
+            loginWithADSwissTextView.setText("HIN (ADSwiss): " + adswissToken.hinId);
+            loginWithADSwissButton.setText(getString(R.string.logout_from_adswiss));
+        }
     }
 
     private void getAccessTokenWithCode(String code) {
@@ -149,17 +179,7 @@ public class SettingsActivity extends AppCompatActivity {
                         }
                     });
                 } catch (Exception e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(_this)
-                                    .setTitle("Error")
-                                    .setMessage(e.getLocalizedMessage())
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                        }
-                    });
-
+                    showError(e);
                 }
             }
         });
@@ -200,22 +220,32 @@ public class SettingsActivity extends AppCompatActivity {
             // HIN OAuth
             String code = uri.getQueryParameter("code");
             String state = uri.getQueryParameter("state");
-            HINClient.Instance.fetchAccessTokenWithAuthCode(code, new HINClientResponseCallback<HINToken>() {
-                @Override
-                public void onResponse(HINToken res) {
-                    if (state.equals("hin_sds")) {
-                        res.application = HINToken.Application.SDS;
-                    } else {
-                        res.application = HINToken.Application.ADSwiss;
+            HINSettingsStore store = new HINSettingsStore(this);
+            HINToken.Application app = state.equals(HINClient.Instance.hinSDSAppName()) ? HINToken.Application.SDS : HINToken.Application.ADSwiss;
+            if (code != null) {
+                HINClient.Instance.fetchAccessTokenWithAuthCode(code, app, new HINClientResponseCallback<HINToken>() {
+                    @Override
+                    public void onResponse(HINToken res) {
+                        if (app == HINToken.Application.SDS) {
+                            store.saveSDSToken(res);
+                            updateDoctorViaSDS(res);
+                        } else if (app == HINToken.Application.ADSwiss) {
+                            store.saveADSwissToken(res);
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateUI();
+                            }
+                        });
                     }
-                    // TODO save res
-                }
 
-                @Override
-                public void onError(Exception err) {
-
-                }
-            });
+                    @Override
+                    public void onError(Exception err) {
+                        showError(err);
+                    }
+                });
+            }
         } else if (uri.getScheme().equals("com.ywesee.amiko.de") || uri.getScheme().equals("com.ywesee.amiko.fr")) {
             // Google OAuth
             String code = uri.getQueryParameter("code");
@@ -223,6 +253,37 @@ public class SettingsActivity extends AppCompatActivity {
             getAccessTokenWithCode(code);
         }
         updateUI();
+    }
+
+    private void updateDoctorViaSDS(HINToken sdsToken) {
+        DoctorStore store = new DoctorStore(this);
+        store.load();
+        HINClient.Instance.fetchSDSSelf(sdsToken, new HINClientResponseCallback<HINSDSProfile>() {
+            @Override
+            public void onResponse(HINSDSProfile res) {
+                res.mergeToOperator(store);
+                store.save();
+            }
+
+            @Override
+            public void onError(Exception err) {
+                showError(err);
+            }
+        });
+    }
+
+    private void showError(Exception e) {
+        Context _this = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(_this)
+                        .setTitle("Error")
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
+        });
     }
 
     protected void receivedSyncStatus(String status) {
