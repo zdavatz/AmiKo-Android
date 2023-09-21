@@ -9,6 +9,7 @@ import com.androidnetworking.interfaces.BitmapRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
 import com.ywesee.amiko.BuildConfig;
 import com.ywesee.amiko.Constants;
+import com.ywesee.amiko.DoctorStore;
 import com.ywesee.amiko.Prescription;
 
 import org.json.JSONException;
@@ -39,6 +40,10 @@ public class HINClient {
         return oauthCallbackScheme() + "://oauth";
     }
 
+    public String adswissAuthOauthCallback() {
+        return oauthCallbackScheme() + "://adswissoauth";
+    }
+
     public String authURLWithApplication(String hinApplicationName) {
         try {
             return String.format(
@@ -53,16 +58,24 @@ public class HINClient {
         }
     }
 
+    public String hinSDSAppName() {
+        return "hin_sds";
+    }
+
+    public String hinADSwissAppName() {
+        if (BuildConfig.DEBUG) {
+            return "ADSwiss_CI-Test";
+        } else {
+            return "ADSwiss_CI";
+        }
+    }
+
     public String authURLForSDS() {
-        return authURLWithApplication("hin_sds");
+        return authURLWithApplication(hinSDSAppName());
     }
 
     public String authURLForADSwiss() {
-        if (BuildConfig.DEBUG) {
-            return authURLWithApplication("ADSwiss_CI-Test");
-        } else {
-            return authURLWithApplication("ADSwiss_CI");
-        }
+        return authURLWithApplication(hinADSwissAppName());
     }
 
     public String HINDomainForADSwiss() {
@@ -181,7 +194,7 @@ public class HINClient {
             }
             @Override
             public void onResponse(HINToken token) {
-                String url = String.format("https://%s/authService/EPDAuth?targetUrl=%s&style=redirect", HINDomainForADSwiss(), oauthCallback());
+                String url = String.format("https://%s/authService/EPDAuth?targetUrl=%s&style=redirect", HINDomainForADSwiss(), adswissAuthOauthCallback());
                 AndroidNetworking.post(url)
                         .addHeaders("Accept", "application/json")
                         .addHeaders("Authorization", "Bearer " + token.accessToken)

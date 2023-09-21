@@ -147,10 +147,22 @@
         <activity android:name=".PatientListActivity" android:alwaysRetainTaskState="true">
         </activity>
 
-        <activity android:name=".PrescriptionActivity" android:alwaysRetainTaskState="true">
+        <activity android:name=".PrescriptionActivity"
+            android:alwaysRetainTaskState="true"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ywesee.amiko.MainActivity" />
+            <intent-filter>
+                <!-- ADSwiss OAuth -->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="${hinOauthRedirectScheme}" />
+                <data android:host="adswissoauth"/>
+            </intent-filter>
         </activity>
 
         <activity android:name=".ProductPrintingActivity" android:alwaysRetainTaskState="true">
@@ -190,12 +202,21 @@
                 android:value="com.ywesee.amiko.MainActivity" />
 
             <intent-filter>
+                <!-- Google OAuth -->
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="${oauthRedirectScheme}" />
+            </intent-filter>
+            <intent-filter>
+                <!-- HIN OAuth -->
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="${hinOauthRedirectScheme}" />
+                <data android:host="oauth"/>
             </intent-filter>
         </activity>
 
