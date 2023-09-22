@@ -250,99 +250,88 @@ public class PatientActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                break;
-            case R.id.save: {
-                Patient patient;
-                if (mPatient == null) {
-                    patient = new Patient();
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        } else if (item.getItemId() == R.id.save) {
+            Patient patient;
+            if (mPatient == null) {
+                patient = new Patient();
+            } else {
+                patient = mPatient;
+            }
+            patient.familyname = editSurname.getText().toString();
+            patient.givenname = editName.getText().toString();
+            patient.birthdate = editBirthday.getText().toString();
+
+            String sexString = null;
+            if (editSex.getCheckedRadioButtonId() == R.id.patient_sex_male) {
+                sexString = Patient.KEY_AMK_PAT_GENDER_M;
+            } else if (editSex.getCheckedRadioButtonId() == R.id.patient_sex_female) {
+                sexString = Patient.KEY_AMK_PAT_GENDER_F;
+            } else {
+                showEmptySexAlert();
+                return false;
+            }
+            patient.gender = sexString;
+            try {
+                patient.weight_kg = Integer.parseInt(editWeight.getText().toString());
+            } catch(Exception e) {
+                patient.weight_kg = 0;
+            }
+            try {
+                patient.height_cm = Integer.parseInt(editHeight.getText().toString());
+            } catch(Exception e) {
+                patient.height_cm = 0;
+            }
+            patient.zipcode = editZip.getText().toString();
+            patient.city = editCity.getText().toString();
+            patient.country = editCountry.getText().toString();
+            patient.address = editStreet.getText().toString();
+            patient.phone = editPhone.getText().toString();
+            patient.email = editEmail.getText().toString();
+
+            boolean errored = false;
+
+            for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editBirthday, editPhone, editEmail)) {
+                if (v.length() == 0) {
+                    v.setError(getString(R.string.required));
+                    errored = true;
+                }
+            }
+
+            if (!errored) {
+                PatientDBAdapter db = new PatientDBAdapter(this);
+                if (mPatient != null) {
+                    patient.timestamp = Utilities.currentTimeString();
+                    db.updateRecord(patient);
+                    showPatientUpdatedAlert();
                 } else {
-                    patient = mPatient;
+                    db.insertRecord(patient);
+                    showPatientAddedAlert();
                 }
-                patient.familyname = editSurname.getText().toString();
-                patient.givenname = editName.getText().toString();
-                patient.birthdate = editBirthday.getText().toString();
-
-                String sexString = null;
-                switch (editSex.getCheckedRadioButtonId()) {
-                    case R.id.patient_sex_male:
-                        sexString = Patient.KEY_AMK_PAT_GENDER_M;
-                        break;
-                    case R.id.patient_sex_female:
-                        sexString = Patient.KEY_AMK_PAT_GENDER_F;
-                        break;
-                    default:
-                        showEmptySexAlert();
-                        return false;
+                db.close();
+                mPatient = patient;
+                Patient.setCurrentPatientId(this, patient.uid);
+                if (getIsCreateOnly()) {
+                    Intent intent = new Intent();
+                    intent.putExtra("patient", patient);
+                    setResult(0, intent);
+                    finish();
                 }
-                patient.gender = sexString;
-                try {
-                    patient.weight_kg = Integer.parseInt(editWeight.getText().toString());
-                } catch(Exception e) {
-                    patient.weight_kg = 0;
-                }
-                try {
-                    patient.height_cm = Integer.parseInt(editHeight.getText().toString());
-                } catch(Exception e) {
-                    patient.height_cm = 0;
-                }
-                patient.zipcode = editZip.getText().toString();
-                patient.city = editCity.getText().toString();
-                patient.country = editCountry.getText().toString();
-                patient.address = editStreet.getText().toString();
-                patient.phone = editPhone.getText().toString();
-                patient.email = editEmail.getText().toString();
-
-                boolean errored = false;
-
-                for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editBirthday, editPhone, editEmail)) {
-                    if (v.length() == 0) {
-                        v.setError(getString(R.string.required));
-                        errored = true;
-                    }
-                }
-
-                if (!errored) {
-                    PatientDBAdapter db = new PatientDBAdapter(this);
-                    if (mPatient != null) {
-                        patient.timestamp = Utilities.currentTimeString();
-                        db.updateRecord(patient);
-                        showPatientUpdatedAlert();
-                    } else {
-                        db.insertRecord(patient);
-                        showPatientAddedAlert();
-                    }
-                    db.close();
-                    mPatient = patient;
-                    Patient.setCurrentPatientId(this, patient.uid);
-                    if (getIsCreateOnly()) {
-                        Intent intent = new Intent();
-                        intent.putExtra("patient", patient);
-                        setResult(0, intent);
-                        finish();
-                    }
-                }
-                return true;
             }
-            case R.id.patient_list: {
-                Intent intent = new Intent(this, PatientListActivity.class);
-                startActivityForResult(intent, REQUEST_PATIENT);
-                return true;
-            }
-            case R.id.new_patient: {
-                mPatient = null;
-                updateUIForPatient();
-                return true;
-            }
-            case R.id.scan_card: {
-                Intent intent = new Intent(this, SmartcardActivity.class);
-                startActivityForResult(intent, REQUEST_SMARTCARD);
-                return true;
-            }
-            default:
-                break;
+            return true;
+        } else if (item.getItemId() == R.id.patient_list) {
+            Intent intent = new Intent(this, PatientListActivity.class);
+            startActivityForResult(intent, REQUEST_PATIENT);
+            return true;
+        } else if (item.getItemId() == R.id.new_patient) {
+            mPatient = null;
+            updateUIForPatient();
+            return true;
+        } else if (item.getItemId() == R.id.scan_card) {
+            Intent intent = new Intent(this, SmartcardActivity.class);
+            startActivityForResult(intent, REQUEST_SMARTCARD);
+            return true;
         }
         return false;
     }
