@@ -273,7 +273,7 @@ public class HINClient {
             AndroidNetworking.post(url)
                     .addHeaders("Content-Type", "text/plain")
                     .addHeaders("Authorization", "Bearer " + authHandle.token)
-                    .addByteBody(prescription.bodyForEPrescription())
+                    .addStringBody(prescription.bodyForEPrescription())
                     .build()
                     .getAsBitmap(new BitmapRequestListener() {
                         @Override
