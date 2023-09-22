@@ -134,11 +134,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (SyncManager.getShared().isGoogleLoggedIn()) {
-            descriptionTextView.setText(R.string.logged_in);
+            descriptionTextView.setText("Google: " + getString(R.string.logged_in));
             loginButton.setText(R.string.logout);
             syncButton.setEnabled(true);
         } else {
-            descriptionTextView.setText(R.string.not_logged_in);
+            descriptionTextView.setText("Google: " + getString(R.string.not_logged_in));
             loginButton.setText(R.string.login);
             syncButton.setEnabled(false);
         }
