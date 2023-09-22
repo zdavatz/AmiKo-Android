@@ -123,6 +123,10 @@ public class HINClient {
     }
 
     public void renewTokenIfNeeded(HINToken token, HINClientResponseCallback<HINToken> callback) {
+        if (!token.isExpired()) {
+            callback.onResponse(token);
+            return;
+        }
         AndroidNetworking.post("https://oauth2.hin.ch/REST/v1/OAuth/GetAccessToken")
                 .addHeaders("Accept", "application/json")
                 .addHeaders("Content-Type", "application/x-www-form-urlencoded")
