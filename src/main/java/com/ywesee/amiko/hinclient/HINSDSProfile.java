@@ -39,7 +39,7 @@ public class HINSDSProfile {
         String dobString = contact.getString("dateOfBirth");
 
         TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         df.setTimeZone(tz);
         this.dateOfBirth = df.parse(dobString);
         this.address = contact.getString("address");
