@@ -17,6 +17,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.zip.GZIPOutputStream;
@@ -119,7 +120,7 @@ public class Prescription {
         return j;
     }
 
-    public byte[] bodyForEPrescription() throws JSONException, IOException, ParseException {
+    public String bodyForEPrescription() throws JSONException, IOException, ParseException {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
         DateFormat patientDOBDateFormat = new SimpleDateFormat("dd.MM.yyyy");
         DateFormat ePrescriptionDOBFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -143,11 +144,12 @@ public class Prescription {
         jsonBody.put("Dt", df.format(new Date()));
         String jsonString = jsonBody.toString();
         ByteArrayOutputStream os = new ByteArrayOutputStream(jsonString.length());
-        os.write("CHMED16A1".getBytes(StandardCharsets.UTF_8));
         GZIPOutputStream gos = new GZIPOutputStream(os);
         gos.write(jsonString.getBytes(StandardCharsets.UTF_8));
         gos.close();
         byte[] compressed = os.toByteArray();
-        return compressed;
+        Base64.Encoder base64Encoder = Base64.getEncoder();
+        String result = "CHMED16A1" + base64Encoder.encodeToString(compressed);
+        return result;
     }
 }
