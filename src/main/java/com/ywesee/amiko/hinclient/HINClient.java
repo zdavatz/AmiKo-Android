@@ -102,7 +102,7 @@ public class HINClient {
                 .addBodyParameter("redirect_uri", oauthCallback())
                 .addBodyParameter("code", authCode)
                 .addBodyParameter("client_id", HINClientCredentials.HIN_CLIENT_ID)
-                .addBodyParameter("client_secret", HINClientCredentials.HIB_CLIENT_SECRET)
+                .addBodyParameter("client_secret", HINClientCredentials.HIN_CLIENT_SECRET)
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
@@ -134,7 +134,7 @@ public class HINClient {
                 .addBodyParameter("redirect_uri", this.oauthCallback())
                 .addBodyParameter("refresh_token", token.refreshToken)
                 .addBodyParameter("client_id", HINClientCredentials.HIN_CLIENT_ID)
-                .addBodyParameter("client_secret", HINClientCredentials.HIB_CLIENT_SECRET)
+                .addBodyParameter("client_secret", HINClientCredentials.HIN_CLIENT_SECRET)
                 .build()
                 .getAsJSONObject(new JSONObjectRequestListener() {
                     @Override
