@@ -4,11 +4,23 @@ import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 
+import com.google.android.gms.common.util.ArrayUtils;
+
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Date;
+import java.util.UUID;
+import java.util.zip.GZIPOutputStream;
 
 public class Prescription {
     public static final String KEY_AMK_HASH = "prescription_hash";
@@ -106,5 +118,38 @@ public class Prescription {
             Log.w("Amiko.Prescription", e.toString());
         }
         return j;
+    }
+
+    public String bodyForEPrescription() throws JSONException, IOException, ParseException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+        DateFormat patientDOBDateFormat = new SimpleDateFormat("dd.MM.yyyy");
+        DateFormat ePrescriptionDOBFormat = new SimpleDateFormat("yyyy-MM-dd");
+        JSONArray medications = new JSONArray();
+        for (Product p : this.medications) {
+            JSONObject o = new JSONObject();
+            o.put("Id", p.eanCode);
+            o.put("IdType", 2); // GTIN
+            medications.put(o);
+        }
+        JSONObject patient = new JSONObject();
+        patient.put("FName", this.patient.givenname);
+        patient.put("LName", this.patient.familyname);
+        patient.put("BDt", ePrescriptionDOBFormat.format(patientDOBDateFormat.parse(this.patient.birthdate)));
+        JSONObject jsonBody = new JSONObject();
+        jsonBody.put("Patient", patient);
+        jsonBody.put("Medicaments", medications);
+        jsonBody.put("MedType", 3); // Prescription
+        jsonBody.put("Id", UUID.randomUUID().toString());
+        jsonBody.put("Auth", this.doctor.gln);
+        jsonBody.put("Dt", df.format(new Date()));
+        String jsonString = jsonBody.toString();
+        ByteArrayOutputStream os = new ByteArrayOutputStream(jsonString.length());
+        GZIPOutputStream gos = new GZIPOutputStream(os);
+        gos.write(jsonString.getBytes(StandardCharsets.UTF_8));
+        gos.close();
+        byte[] compressed = os.toByteArray();
+        Base64.Encoder base64Encoder = Base64.getEncoder();
+        String result = "CHMED16A1" + base64Encoder.encodeToString(compressed);
+        return result;
     }
 }

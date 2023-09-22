@@ -40,6 +40,12 @@ report files are in
 in `Constants.java` set `APP_VERSION`, `GEN_DATE` and `DB_VERSION`
 _to build with Intellij this does not have to change._
 
+
+#### 5.1 HIN Credentials
+
+Copy `src/main/java/com/ywesee/amiko/hinclient/HINClientCredentials.java` to `HINClientCredentials.java`,
+and fill in the fields.
+
 #### 6. AndroidManifest.xml
 in `AndroidManifest.xml` increase versionName (=`APP_VERSION` in `Constants.java`)
 

@@ -145,7 +145,8 @@ public class Utilities {
             br.close();
         }
         catch (Exception e) {
-        	System.err.println(">> Error in reading file");        	
+        	System.err.println(">> Error in reading file");
+			return null;
         }
         
 		return file_str;	
@@ -162,6 +163,11 @@ public class Utilities {
 			return sdf.parse(str);
 		} catch (Exception e) { }
 		return null;
+	}
+
+	public static String timeStringFromDate(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.ss");
+		return sdf.format(date);
 	}
 
 	public static long foundationHash(String baseString) {

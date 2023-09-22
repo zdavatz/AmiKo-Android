@@ -163,19 +163,19 @@ public class DoctorStore {
 
             JsonWriter writer = new JsonWriter(new OutputStreamWriter(fileOut, StandardCharsets.UTF_8));
             writer.beginObject();
-            writer.name("title").value(this.title);
-            writer.name("name").value(this.name);
-            writer.name("surname").value(this.surname);
-            writer.name("street").value(this.street);
-            writer.name("city").value(this.city);
-            writer.name("zip").value(this.zip);
-            writer.name("phone").value(this.phone);
-            writer.name("email").value(this.email);
-            writer.name("gln").value(this.gln);
+            writer.name("title").value(this.title == null ? "" : this.title);
+            writer.name("name").value(this.name == null ? "" : this.name);
+            writer.name("surname").value(this.surname == null ? "" : this.surname);
+            writer.name("street").value(this.street == null ? "" : this.street);
+            writer.name("city").value(this.city == null ? "" : this.city);
+            writer.name("zip").value(this.zip == null ? "" : this.zip);
+            writer.name("phone").value(this.phone == null ? "" : this.phone);
+            writer.name("email").value(this.email == null ? "" : this.email);
+            writer.name("gln").value(this.gln == null ? "" : this.gln);
             // This can exist but we don't have UI to edit it, so it's possible to be null
             writer.name("iban").value(this.iban != null ? this.iban : "");
             writer.name("vat_number").value(this.vatNumber != null ? this.vatNumber : "");
-            writer.name("zsr_number").value(this.zsrNumber);
+            writer.name("zsr_number").value(this.zsrNumber != null ? this.zsrNumber : "");
             writer.endObject();
             writer.close();
 

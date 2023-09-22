@@ -86,7 +86,9 @@ android {
 
             def redirectScheme = "com.ywesee.amiko.de"
             buildConfigField "String", "OAUTH_REDIRECT_SCHEME", "\"" + redirectScheme + "\"";
-            manifestPlaceholders = [oauthRedirectScheme: redirectScheme]
+            def hinRedirectScheme = "amiko";
+            buildConfigField "String", "HIN_OAUTH_REDIRECT_SCHEME", "\"" + hinRedirectScheme + "\"";
+            manifestPlaceholders = [oauthRedirectScheme: redirectScheme, hinOauthRedirectScheme: hinRedirectScheme]
         }
         comed {
             dimension "version"
@@ -95,7 +97,9 @@ android {
 
             def redirectScheme = "com.ywesee.amiko.fr"
             buildConfigField "String", "OAUTH_REDIRECT_SCHEME", "\"" + redirectScheme + "\"";
-            manifestPlaceholders = [oauthRedirectScheme: redirectScheme]
+            def hinRedirectScheme = "comed";
+            buildConfigField "String", "HIN_OAUTH_REDIRECT_SCHEME", "\"" + hinRedirectScheme + "\"";
+            manifestPlaceholders = [oauthRedirectScheme: redirectScheme, hinOauthRedirectScheme: hinRedirectScheme]
         }
     }
 

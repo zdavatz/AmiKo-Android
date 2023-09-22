@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,6 +40,12 @@ import android.widget.TextView;
 
 import com.ywesee.amiko.barcodereader.BarcodeScannerActivity;
 import com.ywesee.amiko.barcodereader.GS1Extractor;
+import com.ywesee.amiko.hinclient.ADSwissAuthHandle;
+import com.ywesee.amiko.hinclient.ADSwissSAML;
+import com.ywesee.amiko.hinclient.HINClient;
+import com.ywesee.amiko.hinclient.HINClientResponseCallback;
+import com.ywesee.amiko.hinclient.HINSettingsStore;
+import com.ywesee.amiko.hinclient.HINToken;
 
 import org.json.JSONObject;
 
@@ -496,17 +503,8 @@ public class PrescriptionActivity extends AppCompatActivity {
         pdfButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String filename = PrescriptionUtility.currentFilenameWithExtension("pdf");
-                File f = PrescriptionPrintingUtility.generatePDF(_this, _this.openedPrescription, filename);
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                Uri outputFileUri = FileProvider.getUriForFile(_this, _this.getApplicationContext().getPackageName() + ".com.ywesee.amiko.provider", f);
-                intent.setDataAndType(outputFileUri, "application/pdf");
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                Intent in = Intent.createChooser(intent, "Open File");
-                startActivity(in);
+                printPrescription();
                 ad.dismiss();
-                f.deleteOnExit();
             }
         });
 
@@ -527,6 +525,20 @@ public class PrescriptionActivity extends AppCompatActivity {
         layout.addView(emailButton);
 
         ad.show();
+    }
+
+    private void showErrorDialog(Exception e) {
+        Context _this = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(_this)
+                        .setTitle("Error")
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(R.string.yes, null)
+                        .show();
+            }
+        });
     }
 
     public void setDoctor(Operator doctor) {
@@ -651,6 +663,113 @@ public class PrescriptionActivity extends AppCompatActivity {
         setDoctor(Operator.loadFromStore(this.getFilesDir().toString()));
         setProducts(new ArrayList<Product>());
         reloadPlaceDateText();
+    }
+
+    private void printPrescription() {
+        HINSettingsStore store = new HINSettingsStore(this);
+        HINToken adswissToken = store.getADSwissToken();
+        ADSwissAuthHandle adswissAuthHandle = store.getADSwissAuthHandle();
+        if (adswissToken != null && adswissAuthHandle == null) {
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.sign_eprescription_confirm))
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            printPrescription(true);
+                        }
+                    })
+                    .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            printPrescription(false);
+                        }
+                    })
+                    .show();
+            return;
+        } else if (adswissToken != null && adswissAuthHandle != null) {
+            printPrescription(true);
+        } else {
+            printPrescription(false);
+        }
+    }
+    private void printPrescription(boolean withEPrescription) {
+        HINSettingsStore store = new HINSettingsStore(this);
+        HINToken adswissToken = store.getADSwissToken();
+        ADSwissAuthHandle adswissAuthHandle = store.getADSwissAuthHandle();
+        if (adswissToken == null || !withEPrescription) {
+            printPrescriptionWithQRCode(null);
+            return;
+        }
+        if (adswissAuthHandle == null) {
+            HINClient.Instance.fetchADSwissSAML(adswissToken, new HINClientResponseCallback<ADSwissSAML>() {
+                @Override
+                public void onResponse(ADSwissSAML res) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(res.epdAuthUrl)));
+                }
+                @Override
+                public void onError(Exception err) {
+                    showErrorDialog(err);
+                }
+            });
+        } else {
+            HINClient.Instance.makeQRCode(adswissAuthHandle, this.openedPrescription, new HINClientResponseCallback<Bitmap>() {
+                @Override
+                public void onResponse(Bitmap res) {
+                    printPrescriptionWithQRCode(res);
+                }
+
+                @Override
+                public void onError(Exception err) {
+                    showErrorDialog(err);
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        if (intent == null) return;
+        Uri uri = intent.getData();
+        if (uri == null) return;
+        if ((uri.getScheme().equals("amiko") || uri.getScheme().equals("comed")) && uri.getHost().equals("adswissoauth")) {
+            // ADSwiss OAuth
+            String authCode = uri.getQueryParameter("auth_code");
+            HINSettingsStore store = new HINSettingsStore(this);
+            if (authCode == null) return;
+            HINToken adswissToken = store.getADSwissToken();
+            if (adswissToken == null) return;
+            HINClient.Instance.fetchADSwissAuthHandle(adswissToken, authCode, new HINClientResponseCallback<ADSwissAuthHandle>() {
+                @Override
+                public void onResponse(ADSwissAuthHandle res) {
+                    store.saveADSwissAuthHandle(res);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            printPrescription(true);
+                        }
+                    });
+                }
+
+                @Override
+                public void onError(Exception err) {
+                    showErrorDialog(err);
+                }
+            });
+        }
+    }
+
+    private void printPrescriptionWithQRCode(Bitmap qrCode) {
+        String filename = PrescriptionUtility.currentFilenameWithExtension("pdf");
+        File f = PrescriptionPrintingUtility.generatePDF(this, this.openedPrescription, filename, qrCode);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Uri outputFileUri = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".com.ywesee.amiko.provider", f);
+        intent.setDataAndType(outputFileUri, "application/pdf");
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Intent in = Intent.createChooser(intent, "Open File");
+        startActivity(in);
+        f.deleteOnExit();
     }
 
     public void reloadPlaceDateText() {

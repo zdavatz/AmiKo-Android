@@ -34,7 +34,7 @@
     <string name="menu_share">Partager</string>
 	<string name="menu_rate">Evaluer</string>
     <string name="menu_help">A propos</string>
-    <string name="menu_syncing">Sync</string>
+    <string name="menu_settings">Préférences</string>
 
     <string name="search">Recherche</string>
     <string name="tab_name_1">Spécialité</string>
@@ -118,8 +118,8 @@
     <string name="updating_report">Initializing report...</string>
     <string name="updating_full_text_database">Initializing full text database...</string>
 
-    <string name="status">Status</string>
-    <string name="not_logged_in">Not logged in</string>
+    <string name="sync_status">Sync Status</string>
+    <string name="not_logged_in">[non connecté]</string>
     <string name="logged_in">Logged in</string>
     <string name="sync_now">Sync now</string>
     <string name="login">Login</string>
@@ -129,4 +129,11 @@
     <string name="loading">Loading</string>
     <string name="delete_on_google_drive">Do you want to delete files on Google drive?</string>
     <string name="zsr_number">N° RCC</string>
+
+    <string name="login_with_hin_sds">Se connecter avec HIN SDS</string>
+    <string name="login_with_adswiss">Se connecter avec ADSwiss</string>
+    <string name="logout_from_hin_sds">Déconnexion de HIN SDS</string>
+    <string name="logout_from_adswiss">Déconnexion de ADSwiss</string>
+    <string name="sign_eprescription_confirm">Vous souhaitez signer votre ordonnance électronique?</string>
+    <string name="generating_prescription">La prescription électronique est créée</string>
 </resources>

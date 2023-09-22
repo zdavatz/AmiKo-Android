@@ -29,28 +29,37 @@ import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
+import com.ywesee.amiko.hinclient.HINClient;
+import com.ywesee.amiko.hinclient.HINClientResponseCallback;
+import com.ywesee.amiko.hinclient.HINSDSProfile;
+import com.ywesee.amiko.hinclient.HINSettingsStore;
+import com.ywesee.amiko.hinclient.HINToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class GoogleSyncActivity extends AppCompatActivity {
+public class SettingsActivity extends AppCompatActivity {
     static private String TAG = "GoogleSyncActivity";
     private TextView descriptionTextView;
     private Button loginButton;
     private TextView syncTextView;
     private Button syncButton;
+    private TextView loginWithSDSTextView;
+    private Button loginWithSDSButton;
+    private TextView loginWithADSwissTextView;
+    private Button loginWithADSwissButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SyncManager.setupShared(this);
-        setContentView(R.layout.activity_google_sync);
+        setContentView(R.layout.activity_settings);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        setTitle("Login Google");
+        setTitle(getString(R.string.menu_settings));
 
-        GoogleSyncActivity _this = this;
+        SettingsActivity _this = this;
         descriptionTextView = findViewById(R.id.description_textview);
         loginButton = findViewById(R.id.login_button);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -69,6 +78,35 @@ public class GoogleSyncActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 SyncManager.getShared().triggerSync();
+            }
+        });
+        HINSettingsStore store = new HINSettingsStore(this);
+        loginWithSDSTextView = findViewById(R.id.hin_sds_textview);
+        loginWithSDSButton = findViewById(R.id.login_with_sds_button);
+        loginWithSDSButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HINToken token = store.getSDSToken();
+                if (token == null) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForSDS())));
+                } else {
+                    store.deleteSDSToken();
+                    updateUI();
+                }
+            }
+        });
+        loginWithADSwissTextView = findViewById(R.id.adswiss_textview);
+        loginWithADSwissButton = findViewById(R.id.login_with_adswiss_button);
+        loginWithADSwissButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                HINToken token = store.getADSwissToken();
+                if (token == null) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(HINClient.Instance.authURLForADSwiss())));
+                } else {
+                    store.deleteADSwissToken();
+                    updateUI();
+                }
             }
         });
         updateUI();
@@ -96,19 +134,36 @@ public class GoogleSyncActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (SyncManager.getShared().isGoogleLoggedIn()) {
-            descriptionTextView.setText(R.string.logged_in);
+            descriptionTextView.setText("Google: " + getString(R.string.logged_in));
             loginButton.setText(R.string.logout);
             syncButton.setEnabled(true);
         } else {
-            descriptionTextView.setText(R.string.not_logged_in);
+            descriptionTextView.setText("Google: " + getString(R.string.not_logged_in));
             loginButton.setText(R.string.login);
             syncButton.setEnabled(false);
         }
         syncTextView.setText("Last synced: " + SyncService.lastSynced(this));
+        HINSettingsStore store = new HINSettingsStore(this);
+        HINToken sdsToken = store.getSDSToken();
+        HINToken adswissToken = store.getADSwissToken();
+        if (sdsToken == null) {
+            loginWithSDSTextView.setText("HIN (SDS): " + getString(R.string.not_logged_in));
+            loginWithSDSButton.setText(getString(R.string.login_with_hin_sds));
+        } else {
+            loginWithSDSTextView.setText("HIN (SDS): " + sdsToken.hinId);
+            loginWithSDSButton.setText(getString(R.string.logout_from_hin_sds));
+        }
+        if (adswissToken == null) {
+            loginWithADSwissTextView.setText("HIN (ADSwiss): " + getString(R.string.not_logged_in));
+            loginWithADSwissButton.setText(getString(R.string.login_with_adswiss));
+        } else {
+            loginWithADSwissTextView.setText("HIN (ADSwiss): " + adswissToken.hinId);
+            loginWithADSwissButton.setText(getString(R.string.logout_from_adswiss));
+        }
     }
 
     private void getAccessTokenWithCode(String code) {
-        GoogleSyncActivity _this = this;
+        SettingsActivity _this = this;
         descriptionTextView.setText(R.string.loading);
         AsyncTask.execute(new Runnable() {
             @Override
@@ -124,17 +179,7 @@ public class GoogleSyncActivity extends AppCompatActivity {
                         }
                     });
                 } catch (Exception e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            new AlertDialog.Builder(_this)
-                                    .setTitle("Error")
-                                    .setMessage(e.getLocalizedMessage())
-                                    .setPositiveButton(android.R.string.ok, null)
-                                    .show();
-                        }
-                    });
-
+                    showError(e);
                 }
             }
         });
@@ -171,10 +216,74 @@ public class GoogleSyncActivity extends AppCompatActivity {
         if (intent == null) return;
         Uri uri = intent.getData();
         if (uri == null) return;
-        String code = uri.getQueryParameter("code");
-        if (code == null) return;
-        getAccessTokenWithCode(code);
+        if (uri.getScheme().equals("amiko") || uri.getScheme().equals("comed")) {
+            // HIN OAuth
+            String code = uri.getQueryParameter("code");
+            String state = uri.getQueryParameter("state");
+            HINSettingsStore store = new HINSettingsStore(this);
+            HINToken.Application app = state.equals(HINClient.Instance.hinSDSAppName()) ? HINToken.Application.SDS : HINToken.Application.ADSwiss;
+            if (code != null) {
+                HINClient.Instance.fetchAccessTokenWithAuthCode(code, app, new HINClientResponseCallback<HINToken>() {
+                    @Override
+                    public void onResponse(HINToken res) {
+                        if (app == HINToken.Application.SDS) {
+                            store.saveSDSToken(res);
+                            updateDoctorViaSDS(res);
+                        } else if (app == HINToken.Application.ADSwiss) {
+                            store.saveADSwissToken(res);
+                        }
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateUI();
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception err) {
+                        showError(err);
+                    }
+                });
+            }
+        } else if (uri.getScheme().equals("com.ywesee.amiko.de") || uri.getScheme().equals("com.ywesee.amiko.fr")) {
+            // Google OAuth
+            String code = uri.getQueryParameter("code");
+            if (code == null) return;
+            getAccessTokenWithCode(code);
+        }
         updateUI();
+    }
+
+    private void updateDoctorViaSDS(HINToken sdsToken) {
+        DoctorStore store = new DoctorStore(this);
+        store.load();
+        HINClient.Instance.fetchSDSSelf(sdsToken, new HINClientResponseCallback<HINSDSProfile>() {
+            @Override
+            public void onResponse(HINSDSProfile res) {
+                res.mergeToOperator(store);
+                store.save();
+            }
+
+            @Override
+            public void onError(Exception err) {
+                showError(err);
+            }
+        });
+    }
+
+    private void showError(Exception e) {
+        Context _this = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(_this)
+                        .setTitle("Error")
+                        .setMessage(e.getLocalizedMessage())
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
+        });
     }
 
     protected void receivedSyncStatus(String status) {

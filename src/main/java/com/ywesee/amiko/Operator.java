@@ -169,13 +169,13 @@ public class Operator implements Serializable {
         return this.signature;
     }
 
-    public Bitmap getSignatureThumbnailForPrinting() {
+    public Bitmap getSignatureThumbnailForPrinting(Bitmap overrideImage) {
         Rect rect = new Rect(0, 0, MIN_SIGNATURE_WIDTH, MIN_SIGNATURE_HEIGHT);
-        Bitmap bm = this.getSignatureImage();
+        Bitmap bm = overrideImage != null ? overrideImage : this.getSignatureImage();
         if (bm == null) return null;
         Bitmap baseBitmap = Bitmap.createBitmap(rect.width(), rect.height(), bm.getConfig());
 
-        Canvas canvas = new Canvas(baseBitmap );
+        Canvas canvas = new Canvas(baseBitmap);
 
         Paint bg = new Paint();
         bg.setColor(Color.rgb(245, 245, 245));

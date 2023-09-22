@@ -34,7 +34,7 @@
     <string name="menu_share">Share</string>
     <string name="menu_rate">Rate</string>
     <string name="menu_help">About</string>
-    <string name="menu_syncing">Sync</string>
+    <string name="menu_settings">Einstellungen</string>
 
     <string name="search">Suche</string>
     <string name="tab_name_1">Präparat</string>
@@ -117,8 +117,8 @@
     <string name="updating_report">Initializing report...</string>
     <string name="updating_full_text_database">Initializing full text database...</string>
 
-    <string name="status">Status</string>
-    <string name="not_logged_in">Not logged in</string>
+    <string name="sync_status">Sync Status</string>
+    <string name="not_logged_in">[nicht eingeloggt]</string>
     <string name="logged_in">Logged in</string>
     <string name="sync_now">Sync now</string>
     <string name="login">Login</string>
@@ -128,4 +128,11 @@
     <string name="loading">Loading</string>
     <string name="delete_on_google_drive">Do you want to delete files on Google drive?</string>
     <string name="zsr_number">ZSR-Nr.</string>
+
+    <string name="login_with_hin_sds">Einloggen mit HIN SDS</string>
+    <string name="login_with_adswiss">Einloggen mit ADSwiss</string>
+    <string name="logout_from_hin_sds">Ausloggen von HIN SDS</string>
+    <string name="logout_from_adswiss">Ausloggen von ADSwiss</string>
+    <string name="sign_eprescription_confirm">Möchten Sie Ihr ERezept unterschreiben?</string>
+    <string name="generating_prescription">ERezept wird erstellt</string>
 </resources>
