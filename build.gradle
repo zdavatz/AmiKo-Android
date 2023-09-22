@@ -15,7 +15,7 @@ buildscript {
     * of the Gradle plugin for the buildscript.
     */
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.3'
+        classpath 'com.android.tools.build:gradle:8.1.1'
         classpath 'de.undercouch:gradle-download-task:3.4.3'
     }
 }
@@ -42,7 +42,7 @@ dependencies {
 
     implementation 'androidx.legacy:legacy-support-v13:1.0.0-beta01'
     implementation 'org.jsoup:jsoup:1.11.3'
-    implementation 'com.google.android.material:material:1.1.0-alpha10'
+    implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.google.android.gms:play-services-vision:18.0.0'
     implementation 'com.amitshekhar.android:android-networking:1.0.2'
 
@@ -56,6 +56,7 @@ dependencies {
  * You must provide a value for at least the compilation target.
  */
 android {
+    namespace "com.ywesee.amiko"
     compileSdkVersion 31
 
     compileOptions {
@@ -68,7 +69,9 @@ android {
     * existing folders in the project, instead of using the default new
     * organization.
     */
-
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         minSdkVersion 26
         targetSdkVersion 31
