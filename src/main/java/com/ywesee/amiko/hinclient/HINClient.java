@@ -7,6 +7,7 @@ import com.androidnetworking.AndroidNetworking;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.BitmapRequestListener;
 import com.androidnetworking.interfaces.JSONObjectRequestListener;
+import com.ywesee.amiko.App;
 import com.ywesee.amiko.BuildConfig;
 import com.ywesee.amiko.Constants;
 import com.ywesee.amiko.DoctorStore;
@@ -140,8 +141,13 @@ public class HINClient {
                     @Override
                     public void onResponse(JSONObject response) {
                         try {
-                            HINToken newToken = new HINToken(response);
-                            // TODO: save newToken
+                            HINToken newToken = new HINToken(response, token.application);
+                            HINSettingsStore store = new HINSettingsStore(App.getAppContext());
+                            if (newToken.application == HINToken.Application.SDS) {
+                                store.saveSDSToken(newToken);
+                            } else if (newToken.application == HINToken.Application.ADSwiss) {
+                                store.saveADSwissToken(newToken);
+                            }
                             callback.onResponse(newToken);
                         } catch (JSONException e) {
                             Log.e(TAG, e.getLocalizedMessage());
