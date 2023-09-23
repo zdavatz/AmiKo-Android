@@ -27,4 +27,13 @@ jobs:
           sed "s/YOUR_HIN_CLIENT_ID/$HIN_CLIENT_ID/;s/YOUR_HIN_CLIENT_SECRET/$HIN_CLIENT_SECRET/;s#YOUR_CERTIFACTION_SERVER#$CERTIFACTION_SERVER#;s#YOUR_CERTIFACTION_TEST_SERVER#$CERTIFACTION_TEST_SERVER#" ./src/main/java/com/ywesee/amiko/hinclient/HINClientCredentials.java.sample > ./src/main/java/com/ywesee/amiko/hinclient/HINClientCredentials.java
       - name: Build
         run: |
+          make comed
+          make amiko
           make bundle
+      - uses: actions/upload-artifact@v3
+        with:
+          name: artifacts
+          retention-days: 5
+          path: |
+            build/outputs/bundle/comedRelease
+            build/outputs/bundle/amikoRelease
