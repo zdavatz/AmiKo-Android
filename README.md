@@ -43,7 +43,7 @@ _to build with Intellij this does not have to change._
 
 #### 5.1 HIN Credentials
 
-Copy `src/main/java/com/ywesee/amiko/hinclient/HINClientCredentials.java` to `HINClientCredentials.java`,
+Copy `src/main/java/com/ywesee/amiko/hinclient/HINClientCredentials.java.sample` to `HINClientCredentials.java`,
 and fill in the fields.
 
 #### 6. AndroidManifest.xml
