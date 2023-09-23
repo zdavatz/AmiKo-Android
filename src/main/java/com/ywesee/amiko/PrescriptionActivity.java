@@ -834,13 +834,11 @@ public class PrescriptionActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.patient_list: {
-                Intent intent = new Intent(this, PatientListActivity.class);
-                intent.putExtra("allowCreation", true);
-                startActivityForResult(intent, REQUEST_PATIENT);
-                return true;
-            }
+        if (item.getItemId() == R.id.patient_list) {
+            Intent intent = new Intent(this, PatientListActivity.class);
+            intent.putExtra("allowCreation", true);
+            startActivityForResult(intent, REQUEST_PATIENT);
+            return true;
         }
         return false;
     }
@@ -1051,7 +1049,7 @@ class MedicineListAdapter extends RecyclerView.Adapter<MedicineListAdapter.ViewH
 
         TypedValue typedValue = new TypedValue();
         Resources.Theme theme = context.getTheme();
-        theme.resolveAttribute(R.attr.colorOnBackground, typedValue, true);
+        theme.resolveAttribute(com.google.android.material.R.attr.colorOnBackground, typedValue, true);
         TextView packageTextView = new TextView(context);
         packageTextView.setTextColor(typedValue.data);
         packageTextView.setWidth(parent.getWidth());

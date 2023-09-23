@@ -176,47 +176,45 @@ public class DoctorActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                return true;
-            case R.id.save: {
-                boolean errored = false;
-                store.title = editTitle.getText().toString();
-                for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editPhone, editEmail)) {
-                    if (v.length() == 0) {
-                        v.setError(getString(R.string.required));
-                        errored = true;
-                    }
-                }
-                if (!editZsrNumber.getText().toString().equals("")) {
-                    Pattern pattern = Pattern.compile("^[a-zA-Z][0-9]{6}$");
-                    Matcher matcher = pattern.matcher(editZsrNumber.getText().toString());
-                    if (!matcher.matches()) {
-                        editZsrNumber.setError("Error");
-                        errored = true;
-                    }
-                }
-                if (!editGln.getText().toString().equals("") && editGln.getText().toString().length() != 13) {
-                    editGln.setError("Error");
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        } else if (item.getItemId() == R.id.save) {
+            boolean errored = false;
+            store.title = editTitle.getText().toString();
+            for (EditText v : Arrays.asList(editName, editSurname, editStreet, editCity, editZip, editPhone, editEmail)) {
+                if (v.length() == 0) {
+                    v.setError(getString(R.string.required));
                     errored = true;
                 }
-
-                store.name = editName.getText().toString();
-                store.surname = editSurname.getText().toString();
-                store.street = editStreet.getText().toString();
-                store.city = editCity.getText().toString();
-                store.zip = editZip.getText().toString();
-                store.phone = editPhone.getText().toString();
-                store.email = editEmail.getText().toString();
-                store.zsrNumber = editZsrNumber.getText().toString();
-                store.gln = editGln.getText().toString();
-                if (!errored) {
-                    store.save();
-                    finish();
-                }
-                return true;
             }
+            if (!editZsrNumber.getText().toString().equals("")) {
+                Pattern pattern = Pattern.compile("^[a-zA-Z][0-9]{6}$");
+                Matcher matcher = pattern.matcher(editZsrNumber.getText().toString());
+                if (!matcher.matches()) {
+                    editZsrNumber.setError("Error");
+                    errored = true;
+                }
+            }
+            if (!editGln.getText().toString().equals("") && editGln.getText().toString().length() != 13) {
+                editGln.setError("Error");
+                errored = true;
+            }
+
+            store.name = editName.getText().toString();
+            store.surname = editSurname.getText().toString();
+            store.street = editStreet.getText().toString();
+            store.city = editCity.getText().toString();
+            store.zip = editZip.getText().toString();
+            store.phone = editPhone.getText().toString();
+            store.email = editEmail.getText().toString();
+            store.zsrNumber = editZsrNumber.getText().toString();
+            store.gln = editGln.getText().toString();
+            if (!errored) {
+                store.save();
+                finish();
+            }
+            return true;
         }
         return false;
     }

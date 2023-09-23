@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import android.Manifest;
 import android.animation.LayoutTransition;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -604,6 +605,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * This function creates the main layout, called when splashscreen is over
      */
+    @SuppressLint("MissingInflatedId")
     public void createMainLayout() {
         //
         setContentView(R.layout.activity_main);
@@ -1013,60 +1015,55 @@ public class MainActivity extends AppCompatActivity {
         mBottomNavigationView.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case (R.id.bottom_nav_aips): {
-                        if (mSearchInteractions == true || mDatabaseUsed.equals("favorites")) {
-                            mSearchInteractions = false;
-                            resetView(false);
-                            // Show empty list
-                            showResults(null);
-                            showSoftKeyboard(300);
-                        } else {
-                            // We are already in AIPS mode
-                            if (mSearch.length() > 0)
-                                mSearch.getText().clear();
-                            performSearch("");
-                        }
-                        return true;
-                    }
-                    case (R.id.bottom_nav_favorites): {
-                        // Switch to favorites database
-                        mDatabaseUsed = "favorites";
+                if (item.getItemId() == R.id.bottom_nav_aips) {
+                    if (mSearchInteractions == true || mDatabaseUsed.equals("favorites")) {
                         mSearchInteractions = false;
-                        // Change view
-                        setCurrentView(mSuggestView, true);
-                        performSearch("");
-                        // Reset search
+                        resetView(false);
+                        // Show empty list
+                        showResults(null);
+                        showSoftKeyboard(300);
+                    } else {
+                        // We are already in AIPS mode
                         if (mSearch.length() > 0)
                             mSearch.getText().clear();
-                        return true;
+                        performSearch("");
                     }
-                    case (R.id.bottom_nav_interactions): {
-                        // Switch to AIPS database
-                        mDatabaseUsed = "aips";
-                        mSearchInteractions = true;
-                        // Update interaction basket
-                        updateInteractionBasket();
-                        // Update webview
-                        String html_str = mMedInteractionBasket.getInteractionsHtml();
-                        html_str = Utilities.replaceColoursForNightTheme(html_str, _this);
-                        mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
-                        // Change view
-                        setCurrentView(mShowView, true);
-                        // Reset and change search hint
-                        if (mSearch != null) {
-                            if (mSearch.length() > 0)
-                                mSearch.getText().clear();
-                            mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
-                        }
-                        return true;
+                    return true;
+                } else if (item.getItemId() == R.id.bottom_nav_favorites) {
+                    // Switch to favorites database
+                    mDatabaseUsed = "favorites";
+                    mSearchInteractions = false;
+                    // Change view
+                    setCurrentView(mSuggestView, true);
+                    performSearch("");
+                    // Reset search
+                    if (mSearch.length() > 0)
+                        mSearch.getText().clear();
+                    return true;
+                } else if (item.getItemId() == R.id.bottom_nav_interactions) {
+                    // Switch to AIPS database
+                    mDatabaseUsed = "aips";
+                    mSearchInteractions = true;
+                    // Update interaction basket
+                    updateInteractionBasket();
+                    // Update webview
+                    String html_str = mMedInteractionBasket.getInteractionsHtml();
+                    html_str = Utilities.replaceColoursForNightTheme(html_str, _this);
+                    mWebView.loadDataWithBaseURL("file:///android_res/drawable/", html_str, "text/html", "utf-8", null);
+                    // Change view
+                    setCurrentView(mShowView, true);
+                    // Reset and change search hint
+                    if (mSearch != null) {
+                        if (mSearch.length() > 0)
+                            mSearch.getText().clear();
+                        mSearch.setHint(getString(R.string.search) + " " + getString(R.string.interactions_search));
                     }
-                    case (R.id.bottom_nav_prescription): {
-                        mSearchInteractions = false;
-                        Intent intent = new Intent(_this, PrescriptionActivity.class);
-                        startActivity(intent);
-                        return true;
-                    }
+                    return true;
+                } else if (item.getItemId() == R.id.bottom_nav_prescription) {
+                    mSearchInteractions = false;
+                    Intent intent = new Intent(_this, PrescriptionActivity.class);
+                    startActivity(intent);
+                    return true;
                 }
                 return true;
             }
@@ -1491,83 +1488,70 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case (R.id.menu_search): {
-                showSoftKeyboard(300);
-                return true;
-            }
-            case (R.id.menu_pref2): {
-                Intent intent = new Intent(this, ReportActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            case (R.id.menu_pref3): {
-                // Download new database (blocking call)
-                requestPermissionAndDownloadUpdates();
-                mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
-                return true;
-            }
-            case (R.id.menu_doctor): {
-                Intent intent = new Intent(this, DoctorActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            case (R.id.menu_patients): {
-                Intent intent = new Intent(this, PatientActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            case (R.id.menu_share): {
-                // Remove softkeyboard
-                hideSoftKeyboard(10);
-                // Take screenshot and start email activity after 500ms (wait for the keyboard to disappear)
-                final Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mToastObject.show(getString(R.string.menu_share), Toast.LENGTH_SHORT);
-                        sendFeedbackScreenshot(MainActivity.this, 1);
-                    }
-                }, 500);
-                return true;
-            }
-            case (R.id.menu_rate): {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                // Try Google play
-                String uri_str = "market://details?id=com.ywesee.amiko.de";
+        if (item.getItemId() == R.id.menu_search) {
+            showSoftKeyboard(300);
+            return true;
+        } else if (item.getItemId() == R.id.menu_pref2) {
+            Intent intent = new Intent(this, ReportActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.menu_pref3) {
+            // Download new database (blocking call)
+            requestPermissionAndDownloadUpdates();
+            mToastObject.show(getString(R.string.menu_pref3), Toast.LENGTH_SHORT);
+            return true;
+        } else if (item.getItemId() == R.id.menu_doctor) {
+            Intent intent = new Intent(this, DoctorActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.menu_patients) {
+            Intent intent = new Intent(this, PatientActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.menu_share) {
+            // Remove softkeyboard
+            hideSoftKeyboard(10);
+            // Take screenshot and start email activity after 500ms (wait for the keyboard to disappear)
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mToastObject.show(getString(R.string.menu_share), Toast.LENGTH_SHORT);
+                    sendFeedbackScreenshot(MainActivity.this, 1);
+                }
+            }, 500);
+            return true;
+        } else if (item.getItemId() == R.id.menu_rate) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            // Try Google play
+            String uri_str = "market://details?id=com.ywesee.amiko.de";
+            if (Constants.appLanguage().equals("fr"))
+                uri_str = "market://details?id=com.ywesee.amiko.fr";
+            intent.setData(Uri.parse(uri_str));
+            if (myStartActivity(intent)==false) {
+                // Market (Google play) app seems not installed, let's try to open a webbrowser
+                uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.de";
                 if (Constants.appLanguage().equals("fr"))
-                    uri_str = "market://details?id=com.ywesee.amiko.fr";
+                    uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.fr&hl=fr";
                 intent.setData(Uri.parse(uri_str));
                 if (myStartActivity(intent)==false) {
-                    // Market (Google play) app seems not installed, let's try to open a webbrowser
-                    uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.de";
-                    if (Constants.appLanguage().equals("fr"))
-                        uri_str = "https://play.google.com/store/apps/details?id=com.ywesee.amiko.fr&hl=fr";
-                    intent.setData(Uri.parse(uri_str));
-                    if (myStartActivity(intent)==false) {
-                        // Well if this also fails, we have run out of options, inform the user.
-                        mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
-                    }
+                    // Well if this also fails, we have run out of options, inform the user.
+                    mToastObject.show("Could not open Android market, please install the market app.", Toast.LENGTH_SHORT);
                 }
-                return true;
             }
-            case (R.id.menu_settings): {
-                Intent intent = new Intent(this, SettingsActivity.class);
-                startActivity(intent);
-                return true;
+            return true;
+        } else if (item.getItemId() == R.id.menu_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (item.getItemId() == R.id.menu_help) {
+            mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
+            if (Constants.appOwner().equals("ywesee")) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ywesee.com/AmiKo/Index"));
+                startActivity(browserIntent);
             }
-            case (R.id.menu_help): {
-                mToastObject.show(getString(R.string.menu_help), Toast.LENGTH_SHORT);
-                if (Constants.appOwner().equals("ywesee")) {
-                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ywesee.com/AmiKo/Index"));
-                    startActivity(browserIntent);
-                }
-                return true;
-            }
-            default:
-                break;
+            return true;
         }
-
         return true;
     }
 

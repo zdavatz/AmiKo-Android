@@ -15,13 +15,13 @@ buildscript {
     * of the Gradle plugin for the buildscript.
     */
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.3'
-        classpath 'de.undercouch:gradle-download-task:3.4.3'
+        classpath 'com.android.tools.build:gradle:8.1.1'
     }
 }
 
 plugins {
   id "com.github.triplet.play" version "2.8.0"
+  id "de.undercouch.download" version "5.5.0"
 }
 
 /**
@@ -42,7 +42,7 @@ dependencies {
 
     implementation 'androidx.legacy:legacy-support-v13:1.0.0-beta01'
     implementation 'org.jsoup:jsoup:1.11.3'
-    implementation 'com.google.android.material:material:1.1.0-alpha10'
+    implementation 'com.google.android.material:material:1.1.0'
     implementation 'com.google.android.gms:play-services-vision:18.0.0'
     implementation 'com.amitshekhar.android:android-networking:1.0.2'
 
@@ -56,7 +56,8 @@ dependencies {
  * You must provide a value for at least the compilation target.
  */
 android {
-    compileSdkVersion 29
+    namespace "com.ywesee.amiko"
+    compileSdkVersion 31
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -68,10 +69,12 @@ android {
     * existing folders in the project, instead of using the default new
     * organization.
     */
-
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         minSdkVersion 26
-        targetSdkVersion 30
+        targetSdkVersion 31
 
         buildConfigField "long", "TIMESTAMP", System.currentTimeMillis() + "L"
     }
@@ -175,16 +178,25 @@ android {
     }
 
     tasks.whenTaskAdded { task ->
-        if (task.name == "generateAmikoDebugResources" || task.name == "generateAmikoReleaseResources") {
-            task.dependsOn unzipAmikoDB
-            task.dependsOn unzipAmikoFrequencyDB
-            task.dependsOn downloadAmikoReport
-            task.dependsOn unzipAmikoInteractions
-        } else if (task.name == "generateComedDebugResources" || task.name == "generateComedReleaseResources") {
-            task.dependsOn unzipComedDB
-            task.dependsOn unzipComedFrequencyDB
-            task.dependsOn downloadComedReport
-            task.dependsOn unzipComedInteractions
+        if (task.name == "mergeAmikoDebugAssets" ||
+            task.name == "mergeAmikoReleaseAssets" ||
+            
+            task.name == "generateAmikoDebugResources" ||
+            task.name == "generateAmikoReleaseResources"
+        ) {
+           task.dependsOn unzipAmikoDB
+           task.dependsOn unzipAmikoFrequencyDB
+           task.dependsOn downloadAmikoReport
+           task.dependsOn unzipAmikoInteractions
+        } else if (task.name == "mergeComedDebugAssets" ||
+            task.name == "mergeComedReleaseAssets" ||
+            task.name == "generateComedDebugResources" ||
+            task.name == "generateComedReleaseResources"
+        ) {
+           task.dependsOn unzipComedDB
+           task.dependsOn unzipComedFrequencyDB
+           task.dependsOn downloadComedReport
+           task.dependsOn unzipComedInteractions
         }
     }
 

@@ -225,15 +225,12 @@ public class PatientListActivity extends AppCompatActivity {
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                break;
-            case R.id.add: {
-                Intent intent = new Intent(this, PatientActivity.class);
-                intent.putExtra("createOnly", true);
-                startActivityForResult(intent, CREATE_PATIENT);
-            }
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+        } else if (item.getItemId() == R.id.add) {
+            Intent intent = new Intent(this, PatientActivity.class);
+            intent.putExtra("createOnly", true);
+            startActivityForResult(intent, CREATE_PATIENT);
         }
         return super.onOptionsItemSelected(item);
     }
