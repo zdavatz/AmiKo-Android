@@ -180,7 +180,6 @@ android {
     tasks.whenTaskAdded { task ->
         if (task.name == "mergeAmikoDebugAssets" ||
             task.name == "mergeAmikoReleaseAssets" ||
-            
             task.name == "generateAmikoDebugResources" ||
             task.name == "generateAmikoReleaseResources"
         ) {
