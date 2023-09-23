@@ -16,12 +16,12 @@ buildscript {
     */
     dependencies {
         classpath 'com.android.tools.build:gradle:8.1.1'
-        classpath 'de.undercouch:gradle-download-task:3.4.3'
     }
 }
 
 plugins {
   id "com.github.triplet.play" version "2.8.0"
+  id "de.undercouch.download" version "5.5.0"
 }
 
 /**
@@ -178,16 +178,25 @@ android {
     }
 
     tasks.whenTaskAdded { task ->
-        if (task.name == "generateAmikoDebugResources" || task.name == "generateAmikoReleaseResources") {
-            task.dependsOn unzipAmikoDB
-            task.dependsOn unzipAmikoFrequencyDB
-            task.dependsOn downloadAmikoReport
-            task.dependsOn unzipAmikoInteractions
-        } else if (task.name == "generateComedDebugResources" || task.name == "generateComedReleaseResources") {
-            task.dependsOn unzipComedDB
-            task.dependsOn unzipComedFrequencyDB
-            task.dependsOn downloadComedReport
-            task.dependsOn unzipComedInteractions
+        if (task.name == "mergeAmikoDebugAssets" ||
+            task.name == "mergeAmikoReleaseAssets" ||
+            
+            task.name == "generateAmikoDebugResources" ||
+            task.name == "generateAmikoReleaseResources"
+        ) {
+           task.dependsOn unzipAmikoDB
+           task.dependsOn unzipAmikoFrequencyDB
+           task.dependsOn downloadAmikoReport
+           task.dependsOn unzipAmikoInteractions
+        } else if (task.name == "mergeComedDebugAssets" ||
+            task.name == "mergeComedReleaseAssets" ||
+            task.name == "generateComedDebugResources" ||
+            task.name == "generateComedReleaseResources"
+        ) {
+           task.dependsOn unzipComedDB
+           task.dependsOn unzipComedFrequencyDB
+           task.dependsOn downloadComedReport
+           task.dependsOn unzipComedInteractions
         }
     }
 
