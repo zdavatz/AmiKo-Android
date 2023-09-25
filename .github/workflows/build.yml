@@ -30,10 +30,32 @@ jobs:
           make comed
           make amiko
           make bundle
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        # ID used to access action output
+        id: sign_amiko
+        with:
+          releaseDirectory: build/outputs/bundle/amikoRelease
+          signingKeyBase64: ${{ secrets.STORE_FILE }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        # ID used to access action output
+        id: sign_comed
+        with:
+          releaseDirectory: build/outputs/bundle/comedRelease
+          signingKeyBase64: ${{ secrets.STORE_FILE }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
       - uses: actions/upload-artifact@v3
         with:
           name: artifacts
           retention-days: 5
           path: |
-            build/outputs/bundle/comedRelease
-            build/outputs/bundle/amikoRelease
+            build/outputs/bundle/comedRelease/AmiKo-Android-comed-release.aab
+            build/outputs/bundle/amikoRelease/AmiKo-Android-amiko-release.aab
+            ${{ steps.sign_amiko.signedReleaseFile }}
+            ${{ steps.sign_comed.signedReleaseFile }}
