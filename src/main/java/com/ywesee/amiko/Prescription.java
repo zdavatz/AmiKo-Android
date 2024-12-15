@@ -135,6 +135,13 @@ public class Prescription {
         patient.put("FName", this.patient.givenname);
         patient.put("LName", this.patient.familyname);
         patient.put("BDt", ePrescriptionDOBFormat.format(patientDOBDateFormat.parse(this.patient.birthdate)));
+        patient.put("Gender", this.patient.gender.equals(Patient.KEY_AMK_PAT_GENDER_M));
+        patient.put("Street", this.patient.address);
+        patient.put("Zip", this.patient.zipcode);
+        patient.put("City", this.patient.city);
+        patient.put("Lng", Constants.appLanguage());
+        patient.put("Phone", this.patient.phone);
+        patient.put("Email", this.patient.email);
         JSONObject jsonBody = new JSONObject();
         jsonBody.put("Patient", patient);
         jsonBody.put("Medicaments", medications);
